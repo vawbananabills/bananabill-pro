@@ -1,0 +1,241 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@layer base {
+  :root {
+    /* Warm professional palette with golden accents */
+    --background: 45 30% 98%;
+    --foreground: 30 10% 12%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 30 10% 12%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 30 10% 12%;
+
+    /* Golden yellow - banana inspired but professional */
+    --primary: 45 93% 47%;
+    --primary-foreground: 30 10% 12%;
+
+    --secondary: 45 20% 94%;
+    --secondary-foreground: 30 10% 25%;
+
+    --muted: 45 15% 92%;
+    --muted-foreground: 30 8% 45%;
+
+    --accent: 45 40% 90%;
+    --accent-foreground: 30 10% 15%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 142 72% 42%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 30 10% 12%;
+
+    --border: 45 15% 88%;
+    --input: 45 15% 88%;
+    --ring: 45 93% 47%;
+
+    --radius: 0.625rem;
+
+    /* Sidebar */
+    --sidebar-background: 30 10% 8%;
+    --sidebar-foreground: 45 20% 90%;
+    --sidebar-primary: 45 93% 55%;
+    --sidebar-primary-foreground: 30 10% 8%;
+    --sidebar-accent: 30 10% 15%;
+    --sidebar-accent-foreground: 45 20% 90%;
+    --sidebar-border: 30 10% 18%;
+    --sidebar-ring: 45 93% 47%;
+
+    /* Custom tokens */
+    --header-height: 64px;
+    --sidebar-width: 260px;
+    --sidebar-collapsed-width: 72px;
+
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(45 93% 52%) 0%, hsl(38 92% 50%) 100%);
+    --gradient-dark: linear-gradient(135deg, hsl(30 10% 12%) 0%, hsl(30 10% 18%) 100%);
+    --gradient-hero: linear-gradient(180deg, hsl(45 30% 98%) 0%, hsl(45 25% 95%) 100%);
+    --gradient-card: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(45 20% 99%) 100%);
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 hsl(30 10% 12% / 0.04);
+    --shadow-md: 0 4px 6px -1px hsl(30 10% 12% / 0.06), 0 2px 4px -2px hsl(30 10% 12% / 0.06);
+    --shadow-lg: 0 10px 15px -3px hsl(30 10% 12% / 0.08), 0 4px 6px -4px hsl(30 10% 12% / 0.04);
+    --shadow-xl: 0 20px 25px -5px hsl(30 10% 12% / 0.1), 0 8px 10px -6px hsl(30 10% 12% / 0.06);
+    --shadow-glow: 0 0 40px hsl(45 93% 47% / 0.15);
+    --shadow-card: 0 1px 3px hsl(30 10% 12% / 0.04), 0 1px 2px hsl(30 10% 12% / 0.06);
+  }
+
+  .dark {
+    --background: 30 10% 8%;
+    --foreground: 45 20% 95%;
+
+    --card: 30 10% 12%;
+    --card-foreground: 45 20% 95%;
+
+    --popover: 30 10% 12%;
+    --popover-foreground: 45 20% 95%;
+
+    --primary: 45 93% 55%;
+    --primary-foreground: 30 10% 8%;
+
+    --secondary: 30 10% 18%;
+    --secondary-foreground: 45 20% 90%;
+
+    --muted: 30 10% 18%;
+    --muted-foreground: 45 10% 60%;
+
+    --accent: 30 10% 20%;
+    --accent-foreground: 45 20% 95%;
+
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 30 10% 20%;
+    --input: 30 10% 20%;
+    --ring: 45 93% 55%;
+
+    --sidebar-background: 30 10% 6%;
+    --sidebar-foreground: 45 20% 90%;
+    --sidebar-primary: 45 93% 55%;
+    --sidebar-primary-foreground: 30 10% 8%;
+    --sidebar-accent: 30 10% 12%;
+    --sidebar-accent-foreground: 45 20% 90%;
+    --sidebar-border: 30 10% 15%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-feature-settings: "cv11", "ss01", "ss03";
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold tracking-tight;
+  }
+}
+
+@layer components {
+  .glass {
+    @apply bg-card/80 backdrop-blur-xl border border-border/50;
+  }
+
+  .data-table-row {
+    @apply border-b border-border/50 transition-colors hover:bg-muted/30;
+  }
+
+  .data-input {
+    @apply h-9 px-3 bg-background border border-input rounded-md text-sm 
+           focus:outline-none focus:ring-2 focus:ring-ring/20 focus:border-primary
+           transition-all duration-150 placeholder:text-muted-foreground;
+  }
+
+  .stat-card {
+    @apply p-5 rounded-xl bg-card border border-border/50 shadow-[var(--shadow-card)]
+           transition-all duration-200 hover:shadow-[var(--shadow-md)] hover:border-border;
+  }
+
+  .nav-link {
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium
+           text-sidebar-foreground/70 transition-all duration-150
+           hover:bg-sidebar-accent hover:text-sidebar-foreground;
+  }
+
+  .nav-link-active {
+    @apply bg-sidebar-accent text-sidebar-foreground;
+  }
+
+  .invoice-cell {
+    @apply px-3 py-2 text-sm tabular-nums;
+  }
+
+  .badge-status {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .badge-paid {
+    @apply bg-success/10 text-success;
+  }
+
+  .badge-pending {
+    @apply bg-warning/10 text-warning;
+  }
+
+  .badge-credit {
+    @apply bg-primary/10 text-primary;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.4s ease-out;
+  }
+
+  .animate-scale-in {
+    animation: scaleIn 0.2s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes scaleIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  @keyframes marquee {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  .animate-marquee {
+    animation: marquee 8s linear infinite;
+  }
+
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted)) transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted));
+    border-radius: 3px;
+  }
+}
