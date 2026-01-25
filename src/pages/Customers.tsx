@@ -12,17 +12,35 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Label } from '@/components/ui/label';
-import { Search, Plus, Phone, Mail, MapPin, MoreVertical, Loader2 } from 'lucide-react';
-import { useCustomers } from '@/hooks/useCustomers';
+import { Search, Plus, Phone, Mail, MapPin, MoreVertical, Loader2, Pencil, Trash2 } from 'lucide-react';
+import { useCustomers, Customer } from '@/hooks/useCustomers';
 import { PartyStatementDialog } from '@/components/reports/PartyStatementDialog';
 
 export default function Customers() {
-  const { customers, isLoading, addCustomer } = useCustomers();
+  const { customers, isLoading, addCustomer, updateCustomer, deleteCustomer } = useCustomers();
   const [search, setSearch] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
   const [isStatementOpen, setIsStatementOpen] = useState(false);
+  const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
+  const [deleteCustomerId, setDeleteCustomerId] = useState<string | null>(null);
   const [newCustomer, setNewCustomer] = useState({
     name: '',
     phone: '',
@@ -59,6 +77,46 @@ export default function Customers() {
     setNewCustomer({ name: '', phone: '', email: '', address: '', opening_balance: '' });
   };
 
+  const handleEditCustomer = async () => {
+    if (!editingCustomer || !newCustomer.name) return;
+    await updateCustomer.mutateAsync({
+      id: editingCustomer.id,
+      name: newCustomer.name,
+      phone: newCustomer.phone || null,
+      email: newCustomer.email || null,
+      address: newCustomer.address || null,
+      opening_balance: newCustomer.opening_balance ? parseFloat(newCustomer.opening_balance) : 0,
+    });
+    setEditingCustomer(null);
+    setIsDialogOpen(false);
+    setNewCustomer({ name: '', phone: '', email: '', address: '', opening_balance: '' });
+  };
+
+  const handleDeleteCustomer = async () => {
+    if (deleteCustomerId) {
+      await deleteCustomer.mutateAsync(deleteCustomerId);
+      setDeleteCustomerId(null);
+    }
+  };
+
+  const openEditDialog = (customer: Customer) => {
+    setEditingCustomer(customer);
+    setNewCustomer({
+      name: customer.name,
+      phone: customer.phone || '',
+      email: customer.email || '',
+      address: customer.address || '',
+      opening_balance: customer.opening_balance?.toString() || '',
+    });
+    setIsDialogOpen(true);
+  };
+
+  const closeDialog = () => {
+    setIsDialogOpen(false);
+    setEditingCustomer(null);
+    setNewCustomer({ name: '', phone: '', email: '', address: '', opening_balance: '' });
+  };
+
   if (isLoading) {
     return (
       <DashboardLayout title="Customers" subtitle="Loading...">
@@ -85,7 +143,10 @@ export default function Customers() {
                   className="pl-9"
                 />
               </div>
-              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <Dialog open={isDialogOpen} onOpenChange={(open) => {
+                if (!open) closeDialog();
+                else setIsDialogOpen(open);
+              }}>
                 <DialogTrigger asChild>
                   <Button className="gap-2">
                     <Plus className="w-4 h-4" />
@@ -94,9 +155,9 @@ export default function Customers() {
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Add New Customer</DialogTitle>
+                    <DialogTitle>{editingCustomer ? 'Edit Customer' : 'Add New Customer'}</DialogTitle>
                     <DialogDescription>
-                      Add a new customer to your database.
+                      {editingCustomer ? 'Update customer details.' : 'Add a new customer to your database.'}
                     </DialogDescription>
                   </DialogHeader>
                   <div className="space-y-4 pt-4">
@@ -149,11 +210,14 @@ export default function Customers() {
                       />
                     </div>
                     <div className="flex justify-end gap-3 pt-4">
-                      <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                      <Button variant="outline" onClick={closeDialog}>
                         Cancel
                       </Button>
-                      <Button onClick={handleAddCustomer} disabled={addCustomer.isPending}>
-                        {addCustomer.isPending ? 'Adding...' : 'Add Customer'}
+                      <Button 
+                        onClick={editingCustomer ? handleEditCustomer : handleAddCustomer} 
+                        disabled={addCustomer.isPending || updateCustomer.isPending}
+                      >
+                        {(addCustomer.isPending || updateCustomer.isPending) ? 'Saving...' : (editingCustomer ? 'Update Customer' : 'Add Customer')}
                       </Button>
                     </div>
                   </div>
@@ -195,14 +259,31 @@ export default function Customers() {
                     <div>
                       <h3 className="font-semibold text-lg">{customer.name}</h3>
                     </div>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-8 w-8"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <MoreVertical className="w-4 h-4" />
-                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <MoreVertical className="w-4 h-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                        <DropdownMenuItem onClick={() => openEditDialog(customer)}>
+                          <Pencil className="w-4 h-4 mr-2" />
+                          Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          className="text-destructive focus:text-destructive"
+                          onClick={() => setDeleteCustomerId(customer.id)}
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                   
                   <div className="space-y-2 text-sm mb-4">
@@ -251,6 +332,26 @@ export default function Customers() {
           onOpenChange={setIsStatementOpen}
           initialCustomerId={selectedCustomerId}
         />
+
+        <AlertDialog open={!!deleteCustomerId} onOpenChange={() => setDeleteCustomerId(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Customer?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action cannot be undone. This will permanently delete the customer and may affect related invoices and payments.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={handleDeleteCustomer}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </DashboardLayout>
   );
