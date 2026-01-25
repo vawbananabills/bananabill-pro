@@ -12,17 +12,35 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Label } from '@/components/ui/label';
-import { Search, Plus, Phone, Mail, MapPin, MoreVertical, Truck, Loader2 } from 'lucide-react';
-import { useVendors } from '@/hooks/useVendors';
+import { Search, Plus, Phone, Mail, MapPin, MoreVertical, Truck, Loader2, Pencil, Trash2 } from 'lucide-react';
+import { useVendors, Vendor } from '@/hooks/useVendors';
 import { VendorStatementDialog } from '@/components/reports/VendorStatementDialog';
 
 export default function Vendors() {
-  const { vendors, isLoading, addVendor } = useVendors();
+  const { vendors, isLoading, addVendor, updateVendor, deleteVendor } = useVendors();
   const [search, setSearch] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedVendorId, setSelectedVendorId] = useState<string | null>(null);
   const [isStatementOpen, setIsStatementOpen] = useState(false);
+  const [editingVendor, setEditingVendor] = useState<Vendor | null>(null);
+  const [deleteVendorId, setDeleteVendorId] = useState<string | null>(null);
   const [newVendor, setNewVendor] = useState({
     name: '',
     phone: '',
@@ -59,6 +77,46 @@ export default function Vendors() {
     setNewVendor({ name: '', phone: '', email: '', address: '', opening_balance: '' });
   };
 
+  const handleEditVendor = async () => {
+    if (!editingVendor || !newVendor.name) return;
+    await updateVendor.mutateAsync({
+      id: editingVendor.id,
+      name: newVendor.name,
+      phone: newVendor.phone || null,
+      email: newVendor.email || null,
+      address: newVendor.address || null,
+      opening_balance: newVendor.opening_balance ? parseFloat(newVendor.opening_balance) : 0,
+    });
+    setEditingVendor(null);
+    setIsDialogOpen(false);
+    setNewVendor({ name: '', phone: '', email: '', address: '', opening_balance: '' });
+  };
+
+  const handleDeleteVendor = async () => {
+    if (deleteVendorId) {
+      await deleteVendor.mutateAsync(deleteVendorId);
+      setDeleteVendorId(null);
+    }
+  };
+
+  const openEditDialog = (vendor: Vendor) => {
+    setEditingVendor(vendor);
+    setNewVendor({
+      name: vendor.name,
+      phone: vendor.phone || '',
+      email: vendor.email || '',
+      address: vendor.address || '',
+      opening_balance: vendor.opening_balance?.toString() || '',
+    });
+    setIsDialogOpen(true);
+  };
+
+  const closeDialog = () => {
+    setIsDialogOpen(false);
+    setEditingVendor(null);
+    setNewVendor({ name: '', phone: '', email: '', address: '', opening_balance: '' });
+  };
+
   if (isLoading) {
     return (
       <DashboardLayout title="Vendors" subtitle="Loading...">
@@ -85,7 +143,10 @@ export default function Vendors() {
                   className="pl-9"
                 />
               </div>
-              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <Dialog open={isDialogOpen} onOpenChange={(open) => {
+                if (!open) closeDialog();
+                else setIsDialogOpen(open);
+              }}>
                 <DialogTrigger asChild>
                   <Button className="gap-2">
                     <Plus className="w-4 h-4" />
@@ -94,9 +155,9 @@ export default function Vendors() {
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Add New Vendor</DialogTitle>
+                    <DialogTitle>{editingVendor ? 'Edit Vendor' : 'Add New Vendor'}</DialogTitle>
                     <DialogDescription>
-                      Add a new vendor/supplier to your database.
+                      {editingVendor ? 'Update vendor details.' : 'Add a new vendor/supplier to your database.'}
                     </DialogDescription>
                   </DialogHeader>
                   <div className="space-y-4 pt-4">
@@ -149,11 +210,14 @@ export default function Vendors() {
                       />
                     </div>
                     <div className="flex justify-end gap-3 pt-4">
-                      <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                      <Button variant="outline" onClick={closeDialog}>
                         Cancel
                       </Button>
-                      <Button onClick={handleAddVendor} disabled={addVendor.isPending}>
-                        {addVendor.isPending ? 'Adding...' : 'Add Vendor'}
+                      <Button 
+                        onClick={editingVendor ? handleEditVendor : handleAddVendor} 
+                        disabled={addVendor.isPending || updateVendor.isPending}
+                      >
+                        {(addVendor.isPending || updateVendor.isPending) ? 'Saving...' : (editingVendor ? 'Update Vendor' : 'Add Vendor')}
                       </Button>
                     </div>
                   </div>
@@ -200,14 +264,31 @@ export default function Vendors() {
                         <h3 className="font-semibold">{vendor.name}</h3>
                       </div>
                     </div>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-8 w-8"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <MoreVertical className="w-4 h-4" />
-                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <MoreVertical className="w-4 h-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                        <DropdownMenuItem onClick={() => openEditDialog(vendor)}>
+                          <Pencil className="w-4 h-4 mr-2" />
+                          Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          className="text-destructive focus:text-destructive"
+                          onClick={() => setDeleteVendorId(vendor.id)}
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                   
                   <div className="space-y-2 text-sm mb-4">
@@ -256,6 +337,26 @@ export default function Vendors() {
           onOpenChange={setIsStatementOpen}
           initialVendorId={selectedVendorId}
         />
+
+        <AlertDialog open={!!deleteVendorId} onOpenChange={() => setDeleteVendorId(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Vendor?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action cannot be undone. This will permanently delete the vendor and may affect related purchases.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={handleDeleteVendor}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </DashboardLayout>
   );
