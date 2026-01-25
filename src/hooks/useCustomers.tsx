@@ -11,6 +11,7 @@ export interface Customer {
   email: string | null;
   address: string | null;
   balance: number;
+  opening_balance: number;
   created_at: string;
 }
 
@@ -67,7 +68,7 @@ export function useCustomers() {
           return sum + (a.type === 'discount' ? amount : -amount);
         }, 0);
 
-        const calculatedBalance = totalInvoices - totalPayments - totalAdjustments;
+        const calculatedBalance = Number(customer.opening_balance || 0) + totalInvoices - totalPayments - totalAdjustments;
 
         return {
           ...customer,

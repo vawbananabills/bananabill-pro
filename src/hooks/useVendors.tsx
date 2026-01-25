@@ -11,6 +11,7 @@ export interface Vendor {
   email: string | null;
   address: string | null;
   balance: number;
+  opening_balance: number;
   created_at: string;
 }
 
@@ -47,7 +48,7 @@ export function useVendors() {
 
         return {
           ...vendor,
-          balance: totalPurchases,
+          balance: Number(vendor.opening_balance || 0) + totalPurchases,
         } as Vendor;
       });
     },

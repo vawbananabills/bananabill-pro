@@ -15,16 +15,17 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useWeeklyInvoices, WeeklyInvoice } from '@/hooks/useWeeklyInvoices';
 import { format } from 'date-fns';
-import { Calendar, Trash2, Eye, Loader2 } from 'lucide-react';
+import { Calendar, Trash2, Eye, Loader2, Pencil } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface SavedWeeklyInvoicesDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onViewInvoice?: (invoice: WeeklyInvoice) => void;
+  onEditInvoice?: (invoice: WeeklyInvoice) => void;
 }
 
-export function SavedWeeklyInvoicesDialog({ open, onOpenChange, onViewInvoice }: SavedWeeklyInvoicesDialogProps) {
+export function SavedWeeklyInvoicesDialog({ open, onOpenChange, onViewInvoice, onEditInvoice }: SavedWeeklyInvoicesDialogProps) {
   const { weeklyInvoices, isLoading, deleteWeeklyInvoice } = useWeeklyInvoices();
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
@@ -112,6 +113,15 @@ export function SavedWeeklyInvoicesDialog({ open, onOpenChange, onViewInvoice }:
                             onClick={() => onViewInvoice(invoice)}
                           >
                             <Eye className="w-4 h-4" />
+                          </Button>
+                        )}
+                        {onEditInvoice && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => onEditInvoice(invoice)}
+                          >
+                            <Pencil className="w-4 h-4" />
                           </Button>
                         )}
                         <Button
