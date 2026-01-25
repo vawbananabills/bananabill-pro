@@ -28,6 +28,7 @@ export default function Vendors() {
     phone: '',
     email: '',
     address: '',
+    opening_balance: '',
   });
 
   const filteredVendors = vendors.filter(v =>
@@ -52,9 +53,10 @@ export default function Vendors() {
       phone: newVendor.phone || null,
       email: newVendor.email || null,
       address: newVendor.address || null,
+      opening_balance: newVendor.opening_balance ? parseFloat(newVendor.opening_balance) : 0,
     });
     setIsDialogOpen(false);
-    setNewVendor({ name: '', phone: '', email: '', address: '' });
+    setNewVendor({ name: '', phone: '', email: '', address: '', opening_balance: '' });
   };
 
   if (isLoading) {
@@ -133,6 +135,17 @@ export default function Vendors() {
                         value={newVendor.address}
                         onChange={(e) => setNewVendor({ ...newVendor, address: e.target.value })}
                         placeholder="Enter address"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="opening_balance">Opening Balance</Label>
+                      <Input
+                        id="opening_balance"
+                        type="number"
+                        step="0.01"
+                        value={newVendor.opening_balance}
+                        onChange={(e) => setNewVendor({ ...newVendor, opening_balance: e.target.value })}
+                        placeholder="0.00 (positive = payable, negative = advance)"
                       />
                     </div>
                     <div className="flex justify-end gap-3 pt-4">

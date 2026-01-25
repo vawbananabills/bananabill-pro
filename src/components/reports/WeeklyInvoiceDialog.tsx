@@ -41,9 +41,10 @@ export function WeeklyInvoiceDialog({ open, onOpenChange }: WeeklyInvoiceDialogP
   const { company, user } = useAuth();
   const { customers } = useCustomers();
   const { createPayment } = usePayments();
-  const { createWeeklyInvoice } = useWeeklyInvoices();
+  const { createWeeklyInvoice, updateWeeklyInvoice } = useWeeklyInvoices();
   const queryClient = useQueryClient();
   const [showSavedInvoices, setShowSavedInvoices] = useState(false);
+  const [editingInvoiceId, setEditingInvoiceId] = useState<string | null>(null);
   const [showPaymentDetails, setShowPaymentDetails] = useState(true);
   
   const [dateRange, setDateRange] = useState<'thisWeek' | 'lastWeek' | 'thisMonth' | 'custom'>('thisWeek');
@@ -275,7 +276,7 @@ export function WeeklyInvoiceDialog({ open, onOpenChange }: WeeklyInvoiceDialogP
     
     setIsSaving(true);
     try {
-      await createWeeklyInvoice.mutateAsync({
+      const invoiceData = {
         company_id: company.id,
         customer_id: selectedCustomer,
         date_from: format(dateFrom, 'yyyy-MM-dd'),
@@ -291,8 +292,18 @@ export function WeeklyInvoiceDialog({ open, onOpenChange }: WeeklyInvoiceDialogP
         total_items: data.items.length + data.looseItems.length,
         total_net_weight: data.totalNetWeight + data.totalLooseWeight,
         created_by: user?.id || null,
-      });
-    } catch (error) {
+      };
+
+      if (editingInvoiceId) {
+        await updateWeeklyInvoice.mutateAsync({
+          id: editingInvoiceId,
+          ...invoiceData,
+        });
+        setEditingInvoiceId(null);
+      } else {
+        await createWeeklyInvoice.mutateAsync(invoiceData);
+      }
+    } catch {
       // Error handled by hook
     } finally {
       setIsSaving(false);
@@ -322,7 +333,7 @@ export function WeeklyInvoiceDialog({ open, onOpenChange }: WeeklyInvoiceDialogP
       setShowPaymentForm(false);
       refetch();
       queryClient.invalidateQueries({ queryKey: ['customers'] });
-    } catch (error) {
+    } catch {
       // Error toast handled by usePayments hook
     } finally {
       setIsSubmittingPayment(false);
@@ -1122,7 +1133,7 @@ export function WeeklyInvoiceDialog({ open, onOpenChange }: WeeklyInvoiceDialogP
                 disabled={!selectedCustomer || !hasData || isSaving}
               >
                 {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                Save
+                {editingInvoiceId ? 'Update' : 'Save'}
               </Button>
               <Button variant="outline" onClick={handlePrint} className="gap-2 flex-1" disabled={!selectedCustomer || !hasData}>
                 <Printer className="w-4 h-4" />
@@ -1143,7 +1154,7 @@ export function WeeklyInvoiceDialog({ open, onOpenChange }: WeeklyInvoiceDialogP
       open={showSavedInvoices} 
       onOpenChange={setShowSavedInvoices}
       onViewInvoice={(invoice) => {
-        // Load the saved invoice data
+        // Load the saved invoice data for viewing
         setSelectedCustomer(invoice.customer_id);
         setDateFrom(new Date(invoice.date_from));
         setDateTo(new Date(invoice.date_to));
@@ -1151,6 +1162,19 @@ export function WeeklyInvoiceDialog({ open, onOpenChange }: WeeklyInvoiceDialogP
         setOtherCharges(Number(invoice.other_charges));
         setNotes(invoice.notes || '');
         setDateRange('custom');
+        setEditingInvoiceId(null); // View mode - not editing
+        setShowSavedInvoices(false);
+      }}
+      onEditInvoice={(invoice) => {
+        // Load the saved invoice data for editing
+        setSelectedCustomer(invoice.customer_id);
+        setDateFrom(new Date(invoice.date_from));
+        setDateTo(new Date(invoice.date_to));
+        setDiscount(Number(invoice.discount));
+        setOtherCharges(Number(invoice.other_charges));
+        setNotes(invoice.notes || '');
+        setDateRange('custom');
+        setEditingInvoiceId(invoice.id); // Edit mode
         setShowSavedInvoices(false);
       }}
     />

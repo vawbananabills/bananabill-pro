@@ -39,7 +39,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Search, Trash2, CreditCard, Banknote, Wallet } from 'lucide-react';
+import { Plus, Search, Trash2, CreditCard, Banknote, Wallet, Pencil } from 'lucide-react';
 import { usePayments } from '@/hooks/usePayments';
 import { useCustomers } from '@/hooks/useCustomers';
 import { useInvoices } from '@/hooks/useInvoices';
@@ -48,6 +48,7 @@ export default function Payments() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [paymentToDelete, setPaymentToDelete] = useState<string | null>(null);
+  const [editingPayment, setEditingPayment] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   
   const [formData, setFormData] = useState({
@@ -59,7 +60,7 @@ export default function Payments() {
     notes: '',
   });
 
-  const { payments, isLoading, createPayment, deletePayment } = usePayments();
+  const { payments, isLoading, createPayment, updatePayment, deletePayment } = usePayments();
   const { customers } = useCustomers();
   const { invoices } = useInvoices();
 
@@ -73,15 +74,25 @@ export default function Payments() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    await createPayment.mutateAsync({
+    const paymentData = {
       amount: parseFloat(formData.amount) || 0,
       payment_date: formData.payment_date,
       payment_method: formData.payment_method,
       customer_id: formData.customer_id || null,
       invoice_id: formData.invoice_id || null,
       notes: formData.notes || null,
-    });
+    };
+
+    if (editingPayment) {
+      await updatePayment.mutateAsync({ id: editingPayment, ...paymentData });
+    } else {
+      await createPayment.mutateAsync(paymentData);
+    }
     
+    resetForm();
+  };
+
+  const resetForm = () => {
     setFormData({
       amount: '',
       payment_date: format(new Date(), 'yyyy-MM-dd'),
@@ -90,7 +101,21 @@ export default function Payments() {
       invoice_id: '',
       notes: '',
     });
+    setEditingPayment(null);
     setDialogOpen(false);
+  };
+
+  const handleEdit = (payment: any) => {
+    setFormData({
+      amount: payment.amount?.toString() || '',
+      payment_date: payment.payment_date,
+      payment_method: payment.payment_method || 'cash',
+      customer_id: payment.customer_id || '',
+      invoice_id: payment.invoice_id || '',
+      notes: payment.notes || '',
+    });
+    setEditingPayment(payment.id);
+    setDialogOpen(true);
   };
 
   const handleDelete = async () => {
@@ -125,7 +150,10 @@ export default function Payments() {
     <DashboardLayout title="Payments" subtitle="Track all payment transactions">
       <div className="space-y-6">
         <div className="flex justify-end">
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <Dialog open={dialogOpen} onOpenChange={(open) => {
+            if (!open) resetForm();
+            setDialogOpen(open);
+          }}>
             <DialogTrigger asChild>
               <Button className="gap-2">
                 <Plus className="w-4 h-4" />
@@ -134,7 +162,7 @@ export default function Payments() {
             </DialogTrigger>
             <DialogContent className="sm:max-w-md">
               <DialogHeader>
-                <DialogTitle>Record Payment</DialogTitle>
+                <DialogTitle>{editingPayment ? 'Edit Payment' : 'Record Payment'}</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
@@ -257,11 +285,11 @@ export default function Payments() {
                 </div>
 
                 <div className="flex justify-end gap-2">
-                  <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
+                  <Button type="button" variant="outline" onClick={resetForm}>
                     Cancel
                   </Button>
-                  <Button type="submit" disabled={createPayment.isPending}>
-                    {createPayment.isPending ? 'Saving...' : 'Save Payment'}
+                  <Button type="submit" disabled={createPayment.isPending || updatePayment.isPending}>
+                    {(createPayment.isPending || updatePayment.isPending) ? 'Saving...' : (editingPayment ? 'Update Payment' : 'Save Payment')}
                   </Button>
                 </div>
               </form>
@@ -344,16 +372,25 @@ export default function Payments() {
                         {payment.notes || '-'}
                       </TableCell>
                       <TableCell>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            setPaymentToDelete(payment.id);
-                            setDeleteDialogOpen(true);
-                          }}
-                        >
-                          <Trash2 className="w-4 h-4 text-destructive" />
-                        </Button>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleEdit(payment)}
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => {
+                              setPaymentToDelete(payment.id);
+                              setDeleteDialogOpen(true);
+                            }}
+                          >
+                            <Trash2 className="w-4 h-4 text-destructive" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))

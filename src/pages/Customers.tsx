@@ -28,6 +28,7 @@ export default function Customers() {
     phone: '',
     email: '',
     address: '',
+    opening_balance: '',
   });
 
   const filteredCustomers = customers.filter(c =>
@@ -52,9 +53,10 @@ export default function Customers() {
       phone: newCustomer.phone || null,
       email: newCustomer.email || null,
       address: newCustomer.address || null,
+      opening_balance: newCustomer.opening_balance ? parseFloat(newCustomer.opening_balance) : 0,
     });
     setIsDialogOpen(false);
-    setNewCustomer({ name: '', phone: '', email: '', address: '' });
+    setNewCustomer({ name: '', phone: '', email: '', address: '', opening_balance: '' });
   };
 
   if (isLoading) {
@@ -133,6 +135,17 @@ export default function Customers() {
                         value={newCustomer.address}
                         onChange={(e) => setNewCustomer({ ...newCustomer, address: e.target.value })}
                         placeholder="Enter address"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="opening_balance">Opening Balance</Label>
+                      <Input
+                        id="opening_balance"
+                        type="number"
+                        step="0.01"
+                        value={newCustomer.opening_balance}
+                        onChange={(e) => setNewCustomer({ ...newCustomer, opening_balance: e.target.value })}
+                        placeholder="0.00 (positive = receivable, negative = advance)"
                       />
                     </div>
                     <div className="flex justify-end gap-3 pt-4">

@@ -83,6 +83,7 @@ export type Database = {
           email: string | null
           id: string
           name: string
+          opening_balance: number | null
           phone: string | null
           updated_at: string | null
         }
@@ -94,6 +95,7 @@ export type Database = {
           email?: string | null
           id?: string
           name: string
+          opening_balance?: number | null
           phone?: string | null
           updated_at?: string | null
         }
@@ -105,6 +107,7 @@ export type Database = {
           email?: string | null
           id?: string
           name?: string
+          opening_balance?: number | null
           phone?: string | null
           updated_at?: string | null
         }
@@ -844,6 +847,7 @@ export type Database = {
           email: string | null
           id: string
           name: string
+          opening_balance: number | null
           phone: string | null
           updated_at: string | null
         }
@@ -855,6 +859,7 @@ export type Database = {
           email?: string | null
           id?: string
           name: string
+          opening_balance?: number | null
           phone?: string | null
           updated_at?: string | null
         }
@@ -866,6 +871,7 @@ export type Database = {
           email?: string | null
           id?: string
           name?: string
+          opening_balance?: number | null
           phone?: string | null
           updated_at?: string | null
         }
