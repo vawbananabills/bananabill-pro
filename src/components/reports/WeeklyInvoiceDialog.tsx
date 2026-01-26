@@ -157,13 +157,51 @@ export function WeeklyInvoiceDialog({ open, onOpenChange }: WeeklyInvoiceDialogP
 
       if (paymentsError) throw paymentsError;
 
-      // Get customer opening balance (balance at start of period - sales after period start + payments after period start)
-      // For simplicity, we'll use the current customer balance as a reference
+      // Get customer's opening balance field (the initial balance set by user)
       const { data: customerData } = await supabase
         .from('customers')
-        .select('balance')
+        .select('opening_balance')
         .eq('id', selectedCustomer)
-        .single();
+        .maybeSingle();
+
+      const customerOpeningBalance = Number(customerData?.opening_balance || 0);
+
+      // Get invoices BEFORE the selected date range for calculating previous balance
+      const { data: priorInvoices } = await supabase
+        .from('invoices')
+        .select('total')
+        .eq('company_id', company.id)
+        .eq('customer_id', selectedCustomer)
+        .lt('date', format(dateFrom, 'yyyy-MM-dd'));
+
+      // Get payments BEFORE the selected date range
+      const { data: priorPayments } = await supabase
+        .from('payments')
+        .select('amount')
+        .eq('company_id', company.id)
+        .eq('customer_id', selectedCustomer)
+        .lt('payment_date', format(dateFrom, 'yyyy-MM-dd'));
+
+      // Get adjustments BEFORE the selected date range
+      const { data: priorAdjustments } = await supabase
+        .from('party_adjustments')
+        .select('amount, type')
+        .eq('company_id', company.id)
+        .eq('customer_id', selectedCustomer)
+        .lt('date', format(dateFrom, 'yyyy-MM-dd'));
+
+      // Calculate prior period totals
+      const priorInvoiceTotal = priorInvoices?.reduce((sum, inv) => sum + Number(inv.total || 0), 0) || 0;
+      const priorPaymentTotal = priorPayments?.reduce((sum, p) => sum + Number(p.amount || 0), 0) || 0;
+      const priorDiscountTotal = (priorAdjustments || [])
+        .filter(a => a.type === 'discount')
+        .reduce((sum, a) => sum + Number(a.amount || 0), 0);
+      const priorAdditionalTotal = (priorAdjustments || [])
+        .filter(a => a.type === 'additional')
+        .reduce((sum, a) => sum + Number(a.amount || 0), 0);
+
+      // Previous/Opening balance = customer's opening balance + prior invoices + prior additional - prior payments - prior discounts
+      const previousBalance = customerOpeningBalance + priorInvoiceTotal + priorAdditionalTotal - priorPaymentTotal - priorDiscountTotal;
 
       // Flatten items for the invoice
       const allItems: any[] = [];
@@ -209,15 +247,8 @@ export function WeeklyInvoiceDialog({ open, onOpenChange }: WeeklyInvoiceDialogP
         totalInvoiceOtherCharges += inv.other_charges || 0;
       });
 
-      // Calculate total payments received
+      // Calculate total payments received in the period
       const totalPayments = payments?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
-
-      // Opening balance is the customer's current balance minus period activity
-      // Current balance = opening + sales - payments
-      // So opening = current balance - sales + payments
-      const currentBalance = customerData?.balance || 0;
-      const periodSales = grandTotal;
-      const openingBalance = currentBalance - periodSales + totalPayments;
 
       return {
         items: allItems,
@@ -227,8 +258,7 @@ export function WeeklyInvoiceDialog({ open, onOpenChange }: WeeklyInvoiceDialogP
         totalNetWeight,
         totalLooseWeight,
         totalPayments,
-        openingBalance: Math.max(0, openingBalance), // Don't show negative opening balance
-        currentBalance,
+        previousBalance, // This is the opening/previous balance before this period
         invoiceCount: invoices?.length || 0,
         totalInvoiceDiscount,
         totalInvoiceOtherCharges,
@@ -240,9 +270,11 @@ export function WeeklyInvoiceDialog({ open, onOpenChange }: WeeklyInvoiceDialogP
   // Calculate final totals
   const subtotal = data?.grandTotal || 0;
   const finalTotal = subtotal - discount + otherCharges;
-  const openingBalance = data?.openingBalance || 0;
+  const previousBalance = data?.previousBalance || 0;
   const totalPaymentsReceived = data?.totalPayments || 0;
-  const closingBalance = openingBalance + finalTotal - totalPaymentsReceived;
+  const closingBalance = previousBalance + finalTotal - totalPaymentsReceived;
+  // Alias for backward compatibility in the UI
+  const openingBalance = previousBalance;
 
   // Generate QR code for UPI payment
   useEffect(() => {
@@ -698,13 +730,11 @@ export function WeeklyInvoiceDialog({ open, onOpenChange }: WeeklyInvoiceDialogP
               </div>
             </div>
 
-            {/* Opening Balance Box */}
-            {openingBalance > 0 && (
-              <div className="opening-balance-box bg-yellow-100 p-3 rounded-lg mb-5 flex justify-between items-center">
-                <span className="opening-balance-label text-sm font-semibold text-yellow-800">📋 Opening Balance (Previous Dues)</span>
-                <span className="opening-balance-value text-lg font-bold text-yellow-800 font-mono">{formatCurrency(openingBalance)}</span>
-              </div>
-            )}
+            {/* Previous Balance Box - Always show */}
+            <div className="opening-balance-box bg-amber-100 p-3 rounded-lg mb-5 flex justify-between items-center">
+              <span className="opening-balance-label text-sm font-semibold text-amber-800">📋 Previous Balance</span>
+              <span className="opening-balance-value text-lg font-bold text-amber-800 font-mono">{formatCurrency(previousBalance)}</span>
+            </div>
 
             {/* Items Table - Grouped by Date with Payments */}
             <div className="overflow-x-auto mb-5">
@@ -906,13 +936,11 @@ export function WeeklyInvoiceDialog({ open, onOpenChange }: WeeklyInvoiceDialogP
                   </div>
                   
                   <div className="totals-box ml-auto w-80 bg-muted/30 p-4 rounded-lg">
-                    {/* Opening Balance */}
-                    {openingBalance > 0 && (
-                      <div className="totals-row flex justify-between py-1.5 text-yellow-700">
-                        <span>Opening Balance</span>
-                        <span className="font-mono">{formatCurrency(openingBalance)}</span>
-                      </div>
-                    )}
+                    {/* Previous Balance - Always show */}
+                    <div className="totals-row flex justify-between py-1.5 text-amber-700">
+                      <span>Previous Balance</span>
+                      <span className="font-mono">{formatCurrency(previousBalance)}</span>
+                    </div>
                     
                     {/* Period Sales */}
                     <div className="totals-row flex justify-between py-1.5">
@@ -949,7 +977,7 @@ export function WeeklyInvoiceDialog({ open, onOpenChange }: WeeklyInvoiceDialogP
                     {/* Total Amount */}
                     <div className="totals-row flex justify-between py-1.5 font-semibold">
                       <span>Total Amount</span>
-                      <span className="font-mono">{formatCurrency(openingBalance + finalTotal)}</span>
+                      <span className="font-mono">{formatCurrency(previousBalance + finalTotal)}</span>
                     </div>
                     
                     {/* Payments */}
@@ -962,11 +990,11 @@ export function WeeklyInvoiceDialog({ open, onOpenChange }: WeeklyInvoiceDialogP
                     
                     <Separator className="my-2" />
                     
-                    {/* Closing Balance */}
+                    {/* Outstanding Balance */}
                     <div className="totals-row total flex justify-between py-2 text-lg font-bold text-primary">
-                      <span>Balance Due</span>
+                      <span>Outstanding Balance</span>
                       <span className={cn("font-mono", closingBalance <= 0 ? "text-green-600" : "text-destructive")}>
-                        {formatCurrency(Math.max(0, closingBalance))}
+                        {formatCurrency(closingBalance)}
                       </span>
                     </div>
                   </div>
