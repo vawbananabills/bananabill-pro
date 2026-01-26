@@ -46,6 +46,7 @@ export function WeeklyInvoiceDialog({ open, onOpenChange }: WeeklyInvoiceDialogP
   const [showSavedInvoices, setShowSavedInvoices] = useState(false);
   const [editingInvoiceId, setEditingInvoiceId] = useState<string | null>(null);
   const [showPaymentDetails, setShowPaymentDetails] = useState(true);
+  const [showPaymentSummary, setShowPaymentSummary] = useState(true);
   
   const [dateRange, setDateRange] = useState<'thisWeek' | 'lastWeek' | 'thisMonth' | 'custom'>('thisWeek');
   const [dateFrom, setDateFrom] = useState<Date>(startOfWeek(new Date(), { weekStartsOn: 1 }));
@@ -585,7 +586,7 @@ export function WeeklyInvoiceDialog({ open, onOpenChange }: WeeklyInvoiceDialogP
 
           {/* Payment Details Toggle */}
           <div className="space-y-1">
-            <label className="text-sm text-muted-foreground">Payments</label>
+            <label className="text-sm text-muted-foreground">Payment Rows</label>
             <Button
               variant={showPaymentDetails ? "default" : "outline"}
               size="sm"
@@ -593,6 +594,29 @@ export function WeeklyInvoiceDialog({ open, onOpenChange }: WeeklyInvoiceDialogP
               className="gap-2"
             >
               {showPaymentDetails ? (
+                <>
+                  <Eye className="w-4 h-4" />
+                  Showing
+                </>
+              ) : (
+                <>
+                  <EyeOff className="w-4 h-4" />
+                  Hidden
+                </>
+              )}
+            </Button>
+          </div>
+
+          {/* Payment Summary Toggle */}
+          <div className="space-y-1">
+            <label className="text-sm text-muted-foreground">Payment Total</label>
+            <Button
+              variant={showPaymentSummary ? "default" : "outline"}
+              size="sm"
+              onClick={() => setShowPaymentSummary(!showPaymentSummary)}
+              className="gap-2"
+            >
+              {showPaymentSummary ? (
                 <>
                   <Eye className="w-4 h-4" />
                   Showing
@@ -778,11 +802,11 @@ export function WeeklyInvoiceDialog({ open, onOpenChange }: WeeklyInvoiceDialogP
                       <td className="p-3 text-sm text-right font-mono">{data.totalNetWeight.toFixed(2)} kg</td>
                       <td className="p-3"></td>
                       <td className="p-3 text-sm text-right font-mono">{formatCurrency(data.items.reduce((sum, item) => sum + item.total, 0))}</td>
-                      <td className="p-3 text-sm text-right font-mono text-green-700">{showPaymentDetails && data.totalPayments > 0 ? formatCurrency(data.totalPayments) : '-'}</td>
+                      <td className="p-3 text-sm text-right font-mono text-green-700">{showPaymentDetails && showPaymentSummary && data.totalPayments > 0 ? formatCurrency(data.totalPayments) : '-'}</td>
                     </tr>
                   )}
                   {/* Payment Summary Row when payments are hidden */}
-                  {!showPaymentDetails && totalPaymentsReceived > 0 && (
+                  {!showPaymentDetails && showPaymentSummary && totalPaymentsReceived > 0 && (
                     <tr className="bg-green-50 font-semibold">
                       <td colSpan={6} className="p-3 text-sm text-right text-green-700">
                         💰 Total Payments Received ({data?.payments?.length || 0} payments):
@@ -929,7 +953,7 @@ export function WeeklyInvoiceDialog({ open, onOpenChange }: WeeklyInvoiceDialogP
                     </div>
                     
                     {/* Payments */}
-                    {totalPaymentsReceived > 0 && (
+                    {showPaymentSummary && totalPaymentsReceived > 0 && (
                       <div className="totals-row payment flex justify-between py-1.5 text-green-600">
                         <span>Payments Received</span>
                         <span className="font-mono">-{formatCurrency(totalPaymentsReceived)}</span>
