@@ -173,26 +173,51 @@ export function PartyStatementDialog({ open, onOpenChange, initialCustomerId }: 
 
       if (paymentsError) throw paymentsError;
 
-      // Get customer's current balance to calculate opening balance
+      // Get customer's opening balance (the initial balance set by user)
       const { data: customerData } = await supabase
         .from('customers')
-        .select('balance')
+        .select('opening_balance')
         .eq('id', selectedCustomer)
         .maybeSingle();
 
-      // Calculate totals for the period (including adjustments)
-      const periodInvoiceTotal = invoices?.reduce((sum, inv) => sum + (inv.total || 0), 0) || 0;
-      const periodPaymentTotal = payments?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
-      const periodDiscountTotal = adjustments
+      const customerOpeningBalance = Number(customerData?.opening_balance || 0);
+
+      // Get invoices BEFORE the selected date range
+      const { data: priorInvoices } = await supabase
+        .from('invoices')
+        .select('total')
+        .eq('company_id', company.id)
+        .eq('customer_id', selectedCustomer)
+        .lt('date', format(dateFrom, 'yyyy-MM-dd'));
+
+      // Get payments BEFORE the selected date range
+      const { data: priorPayments } = await supabase
+        .from('payments')
+        .select('amount')
+        .eq('company_id', company.id)
+        .eq('customer_id', selectedCustomer)
+        .lt('payment_date', format(dateFrom, 'yyyy-MM-dd'));
+
+      // Get adjustments BEFORE the selected date range
+      const { data: priorAdjustments } = await supabase
+        .from('party_adjustments')
+        .select('amount, type')
+        .eq('company_id', company.id)
+        .eq('customer_id', selectedCustomer)
+        .lt('date', format(dateFrom, 'yyyy-MM-dd'));
+
+      // Calculate prior period totals
+      const priorInvoiceTotal = priorInvoices?.reduce((sum, inv) => sum + Number(inv.total || 0), 0) || 0;
+      const priorPaymentTotal = priorPayments?.reduce((sum, p) => sum + Number(p.amount || 0), 0) || 0;
+      const priorDiscountTotal = (priorAdjustments || [])
         .filter(a => a.type === 'discount')
-        .reduce((sum, a) => sum + (a.amount || 0), 0);
-      const periodAdditionalTotal = adjustments
+        .reduce((sum, a) => sum + Number(a.amount || 0), 0);
+      const priorAdditionalTotal = (priorAdjustments || [])
         .filter(a => a.type === 'additional')
-        .reduce((sum, a) => sum + (a.amount || 0), 0);
-      
-      // Opening balance = current balance - period sales - additional + period payments + discounts
-      const currentBalance = customerData?.balance || 0;
-      const openingBalance = currentBalance - periodInvoiceTotal - periodAdditionalTotal + periodPaymentTotal + periodDiscountTotal;
+        .reduce((sum, a) => sum + Number(a.amount || 0), 0);
+
+      // Opening balance = customer's opening balance + prior invoices + prior additional - prior payments - prior discounts
+      const openingBalance = customerOpeningBalance + priorInvoiceTotal + priorAdditionalTotal - priorPaymentTotal - priorDiscountTotal;
 
       // Combine and sort all entries
       const allEntries: { date: string; type: 'invoice' | 'payment' | 'adjustment'; adjustmentType?: 'discount' | 'additional'; data: any }[] = [];
@@ -262,7 +287,7 @@ export function PartyStatementDialog({ open, onOpenChange, initialCustomerId }: 
         }
       });
 
-      return { entries, openingBalance: Math.max(0, openingBalance) };
+      return { entries, openingBalance };
     },
     enabled: open && !!company?.id && !!selectedCustomer,
   });
