@@ -84,10 +84,19 @@ export default function NewInvoice() {
     queryFn: async () => {
       if (!customerId) return 0;
 
+      // Get customer's opening balance
+      const { data: customerData } = await supabase
+        .from('customers')
+        .select('opening_balance')
+        .eq('id', customerId)
+        .maybeSingle();
+
+      const openingBalance = Number(customerData?.opening_balance || 0);
+
       // Get all invoices for this customer
       const { data: invoices } = await supabase
         .from('invoices')
-        .select('total, received_amount')
+        .select('total')
         .eq('customer_id', customerId);
 
       // Get all payments for this customer
@@ -102,19 +111,21 @@ export default function NewInvoice() {
         .select('amount, type')
         .eq('customer_id', customerId);
 
-      // Calculate balance: invoices (debit) - received - payments (credit) +/- adjustments
+      // Calculate totals
       const invoiceTotal = (invoices || []).reduce((sum, inv) => 
-        sum + (Number(inv.total) || 0) - (Number(inv.received_amount) || 0), 0);
+        sum + (Number(inv.total) || 0), 0);
       
       const paymentTotal = (payments || []).reduce((sum, pay) => 
         sum + (Number(pay.amount) || 0), 0);
       
       const adjustmentTotal = (adjustments || []).reduce((sum, adj) => {
         const amount = Number(adj.amount) || 0;
-        return adj.type === 'debit' ? sum + amount : sum - amount;
+        // discount reduces balance, additional increases balance
+        return adj.type === 'discount' ? sum + amount : sum - amount;
       }, 0);
 
-      return invoiceTotal - paymentTotal + adjustmentTotal;
+      // Balance = opening_balance + invoices - payments - adjustments (discounts reduce, additional increases)
+      return openingBalance + invoiceTotal - paymentTotal - adjustmentTotal;
     },
     enabled: !!customerId,
   });

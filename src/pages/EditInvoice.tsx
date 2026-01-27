@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Separator } from '@/components/ui/separator';
 import { Save, Printer, Download, Check, Loader2, ArrowLeft, Package, Leaf } from 'lucide-react';
 import { toast } from 'sonner';
@@ -249,16 +250,15 @@ export default function EditInvoice() {
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="customer">Customer / Party *</Label>
-                <Select value={customerId} onValueChange={setCustomerId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select customer" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {customers.map(c => (
-                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <SearchableSelect
+                  value={customerId}
+                  onValueChange={setCustomerId}
+                  options={customers.map(c => ({ value: c.id, label: c.name }))}
+                  placeholder="Select customer"
+                  searchPlaceholder="Search customers..."
+                  emptyMessage="No customers found."
+                  className="w-full"
+                />
               </div>
               
               <div className="space-y-2">

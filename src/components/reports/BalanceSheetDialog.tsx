@@ -21,47 +21,86 @@ export function BalanceSheetDialog({ open, onOpenChange }: BalanceSheetDialogPro
     queryFn: async () => {
       if (!company?.id) return null;
 
-      // Get total receivables (customer balances)
+      // Get customers with opening_balance
       const { data: customers, error: custError } = await supabase
         .from('customers')
-        .select('balance')
+        .select('id, opening_balance')
         .eq('company_id', company.id);
 
       if (custError) throw custError;
 
-      // Get total payables (vendor balances)
-      const { data: vendors, error: vendError } = await supabase
-        .from('vendors')
-        .select('balance')
-        .eq('company_id', company.id);
-
-      if (vendError) throw vendError;
-
-      // Get total sales
+      // Get all invoices
       const { data: invoices, error: invError } = await supabase
         .from('invoices')
-        .select('total, status')
+        .select('customer_id, total, status')
         .eq('company_id', company.id);
 
       if (invError) throw invError;
 
+      // Get all payments
+      const { data: payments, error: payError } = await supabase
+        .from('payments')
+        .select('customer_id, amount')
+        .eq('company_id', company.id);
+
+      if (payError) throw payError;
+
+      // Get all adjustments
+      const { data: adjustments, error: adjError } = await supabase
+        .from('party_adjustments')
+        .select('customer_id, amount, type')
+        .eq('company_id', company.id);
+
+      if (adjError) throw adjError;
+
+      // Calculate actual customer balances
+      const customerBalances = (customers || []).map(customer => {
+        const customerInvoices = (invoices || []).filter(i => i.customer_id === customer.id);
+        const customerPayments = (payments || []).filter(p => p.customer_id === customer.id);
+        const customerAdjustments = (adjustments || []).filter(a => a.customer_id === customer.id);
+
+        const totalInvoices = customerInvoices.reduce((sum, i) => sum + Number(i.total || 0), 0);
+        const totalPayments = customerPayments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
+        const totalAdjustments = customerAdjustments.reduce((sum, a) => {
+          const amount = Number(a.amount || 0);
+          return sum + (a.type === 'discount' ? amount : -amount);
+        }, 0);
+
+        return Number(customer.opening_balance || 0) + totalInvoices - totalPayments - totalAdjustments;
+      });
+
+      // Get vendors with opening_balance
+      const { data: vendors, error: vendError } = await supabase
+        .from('vendors')
+        .select('id, opening_balance')
+        .eq('company_id', company.id);
+
+      if (vendError) throw vendError;
+
       // Get total purchases
       const { data: purchases, error: purError } = await supabase
         .from('purchases')
-        .select('total')
+        .select('vendor_id, total')
         .eq('company_id', company.id);
 
       if (purError) throw purError;
 
-      const totalReceivables = customers?.reduce((sum, c) => sum + Math.max(0, c.balance || 0), 0) || 0;
-      const totalPayables = vendors?.reduce((sum, v) => sum + Math.max(0, v.balance || 0), 0) || 0;
+      // Calculate actual vendor balances
+      const vendorBalances = (vendors || []).map(vendor => {
+        const vendorPurchases = (purchases || []).filter(p => p.vendor_id === vendor.id);
+        const totalPurchases = vendorPurchases.reduce((sum, p) => sum + Number(p.total || 0), 0);
+        return Number(vendor.opening_balance || 0) + totalPurchases;
+      });
+
+      const totalReceivables = customerBalances.filter(b => b > 0).reduce((sum, b) => sum + b, 0);
+      const totalPayables = vendorBalances.filter(b => b > 0).reduce((sum, b) => sum + b, 0);
       const totalSales = invoices?.reduce((sum, inv) => sum + (inv.total || 0), 0) || 0;
       const paidSales = invoices?.filter(inv => inv.status === 'paid').reduce((sum, inv) => sum + (inv.total || 0), 0) || 0;
       const totalPurchases = purchases?.reduce((sum, pur) => sum + (pur.total || 0), 0) || 0;
       
       // Simplified balance sheet calculation
       const cashInHand = paidSales - totalPurchases; // Estimated cash
-      const totalAssets = cashInHand + totalReceivables;
+      const totalAssets = Math.max(0, cashInHand) + totalReceivables;
       const totalLiabilities = totalPayables;
       const equity = totalAssets - totalLiabilities;
 
@@ -69,7 +108,7 @@ export function BalanceSheetDialog({ open, onOpenChange }: BalanceSheetDialogPro
         // Assets
         cashInHand: Math.max(0, cashInHand),
         totalReceivables,
-        totalAssets: Math.max(0, cashInHand) + totalReceivables,
+        totalAssets,
         
         // Liabilities
         totalPayables,
@@ -80,8 +119,8 @@ export function BalanceSheetDialog({ open, onOpenChange }: BalanceSheetDialogPro
         retainedEarnings: equity,
         
         // Stats
-        customersWithBalance: customers?.filter(c => (c.balance || 0) > 0).length || 0,
-        vendorsWithBalance: vendors?.filter(v => (v.balance || 0) > 0).length || 0,
+        customersWithBalance: customerBalances.filter(b => b > 0).length,
+        vendorsWithBalance: vendorBalances.filter(b => b > 0).length,
       };
     },
     enabled: open && !!company?.id,
