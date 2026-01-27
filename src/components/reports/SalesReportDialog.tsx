@@ -6,6 +6,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent } from '@/components/ui/card';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -169,16 +170,15 @@ export function SalesReportDialog({ open, onOpenChange }: SalesReportDialogProps
           {filterBy === 'customer' && (
             <div className="space-y-1">
               <label className="text-sm text-muted-foreground">Select Customer</label>
-              <Select value={selectedFilter} onValueChange={setSelectedFilter}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="All Customers" />
-                </SelectTrigger>
-                <SelectContent>
-                  {customers.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <SearchableSelect
+                value={selectedFilter}
+                onValueChange={setSelectedFilter}
+                options={customers.map((c) => ({ value: c.id, label: c.name }))}
+                placeholder="All Customers"
+                searchPlaceholder="Search customers..."
+                emptyMessage="No customers found."
+                className="w-[180px]"
+              />
             </div>
           )}
 

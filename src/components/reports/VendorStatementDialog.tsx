@@ -3,7 +3,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -11,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -552,16 +552,15 @@ export function VendorStatementDialog({ open, onOpenChange, initialVendorId }: V
             <div className="flex flex-wrap gap-4 items-end">
               <div className="space-y-1">
                 <label className="text-sm text-muted-foreground">Select Vendor *</label>
-                <Select value={selectedVendor} onValueChange={setSelectedVendor}>
-                  <SelectTrigger className="w-[200px]">
-                    <SelectValue placeholder="Select vendor" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {vendors.map((v) => (
-                      <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <SearchableSelect
+                  value={selectedVendor}
+                  onValueChange={setSelectedVendor}
+                  options={vendors.map((v) => ({ value: v.id, label: v.name }))}
+                  placeholder="Select vendor"
+                  searchPlaceholder="Search vendors..."
+                  emptyMessage="No vendors found."
+                  className="w-[200px]"
+                />
               </div>
 
               <div className="space-y-1">
