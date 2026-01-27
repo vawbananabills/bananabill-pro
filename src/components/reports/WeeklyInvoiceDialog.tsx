@@ -9,6 +9,7 @@ import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -555,16 +556,15 @@ export function WeeklyInvoiceDialog({ open, onOpenChange }: WeeklyInvoiceDialogP
         <div className="flex flex-wrap gap-4 items-end mb-4">
           <div className="space-y-1">
             <label className="text-sm text-muted-foreground">Select Customer *</label>
-            <Select value={selectedCustomer} onValueChange={setSelectedCustomer}>
-              <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="Select customer" />
-              </SelectTrigger>
-              <SelectContent>
-                {customers.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <SearchableSelect
+              value={selectedCustomer}
+              onValueChange={setSelectedCustomer}
+              options={customers.map((c) => ({ value: c.id, label: c.name }))}
+              placeholder="Select customer"
+              searchPlaceholder="Search customers..."
+              emptyMessage="No customers found."
+              className="w-[200px]"
+            />
           </div>
 
           <div className="space-y-1">
