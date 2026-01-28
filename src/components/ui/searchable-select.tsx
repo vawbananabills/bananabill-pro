@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Check, ChevronsUpDown } from "lucide-react";
+import { Check, ChevronsUpDown, Plus } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
+  CommandSeparator,
 } from "@/components/ui/command";
 import {
   Popover,
@@ -31,6 +32,9 @@ interface SearchableSelectProps {
   emptyMessage?: string;
   className?: string;
   disabled?: boolean;
+  allowCreate?: boolean;
+  createLabel?: string;
+  onCreateNew?: (searchValue: string) => void;
 }
 
 export function SearchableSelect({
@@ -42,10 +46,29 @@ export function SearchableSelect({
   emptyMessage = "No results found.",
   className,
   disabled = false,
+  allowCreate = false,
+  createLabel = "Create new",
+  onCreateNew,
 }: SearchableSelectProps) {
   const [open, setOpen] = React.useState(false);
+  const [searchValue, setSearchValue] = React.useState("");
 
   const selectedOption = options.find((option) => option.value === value);
+
+  // Filter options based on search
+  const filteredOptions = options.filter((option) =>
+    option.label.toLowerCase().includes(searchValue.toLowerCase())
+  );
+
+  const showCreateOption = allowCreate && searchValue.trim() && filteredOptions.length === 0;
+
+  const handleCreateNew = () => {
+    if (onCreateNew) {
+      onCreateNew(searchValue.trim());
+      setSearchValue("");
+      setOpen(false);
+    }
+  };
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -64,17 +87,38 @@ export function SearchableSelect({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-        <Command>
-          <CommandInput placeholder={searchPlaceholder} />
+        <Command shouldFilter={false}>
+          <CommandInput 
+            placeholder={searchPlaceholder} 
+            value={searchValue}
+            onValueChange={setSearchValue}
+          />
           <CommandList>
-            <CommandEmpty>{emptyMessage}</CommandEmpty>
+            {filteredOptions.length === 0 && !showCreateOption && (
+              <CommandEmpty>{emptyMessage}</CommandEmpty>
+            )}
+            {showCreateOption && (
+              <>
+                <CommandGroup>
+                  <CommandItem
+                    onSelect={handleCreateNew}
+                    className="text-primary cursor-pointer"
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    {createLabel}: "{searchValue.trim()}"
+                  </CommandItem>
+                </CommandGroup>
+                <CommandSeparator />
+              </>
+            )}
             <CommandGroup>
-              {options.map((option) => (
+              {filteredOptions.map((option) => (
                 <CommandItem
                   key={option.value}
                   value={option.label}
                   onSelect={() => {
                     onValueChange(option.value === value ? "" : option.value);
+                    setSearchValue("");
                     setOpen(false);
                   }}
                 >

@@ -30,6 +30,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import { useKeyboardShortcuts, useEnterAsTab, INVOICE_SHORTCUTS } from '@/hooks/useKeyboardShortcuts';
+import { QuickCreateCustomerDialog } from '@/components/customer/QuickCreateCustomerDialog';
 
 interface LocalInvoiceItem {
   id: string;
@@ -54,6 +55,8 @@ export default function NewInvoice() {
   const looseTableRef = useRef<{ addItem: () => void } | null>(null);
 
   const [customerId, setCustomerId] = useState('');
+  const [quickCreateOpen, setQuickCreateOpen] = useState(false);
+  const [newCustomerName, setNewCustomerName] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [paymentType, setPaymentType] = useState('cash');
   const [discount, setDiscount] = useState(0);
@@ -304,9 +307,15 @@ export default function NewInvoice() {
                   onValueChange={setCustomerId}
                   options={customers.map(c => ({ value: c.id, label: c.name }))}
                   placeholder="Select customer"
-                  searchPlaceholder="Search customers..."
+                  searchPlaceholder="Search or type new name..."
                   emptyMessage="No customers found."
                   className="w-full"
+                  allowCreate
+                  createLabel="Create new customer"
+                  onCreateNew={(name) => {
+                    setNewCustomerName(name);
+                    setQuickCreateOpen(true);
+                  }}
                 />
                 {customerId && customerBalance !== 0 && (
                   <div className={`flex items-center gap-1.5 text-xs ${customerBalance > 0 ? 'text-destructive' : 'text-success'}`}>
@@ -318,6 +327,17 @@ export default function NewInvoice() {
                   </div>
                 )}
               </div>
+              
+              {/* Quick Create Customer Dialog */}
+              <QuickCreateCustomerDialog
+                open={quickCreateOpen}
+                onOpenChange={setQuickCreateOpen}
+                initialName={newCustomerName}
+                onCustomerCreated={(id) => {
+                  setCustomerId(id);
+                  setNewCustomerName('');
+                }}
+              />
               
               <div className="space-y-2">
                 <Label htmlFor="date">Date</Label>
