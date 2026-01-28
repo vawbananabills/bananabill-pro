@@ -1,9 +1,13 @@
 import { useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
+
+// Event for opening payment dialog
+export const OPEN_PAYMENT_DIALOG_EVENT = 'open-payment-dialog';
 
 export function GlobalKeyboardShortcuts() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     // Skip if user is typing in an input or textarea
@@ -71,13 +75,18 @@ export function GlobalKeyboardShortcuts() {
       return;
     }
 
-    // Alt + P: Products
+    // Alt + P: Open Add Payment form
     if (e.altKey && e.key.toLowerCase() === 'p') {
       e.preventDefault();
-      navigate('/products');
+      // If not on payments page, navigate there first
+      if (location.pathname !== '/payments') {
+        navigate('/payments');
+      }
+      // Dispatch event to open payment dialog
+      window.dispatchEvent(new CustomEvent(OPEN_PAYMENT_DIALOG_EVENT));
       return;
     }
-  }, [navigate]);
+  }, [navigate, location.pathname]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
@@ -90,11 +99,11 @@ export function GlobalKeyboardShortcuts() {
 // Global shortcuts info for display
 export const GLOBAL_SHORTCUTS = [
   { keys: 'Alt + N', description: 'New Invoice' },
-  { keys: 'Alt + D', description: 'Go to Dashboard' },
-  { keys: 'Alt + I', description: 'Go to Invoices' },
-  { keys: 'Alt + C', description: 'Go to Customers' },
-  { keys: 'Alt + V', description: 'Go to Vendors' },
-  { keys: 'Alt + P', description: 'Go to Products' },
-  { keys: 'Alt + R', description: 'Go to Reports' },
-  { keys: 'Ctrl + K', description: 'Focus Search' },
+  { keys: 'Alt + P', description: 'Add Payment' },
+  { keys: 'Alt + D', description: 'Dashboard' },
+  { keys: 'Alt + I', description: 'Invoices' },
+  { keys: 'Alt + C', description: 'Customers' },
+  { keys: 'Alt + V', description: 'Vendors' },
+  { keys: 'Alt + R', description: 'Reports' },
+  { keys: 'Ctrl + K', description: 'Search' },
 ];
