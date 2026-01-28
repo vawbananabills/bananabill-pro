@@ -75,14 +75,10 @@ export function GlobalKeyboardShortcuts() {
       return;
     }
 
-    // Alt + P: Open Add Payment form
+    // Alt + P: Open Add Payment form (global)
     if (e.altKey && e.key.toLowerCase() === 'p') {
       e.preventDefault();
-      // If not on payments page, navigate there first
-      if (location.pathname !== '/payments') {
-        navigate('/payments');
-      }
-      // Dispatch event to open payment dialog
+      // Dispatch event to open global payment dialog
       window.dispatchEvent(new CustomEvent(OPEN_PAYMENT_DIALOG_EVENT));
       return;
     }
