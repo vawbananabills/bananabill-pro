@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { format } from 'date-fns';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
@@ -43,17 +43,9 @@ import { Plus, Search, Trash2, CreditCard, Banknote, Wallet, Pencil } from 'luci
 import { usePayments } from '@/hooks/usePayments';
 import { useCustomers } from '@/hooks/useCustomers';
 import { useInvoices } from '@/hooks/useInvoices';
-import { OPEN_PAYMENT_DIALOG_EVENT } from '@/components/GlobalKeyboardShortcuts';
 
 export default function Payments() {
   const [dialogOpen, setDialogOpen] = useState(false);
-
-  // Listen for keyboard shortcut event to open dialog
-  useEffect(() => {
-    const handleOpenDialog = () => setDialogOpen(true);
-    window.addEventListener(OPEN_PAYMENT_DIALOG_EVENT, handleOpenDialog);
-    return () => window.removeEventListener(OPEN_PAYMENT_DIALOG_EVENT, handleOpenDialog);
-  }, []);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [paymentToDelete, setPaymentToDelete] = useState<string | null>(null);
   const [editingPayment, setEditingPayment] = useState<string | null>(null);
