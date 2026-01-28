@@ -7,6 +7,7 @@ import { NotificationDropdown } from '@/components/notifications/NotificationDro
 import { SendNotificationDialog } from '@/components/notifications/SendNotificationDialog';
 import { SyncStatusIndicator } from '@/components/sync/SyncStatusIndicator';
 import { useSuperAdmin } from '@/hooks/useSuperAdmin';
+import { KeyboardShortcutsHelp } from '@/components/KeyboardShortcutsHelp';
 
 interface HeaderProps {
   title: string;
@@ -38,6 +39,8 @@ export function Header({ title, subtitle }: HeaderProps) {
         </div>
 
         <SyncStatusIndicator />
+
+        <KeyboardShortcutsHelp />
 
         {isSuperAdmin && <SendNotificationDialog />}
         
