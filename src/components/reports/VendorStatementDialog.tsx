@@ -434,6 +434,8 @@ export function VendorStatementDialog({ open, onOpenChange, initialVendorId }: V
             </div>
           </div>
 
+          ${aggregatedItems.length > 0 ? `
+          <h4 style="margin: 10px 0 5px 0; font-size: 13px; font-weight: bold;">Regular Items</h4>
           <table>
             <thead>
               <tr>
@@ -445,7 +447,7 @@ export function VendorStatementDialog({ open, onOpenChange, initialVendorId }: V
               </tr>
             </thead>
             <tbody>
-              ${aggregatedItems.length > 0 ? aggregatedItems.map((item: any) => `
+              ${aggregatedItems.map((item: any) => `
                 <tr>
                   <td>${item.name}</td>
                   <td class="text-right">${item.quantity}</td>
@@ -453,31 +455,59 @@ export function VendorStatementDialog({ open, onOpenChange, initialVendorId }: V
                   <td class="text-right">${item.netWeight.toFixed(2)}</td>
                   <td class="text-right">₹${item.total.toLocaleString()}</td>
                 </tr>
-              `).join('') : ''}
-              ${aggregatedLooseItems.length > 0 ? `
-                <tr style="background: #fef3c7;">
-                  <td colspan="5" style="font-weight: bold; color: #92400e;">Loose Items</td>
-                </tr>
-                ${aggregatedLooseItems.map((item: any) => `
-                  <tr style="background: #fefce8;">
-                    <td>${item.name}</td>
-                    <td class="text-right">${item.quantity}</td>
-                    <td class="text-right">-</td>
-                    <td class="text-right">${item.netWeight.toFixed(2)}</td>
-                    <td class="text-right">₹${item.total.toLocaleString()}</td>
-                  </tr>
-                `).join('')}
-              ` : ''}
-              ${aggregatedItems.length === 0 && aggregatedLooseItems.length === 0 ? '<tr><td colspan="5" style="text-align:center;">No items found</td></tr>' : ''}
+              `).join('')}
               <tr class="totals">
-                <td><strong>Total</strong></td>
-                <td class="text-right"><strong>${totalItems}</strong></td>
+                <td><strong>Subtotal (Regular)</strong></td>
+                <td class="text-right"><strong>${regularTotalItems}</strong></td>
                 <td class="text-right"><strong>${totalGrossWeight.toFixed(2)}</strong></td>
-                <td class="text-right"><strong>${totalNetWeight.toFixed(2)}</strong></td>
-                <td class="text-right"><strong>₹${totalAmount.toLocaleString()}</strong></td>
+                <td class="text-right"><strong>${regularTotalNetWeight.toFixed(2)}</strong></td>
+                <td class="text-right"><strong>₹${regularTotalAmount.toLocaleString()}</strong></td>
               </tr>
             </tbody>
           </table>
+          ` : ''}
+
+          ${aggregatedLooseItems.length > 0 ? `
+          <h4 style="margin: 15px 0 5px 0; font-size: 13px; font-weight: bold; color: #92400e;">Loose Items</h4>
+          <table style="border-color: #fcd34d;">
+            <thead>
+              <tr style="background: #fef3c7;">
+                <th>Item Name</th>
+                <th class="text-right">Weight (kg)</th>
+                <th class="text-right">Rate</th>
+                <th class="text-right">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${aggregatedLooseItems.map((item: any) => `
+                <tr style="background: #fefce8;">
+                  <td>${item.name}</td>
+                  <td class="text-right">${item.netWeight.toFixed(2)}</td>
+                  <td class="text-right">-</td>
+                  <td class="text-right">₹${item.total.toLocaleString()}</td>
+                </tr>
+              `).join('')}
+              <tr style="background: #fde68a;">
+                <td><strong>Subtotal (Loose)</strong></td>
+                <td class="text-right"><strong>${looseTotalNetWeight.toFixed(2)}</strong></td>
+                <td class="text-right">-</td>
+                <td class="text-right"><strong>₹${looseTotalAmount.toLocaleString()}</strong></td>
+              </tr>
+            </tbody>
+          </table>
+          ` : ''}
+
+          ${aggregatedItems.length === 0 && aggregatedLooseItems.length === 0 ? '<p style="text-align:center; padding: 20px;">No items found</p>' : ''}
+
+          ${(aggregatedItems.length > 0 || aggregatedLooseItems.length > 0) ? `
+          <div style="background: #e0f2fe; padding: 12px; border-radius: 4px; border: 2px solid #3b82f6; margin: 15px 0; display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 14px; font-weight: bold;">Grand Total</span>
+            <div style="text-align: right;">
+              <div style="font-size: 11px; color: #666;">${totalItems} items | ${totalNetWeight.toFixed(2)} kg net</div>
+              <div style="font-size: 18px; font-weight: bold; color: #3b82f6;">₹${totalAmount.toLocaleString()}</div>
+            </div>
+          </div>
+          ` : ''}
 
           <div class="expenses-section">
             <div class="expense-row">
@@ -813,91 +843,123 @@ export function VendorStatementDialog({ open, onOpenChange, initialVendorId }: V
               </Card>
             </div>
 
-            {/* Items Table */}
-            <div className="border rounded-lg max-h-[400px] overflow-y-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-10"></TableHead>
-                    <TableHead>Item Name</TableHead>
-                    <TableHead className="text-right">No. of Items</TableHead>
-                    <TableHead className="text-right">Gross Weight (kg)</TableHead>
-                    <TableHead className="text-right">Net Weight (kg)</TableHead>
-                    <TableHead className="text-right">Total</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {/* Regular Items */}
-                  {aggregatedItems.map((item: any, index: number) => (
-                    <TableRow key={item.name + index}>
-                      <TableCell>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7"
-                          onClick={() => setDetailViewProduct(item.name)}
-                          title="View details"
-                        >
-                          <Eye className="h-4 w-4 text-muted-foreground" />
-                        </Button>
-                      </TableCell>
-                      <TableCell className="font-medium">{item.name}</TableCell>
-                      <TableCell className="text-right">{item.quantity}</TableCell>
-                      <TableCell className="text-right">{item.grossWeight.toFixed(2)}</TableCell>
-                      <TableCell className="text-right">{item.netWeight.toFixed(2)}</TableCell>
-                      <TableCell className="text-right font-medium">₹{item.total.toLocaleString()}</TableCell>
-                    </TableRow>
-                  ))}
-                  {/* Loose Items */}
-                  {aggregatedLooseItems.length > 0 && (
-                    <>
-                      <TableRow className="bg-amber-50/50 dark:bg-amber-900/10">
-                        <TableCell colSpan={6} className="font-semibold text-amber-700 dark:text-amber-400 py-2">
-                          Loose Items
-                        </TableCell>
-                      </TableRow>
-                      {aggregatedLooseItems.map((item: any, index: number) => (
-                        <TableRow key={`loose-${item.name}-${index}`} className="bg-amber-50/30 dark:bg-amber-900/5">
-                          <TableCell>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-7 w-7"
-                              onClick={() => setDetailViewProduct(`loose_${item.name.replace(' (Loose)', '')}`)}
-                              title="View details"
-                            >
-                              <Eye className="h-4 w-4 text-muted-foreground" />
-                            </Button>
-                          </TableCell>
-                          <TableCell className="font-medium">{item.name}</TableCell>
-                          <TableCell className="text-right">{item.quantity}</TableCell>
-                          <TableCell className="text-right text-muted-foreground">-</TableCell>
-                          <TableCell className="text-right">{item.netWeight.toFixed(2)}</TableCell>
-                          <TableCell className="text-right font-medium">₹{item.total.toLocaleString()}</TableCell>
-                        </TableRow>
-                      ))}
-                    </>
-                  )}
-                  {aggregatedItems.length === 0 && aggregatedLooseItems.length === 0 && (
+            {/* Regular Items Table */}
+            {aggregatedItems.length > 0 && (
+              <div className="border rounded-lg overflow-hidden">
+                <div className="bg-muted/30 px-4 py-2 font-semibold border-b">Regular Items</div>
+                <Table>
+                  <TableHeader>
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                        No items found for selected period
-                      </TableCell>
+                      <TableHead className="w-10"></TableHead>
+                      <TableHead>Item Name</TableHead>
+                      <TableHead className="text-right">No. of Items</TableHead>
+                      <TableHead className="text-right">Gross Weight (kg)</TableHead>
+                      <TableHead className="text-right">Net Weight (kg)</TableHead>
+                      <TableHead className="text-right">Total</TableHead>
                     </TableRow>
-                  )}
-                  {(aggregatedItems.length > 0 || aggregatedLooseItems.length > 0) && (
+                  </TableHeader>
+                  <TableBody>
+                    {aggregatedItems.map((item: any, index: number) => (
+                      <TableRow key={item.name + index}>
+                        <TableCell>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={() => setDetailViewProduct(item.name)}
+                            title="View details"
+                          >
+                            <Eye className="h-4 w-4 text-muted-foreground" />
+                          </Button>
+                        </TableCell>
+                        <TableCell className="font-medium">{item.name}</TableCell>
+                        <TableCell className="text-right">{item.quantity}</TableCell>
+                        <TableCell className="text-right">{item.grossWeight.toFixed(2)}</TableCell>
+                        <TableCell className="text-right">{item.netWeight.toFixed(2)}</TableCell>
+                        <TableCell className="text-right font-medium">₹{item.total.toLocaleString()}</TableCell>
+                      </TableRow>
+                    ))}
                     <TableRow className="bg-muted/50 font-semibold border-t-2">
                       <TableCell></TableCell>
-                      <TableCell>Total</TableCell>
-                      <TableCell className="text-right">{totalItems}</TableCell>
+                      <TableCell>Subtotal (Regular)</TableCell>
+                      <TableCell className="text-right">{regularTotalItems}</TableCell>
                       <TableCell className="text-right">{totalGrossWeight.toFixed(2)}</TableCell>
-                      <TableCell className="text-right">{totalNetWeight.toFixed(2)}</TableCell>
-                      <TableCell className="text-right">₹{totalAmount.toLocaleString()}</TableCell>
+                      <TableCell className="text-right">{regularTotalNetWeight.toFixed(2)}</TableCell>
+                      <TableCell className="text-right">₹{regularTotalAmount.toLocaleString()}</TableCell>
                     </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </div>
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+
+            {/* Loose Items Table */}
+            {aggregatedLooseItems.length > 0 && (
+              <div className="border rounded-lg overflow-hidden border-amber-200 dark:border-amber-800">
+                <div className="bg-amber-50 dark:bg-amber-900/20 px-4 py-2 font-semibold border-b border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-400">
+                  Loose Items
+                </div>
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-amber-50/50 dark:bg-amber-900/10">
+                      <TableHead className="w-10"></TableHead>
+                      <TableHead>Item Name</TableHead>
+                      <TableHead className="text-right">Weight (kg)</TableHead>
+                      <TableHead className="text-right">Rate</TableHead>
+                      <TableHead className="text-right">Total</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {aggregatedLooseItems.map((item: any, index: number) => (
+                      <TableRow key={`loose-${item.name}-${index}`} className="bg-amber-50/30 dark:bg-amber-900/5">
+                        <TableCell>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={() => setDetailViewProduct(`loose_${item.name.replace(' (Loose)', '')}`)}
+                            title="View details"
+                          >
+                            <Eye className="h-4 w-4 text-muted-foreground" />
+                          </Button>
+                        </TableCell>
+                        <TableCell className="font-medium">{item.name}</TableCell>
+                        <TableCell className="text-right">{item.netWeight.toFixed(2)}</TableCell>
+                        <TableCell className="text-right text-muted-foreground">-</TableCell>
+                        <TableCell className="text-right font-medium">₹{item.total.toLocaleString()}</TableCell>
+                      </TableRow>
+                    ))}
+                    <TableRow className="bg-amber-100/50 dark:bg-amber-900/20 font-semibold border-t-2 border-amber-200 dark:border-amber-700">
+                      <TableCell></TableCell>
+                      <TableCell>Subtotal (Loose)</TableCell>
+                      <TableCell className="text-right">{looseTotalNetWeight.toFixed(2)}</TableCell>
+                      <TableCell className="text-right">-</TableCell>
+                      <TableCell className="text-right">₹{looseTotalAmount.toLocaleString()}</TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+
+            {aggregatedItems.length === 0 && aggregatedLooseItems.length === 0 && (
+              <div className="border rounded-lg p-8 text-center text-muted-foreground">
+                No items found for selected period
+              </div>
+            )}
+
+            {/* Grand Total */}
+            {(aggregatedItems.length > 0 || aggregatedLooseItems.length > 0) && (
+              <div className="border-2 border-primary/30 rounded-lg bg-primary/5 p-4">
+                <div className="flex justify-between items-center">
+                  <span className="font-semibold text-lg">Grand Total</span>
+                  <div className="text-right">
+                    <div className="text-sm text-muted-foreground">
+                      {totalItems} items | {totalNetWeight.toFixed(2)} kg net
+                    </div>
+                    <div className="text-xl font-bold text-primary">₹{totalAmount.toLocaleString()}</div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Detail View Dialog */}
             <Dialog open={!!detailViewProduct} onOpenChange={(open) => !open && setDetailViewProduct(null)}>
