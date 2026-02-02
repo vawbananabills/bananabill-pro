@@ -63,7 +63,7 @@ export function InvoiceItemRow({
     const product = products.find(p => p.id === localItem.productId);
     let totalBoxWeight = localItem.boxWeight;
     
-    if (product && localItem.quantity > 0) {
+    if (product && localItem.quantity >= 0) {
       const boxWeightUnit = units.find(u => u.id === product.box_weight_unit_id);
       const weightMultiplier = boxWeightUnit?.weight_value || 1;
       totalBoxWeight = (product.box_weight || 0) * weightMultiplier * localItem.quantity;
@@ -90,7 +90,7 @@ export function InvoiceItemRow({
         // Calculate box weight based on product's fixed box weight and quantity
         const boxWeightUnit = units.find(u => u.id === product.box_weight_unit_id);
         const weightMultiplier = boxWeightUnit?.weight_value || 1;
-        updates.boxWeight = (product.box_weight || 0) * weightMultiplier * (updates.quantity || 1);
+        updates.boxWeight = (product.box_weight || 0) * weightMultiplier * (updates.quantity ?? 1);
         setLocalItem(updates);
       }
     }
@@ -100,7 +100,8 @@ export function InvoiceItemRow({
       if (product) {
         const boxWeightUnit = units.find(u => u.id === product.box_weight_unit_id);
         const weightMultiplier = boxWeightUnit?.weight_value || 1;
-        updates.boxWeight = (product.box_weight || 0) * weightMultiplier * (Number(value) || 1);
+        const qty = Number(value);
+        updates.boxWeight = (product.box_weight || 0) * weightMultiplier * (isNaN(qty) ? 0 : qty);
         setLocalItem(updates);
       }
     }
@@ -227,12 +228,15 @@ export function InvoiceItemRow({
       <td className="invoice-cell">
         <Input
           type="number"
-          value={localItem.quantity || ''}
-          onChange={(e) => handleChange('quantity', parseFloat(e.target.value) || 0)}
+          value={localItem.quantity === 0 ? '0' : (localItem.quantity || '')}
+          onChange={(e) => {
+            const val = e.target.value;
+            handleChange('quantity', val === '' ? 0 : parseFloat(val) || 0);
+          }}
           onKeyDown={handleKeyDown}
           className="h-9 w-16 text-right font-mono"
-          placeholder="1"
-          min="1"
+          placeholder="0"
+          min="0"
         />
       </td>
       <td className="invoice-cell">
