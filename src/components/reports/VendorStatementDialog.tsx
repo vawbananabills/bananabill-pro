@@ -30,7 +30,7 @@ interface VendorStatementDialogProps {
 export function VendorStatementDialog({ open, onOpenChange, initialVendorId }: VendorStatementDialogProps) {
   const { company, user } = useAuth();
   const { vendors } = useVendors();
-  const { products } = useProducts();
+  const { products: _products } = useProducts();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<string>('create');
   const [dateFrom, setDateFrom] = useState<Date>(startOfMonth(new Date()));
@@ -51,7 +51,7 @@ export function VendorStatementDialog({ open, onOpenChange, initialVendorId }: V
   const [loaderName, setLoaderName] = useState<string>('');
   const [load, setLoad] = useState<number>(0);
   const [mt, setMt] = useState<number>(0);
-  const printRef = useRef<HTMLDivElement>(null);
+  const _printRef = useRef<HTMLDivElement>(null);
   const [detailViewProduct, setDetailViewProduct] = useState<string | null>(null);
   const [editingStatementId, setEditingStatementId] = useState<string | null>(null);
 
@@ -68,6 +68,30 @@ export function VendorStatementDialog({ open, onOpenChange, initialVendorId }: V
         .select(`
           *,
           products(name),
+          invoices!inner(date, company_id)
+        `)
+        .eq('vendor_id', selectedVendor)
+        .eq('invoices.company_id', company.id)
+        .gte('invoices.date', format(dateFrom, 'yyyy-MM-dd'))
+        .lte('invoices.date', format(dateTo, 'yyyy-MM-dd'))
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: open && !!company?.id && !!selectedVendor,
+  });
+
+  // Fetch loose invoice items for the vendor
+  const { data: looseVendorItems } = useQuery({
+    queryKey: ['vendor-statement-loose', company?.id, selectedVendor, dateFrom, dateTo],
+    queryFn: async () => {
+      if (!company?.id || !selectedVendor) return [];
+
+      const { data, error } = await supabase
+        .from('loose_invoice_items')
+        .select(`
+          *,
           invoices!inner(date, company_id)
         `)
         .eq('vendor_id', selectedVendor)
@@ -203,8 +227,8 @@ export function VendorStatementDialog({ open, onOpenChange, initialVendorId }: V
     return grossWeight - benchesWeight;
   };
 
-  // Group items by product name and aggregate values, also store individual items
-  const groupedItems = vendorItems?.reduce((acc: Record<string, { name: string; quantity: number; grossWeight: number; netWeight: number; total: number; items: any[] }>, item: any) => {
+  // Group regular items by product name and aggregate values, also store individual items
+  const groupedItems = vendorItems?.reduce((acc: Record<string, { name: string; quantity: number; grossWeight: number; netWeight: number; total: number; items: any[]; isLoose: boolean }>, item: any) => {
     const productName = item.products?.name || 'Unknown';
     if (!acc[productName]) {
       acc[productName] = {
@@ -214,6 +238,7 @@ export function VendorStatementDialog({ open, onOpenChange, initialVendorId }: V
         netWeight: 0,
         total: 0,
         items: [],
+        isLoose: false,
       };
     }
     acc[productName].quantity += item.quantity || 0;
@@ -224,15 +249,59 @@ export function VendorStatementDialog({ open, onOpenChange, initialVendorId }: V
     return acc;
   }, {}) || {};
 
+  // Group loose items by product name
+  const groupedLooseItems = looseVendorItems?.reduce((acc: Record<string, { name: string; quantity: number; grossWeight: number; netWeight: number; total: number; items: any[]; isLoose: boolean }>, item: any) => {
+    const productName = item.product_name || 'Unknown Loose';
+    const looseKey = `loose_${productName}`;
+    if (!acc[looseKey]) {
+      acc[looseKey] = {
+        name: `${productName} (Loose)`,
+        quantity: 0,
+        grossWeight: 0,
+        netWeight: 0,
+        total: 0,
+        items: [],
+        isLoose: true,
+      };
+    }
+    acc[looseKey].quantity += 1; // Count each loose item as 1
+    // Loose items don't have gross weight, so we use net weight for display consistency
+    const netWeight = item.weight_unit === 'g' ? (item.net_weight || 0) / 1000 : (item.net_weight || 0);
+    acc[looseKey].netWeight += netWeight;
+    acc[looseKey].total += item.total || 0;
+    acc[looseKey].items.push(item);
+    return acc;
+  }, {}) || {};
+
   const aggregatedItems = Object.values(groupedItems);
+  const aggregatedLooseItems = Object.values(groupedLooseItems);
+  
 
   // Get detail items for the selected product
-  const detailItems = detailViewProduct ? (groupedItems[detailViewProduct]?.items || []) : [];
+  const detailItems = detailViewProduct 
+    ? (groupedItems[detailViewProduct]?.items || groupedLooseItems[detailViewProduct]?.items || []) 
+    : [];
+  
 
-  const totalAmount = vendorItems?.reduce((sum, item) => sum + (item.total || 0), 0) || 0;
-  const totalNetWeight = vendorItems?.reduce((sum, item) => sum + (item.net_weight || 0), 0) || 0;
-  const totalItems = vendorItems?.reduce((sum, item) => sum + (item.quantity || 0), 0) || 0;
+  // Calculate totals for regular items
+  const regularTotalAmount = vendorItems?.reduce((sum, item) => sum + (item.total || 0), 0) || 0;
+  const regularTotalNetWeight = vendorItems?.reduce((sum, item) => sum + (item.net_weight || 0), 0) || 0;
+  const regularTotalItems = vendorItems?.reduce((sum, item) => sum + (item.quantity || 0), 0) || 0;
   const totalGrossWeight = vendorItems?.reduce((sum, item) => sum + getAdjustedGrossWeight(item), 0) || 0;
+
+  // Calculate totals for loose items
+  const looseTotalAmount = looseVendorItems?.reduce((sum, item) => sum + (item.total || 0), 0) || 0;
+  const looseTotalNetWeight = looseVendorItems?.reduce((sum, item) => {
+    const netWeight = item.weight_unit === 'g' ? (item.net_weight || 0) / 1000 : (item.net_weight || 0);
+    return sum + netWeight;
+  }, 0) || 0;
+  const looseTotalItems = looseVendorItems?.length || 0;
+
+  // Combined totals
+  const totalAmount = regularTotalAmount + looseTotalAmount;
+  const totalNetWeight = regularTotalNetWeight + looseTotalNetWeight;
+  const totalItems = regularTotalItems + looseTotalItems;
+
   const rentAdjustment = rentIsAddition ? rent : -rent;
   const otherExpensesAdjustment = otherExpensesIsAddition ? otherExpenses : -otherExpenses;
   const finalTotal = totalAmount + rentAdjustment + otherExpensesAdjustment;
@@ -384,7 +453,22 @@ export function VendorStatementDialog({ open, onOpenChange, initialVendorId }: V
                   <td class="text-right">${item.netWeight.toFixed(2)}</td>
                   <td class="text-right">₹${item.total.toLocaleString()}</td>
                 </tr>
-              `).join('') : '<tr><td colspan="5" style="text-align:center;">No items found</td></tr>'}
+              `).join('') : ''}
+              ${aggregatedLooseItems.length > 0 ? `
+                <tr style="background: #fef3c7;">
+                  <td colspan="5" style="font-weight: bold; color: #92400e;">Loose Items</td>
+                </tr>
+                ${aggregatedLooseItems.map((item: any) => `
+                  <tr style="background: #fefce8;">
+                    <td>${item.name}</td>
+                    <td class="text-right">${item.quantity}</td>
+                    <td class="text-right">-</td>
+                    <td class="text-right">${item.netWeight.toFixed(2)}</td>
+                    <td class="text-right">₹${item.total.toLocaleString()}</td>
+                  </tr>
+                `).join('')}
+              ` : ''}
+              ${aggregatedItems.length === 0 && aggregatedLooseItems.length === 0 ? '<tr><td colspan="5" style="text-align:center;">No items found</td></tr>' : ''}
               <tr class="totals">
                 <td><strong>Total</strong></td>
                 <td class="text-right"><strong>${totalItems}</strong></td>
@@ -743,6 +827,7 @@ export function VendorStatementDialog({ open, onOpenChange, initialVendorId }: V
                   </TableRow>
                 </TableHeader>
                 <TableBody>
+                  {/* Regular Items */}
                   {aggregatedItems.map((item: any, index: number) => (
                     <TableRow key={item.name + index}>
                       <TableCell>
@@ -763,14 +848,44 @@ export function VendorStatementDialog({ open, onOpenChange, initialVendorId }: V
                       <TableCell className="text-right font-medium">₹{item.total.toLocaleString()}</TableCell>
                     </TableRow>
                   ))}
-                  {aggregatedItems.length === 0 && (
+                  {/* Loose Items */}
+                  {aggregatedLooseItems.length > 0 && (
+                    <>
+                      <TableRow className="bg-amber-50/50 dark:bg-amber-900/10">
+                        <TableCell colSpan={6} className="font-semibold text-amber-700 dark:text-amber-400 py-2">
+                          Loose Items
+                        </TableCell>
+                      </TableRow>
+                      {aggregatedLooseItems.map((item: any, index: number) => (
+                        <TableRow key={`loose-${item.name}-${index}`} className="bg-amber-50/30 dark:bg-amber-900/5">
+                          <TableCell>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7"
+                              onClick={() => setDetailViewProduct(`loose_${item.name.replace(' (Loose)', '')}`)}
+                              title="View details"
+                            >
+                              <Eye className="h-4 w-4 text-muted-foreground" />
+                            </Button>
+                          </TableCell>
+                          <TableCell className="font-medium">{item.name}</TableCell>
+                          <TableCell className="text-right">{item.quantity}</TableCell>
+                          <TableCell className="text-right text-muted-foreground">-</TableCell>
+                          <TableCell className="text-right">{item.netWeight.toFixed(2)}</TableCell>
+                          <TableCell className="text-right font-medium">₹{item.total.toLocaleString()}</TableCell>
+                        </TableRow>
+                      ))}
+                    </>
+                  )}
+                  {aggregatedItems.length === 0 && aggregatedLooseItems.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
                         No items found for selected period
                       </TableCell>
                     </TableRow>
                   )}
-                  {aggregatedItems.length > 0 && (
+                  {(aggregatedItems.length > 0 || aggregatedLooseItems.length > 0) && (
                     <TableRow className="bg-muted/50 font-semibold border-t-2">
                       <TableCell></TableCell>
                       <TableCell>Total</TableCell>
@@ -790,7 +905,9 @@ export function VendorStatementDialog({ open, onOpenChange, initialVendorId }: V
                 <DialogHeader>
                   <DialogTitle className="flex items-center gap-2">
                     <Eye className="w-5 h-5 text-primary" />
-                    {detailViewProduct} - Detailed Breakdown
+                    {detailViewProduct?.startsWith('loose_') 
+                      ? `${detailViewProduct.replace('loose_', '')} (Loose)` 
+                      : detailViewProduct} - Detailed Breakdown
                   </DialogTitle>
                 </DialogHeader>
                 <div className="rounded-lg border overflow-hidden">
@@ -798,29 +915,55 @@ export function VendorStatementDialog({ open, onOpenChange, initialVendorId }: V
                     <TableHeader>
                       <TableRow>
                         <TableHead>Date</TableHead>
-                        <TableHead className="text-right">Qty</TableHead>
-                        <TableHead className="text-right">Gross Wt (kg)</TableHead>
+                        {!detailViewProduct?.startsWith('loose_') && (
+                          <TableHead className="text-right">Qty</TableHead>
+                        )}
+                        {!detailViewProduct?.startsWith('loose_') && (
+                          <TableHead className="text-right">Gross Wt (kg)</TableHead>
+                        )}
                         <TableHead className="text-right">Net Wt (kg)</TableHead>
                         <TableHead className="text-right">Rate</TableHead>
                         <TableHead className="text-right">Total</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {detailItems.map((item: any, idx: number) => (
-                        <TableRow key={item.id || idx}>
-                          <TableCell>{item.invoices?.date ? format(new Date(item.invoices.date), 'dd MMM yyyy') : '-'}</TableCell>
-                          <TableCell className="text-right">{item.quantity || 0}</TableCell>
-                          <TableCell className="text-right">{getAdjustedGrossWeight(item).toFixed(2)}</TableCell>
-                          <TableCell className="text-right">{item.net_weight?.toFixed(2) || '0.00'}</TableCell>
-                          <TableCell className="text-right">₹{item.rate?.toLocaleString() || 0}</TableCell>
-                          <TableCell className="text-right font-medium">₹{item.total?.toLocaleString() || 0}</TableCell>
-                        </TableRow>
-                      ))}
+                      {detailItems.map((item: any, idx: number) => {
+                        const isLooseItem = detailViewProduct?.startsWith('loose_');
+                        const netWeight = isLooseItem 
+                          ? (item.weight_unit === 'g' ? (item.net_weight || 0) / 1000 : (item.net_weight || 0))
+                          : (item.net_weight || 0);
+                        return (
+                          <TableRow key={item.id || idx}>
+                            <TableCell>{item.invoices?.date ? format(new Date(item.invoices.date), 'dd MMM yyyy') : '-'}</TableCell>
+                            {!isLooseItem && (
+                              <TableCell className="text-right">{item.quantity || 0}</TableCell>
+                            )}
+                            {!isLooseItem && (
+                              <TableCell className="text-right">{getAdjustedGrossWeight(item).toFixed(2)}</TableCell>
+                            )}
+                            <TableCell className="text-right">{netWeight.toFixed(2)}</TableCell>
+                            <TableCell className="text-right">₹{item.rate?.toLocaleString() || 0}</TableCell>
+                            <TableCell className="text-right font-medium">₹{item.total?.toLocaleString() || 0}</TableCell>
+                          </TableRow>
+                        );
+                      })}
                       <TableRow className="bg-muted/50 font-semibold">
                         <TableCell>Total</TableCell>
-                        <TableCell className="text-right">{detailItems.reduce((sum: number, i: any) => sum + (i.quantity || 0), 0)}</TableCell>
-                        <TableCell className="text-right">{detailItems.reduce((sum: number, i: any) => sum + getAdjustedGrossWeight(i), 0).toFixed(2)}</TableCell>
-                        <TableCell className="text-right">{detailItems.reduce((sum: number, i: any) => sum + (i.net_weight || 0), 0).toFixed(2)}</TableCell>
+                        {!detailViewProduct?.startsWith('loose_') && (
+                          <TableCell className="text-right">{detailItems.reduce((sum: number, i: any) => sum + (i.quantity || 0), 0)}</TableCell>
+                        )}
+                        {!detailViewProduct?.startsWith('loose_') && (
+                          <TableCell className="text-right">{detailItems.reduce((sum: number, i: any) => sum + getAdjustedGrossWeight(i), 0).toFixed(2)}</TableCell>
+                        )}
+                        <TableCell className="text-right">
+                          {detailViewProduct?.startsWith('loose_')
+                            ? detailItems.reduce((sum: number, i: any) => {
+                                const nw = i.weight_unit === 'g' ? (i.net_weight || 0) / 1000 : (i.net_weight || 0);
+                                return sum + nw;
+                              }, 0).toFixed(2)
+                            : detailItems.reduce((sum: number, i: any) => sum + (i.net_weight || 0), 0).toFixed(2)
+                          }
+                        </TableCell>
                         <TableCell className="text-right">-</TableCell>
                         <TableCell className="text-right">₹{detailItems.reduce((sum: number, i: any) => sum + (i.total || 0), 0).toLocaleString()}</TableCell>
                       </TableRow>
