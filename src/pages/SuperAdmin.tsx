@@ -24,9 +24,11 @@ import {
   Loader2,
   Shield,
   Calendar,
-  Mail
+  Mail,
+  Eye
 } from 'lucide-react';
 import { useSuperAdmin } from '@/hooks/useSuperAdmin';
+import { CompanyDetailsDialog } from '@/components/superadmin/CompanyDetailsDialog';
 import { format } from 'date-fns';
 
 function formatCurrency(amount: number) {
@@ -52,6 +54,8 @@ export default function SuperAdmin() {
   
   const [companySearch, setCompanySearch] = useState('');
   const [userSearch, setUserSearch] = useState('');
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
+  const [detailsOpen, setDetailsOpen] = useState(false);
 
   if (checkingRole) {
     return (
@@ -76,6 +80,11 @@ export default function SuperAdmin() {
     u.name.toLowerCase().includes(userSearch.toLowerCase()) ||
     u.email.toLowerCase().includes(userSearch.toLowerCase())
   );
+
+  const handleViewCompany = (companyId: string) => {
+    setSelectedCompanyId(companyId);
+    setDetailsOpen(true);
+  };
 
   return (
     <DashboardLayout title="Super Admin" subtitle="Platform management dashboard">
@@ -184,11 +193,16 @@ export default function SuperAdmin() {
                         <TableHead>Created</TableHead>
                         <TableHead className="text-center">Status</TableHead>
                         <TableHead className="text-center">Active</TableHead>
+                        <TableHead className="text-center">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {filteredCompanies.map((company) => (
-                        <TableRow key={company.id}>
+                        <TableRow 
+                          key={company.id} 
+                          className="cursor-pointer hover:bg-muted/50"
+                          onClick={() => handleViewCompany(company.id)}
+                        >
                           <TableCell>
                             <div className="font-medium">{company.name}</div>
                           </TableCell>
@@ -222,7 +236,7 @@ export default function SuperAdmin() {
                               {company.is_active ? 'Active' : 'Inactive'}
                             </Badge>
                           </TableCell>
-                          <TableCell className="text-center">
+                          <TableCell className="text-center" onClick={(e) => e.stopPropagation()}>
                             <Switch
                               checked={company.is_active ?? true}
                               onCheckedChange={(checked) => 
@@ -231,11 +245,21 @@ export default function SuperAdmin() {
                               disabled={toggleCompanyStatus.isPending}
                             />
                           </TableCell>
+                          <TableCell className="text-center" onClick={(e) => e.stopPropagation()}>
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => handleViewCompany(company.id)}
+                            >
+                              <Eye className="w-4 h-4 mr-1" />
+                              View
+                            </Button>
+                          </TableCell>
                         </TableRow>
                       ))}
                       {filteredCompanies.length === 0 && (
                         <TableRow>
-                          <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                          <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                             No companies found
                           </TableCell>
                         </TableRow>
@@ -328,6 +352,13 @@ export default function SuperAdmin() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Company Details Dialog */}
+      <CompanyDetailsDialog 
+        open={detailsOpen} 
+        onOpenChange={setDetailsOpen}
+        companyId={selectedCompanyId}
+      />
     </DashboardLayout>
   );
 }
