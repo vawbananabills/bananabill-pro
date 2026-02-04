@@ -111,13 +111,12 @@ export function CompanyDetailsDialog({ open, onOpenChange, companyId }: CompanyD
         .eq('company_id', companyId)
         .order('created_at', { ascending: false });
 
-      // Fetch invoices
-      const { data: invoices } = await supabase
+      // Fetch ALL invoices for accurate balance calculation (not limited)
+      const { data: allInvoices } = await supabase
         .from('invoices')
         .select('*, customers(name)')
         .eq('company_id', companyId)
-        .order('date', { ascending: false })
-        .limit(50);
+        .order('date', { ascending: false });
 
       // Fetch products
       const { data: products } = await supabase
@@ -125,37 +124,81 @@ export function CompanyDetailsDialog({ open, onOpenChange, companyId }: CompanyD
         .select('*')
         .eq('company_id', companyId);
 
-      // Fetch payments
-      const { data: payments } = await supabase
+      // Fetch ALL payments for accurate balance calculation
+      const { data: allPayments } = await supabase
         .from('payments')
         .select('*, customers(name)')
         .eq('company_id', companyId)
-        .order('payment_date', { ascending: false })
-        .limit(50);
+        .order('payment_date', { ascending: false });
+
+      // Fetch party adjustments
+      const { data: adjustments } = await supabase
+        .from('party_adjustments')
+        .select('*')
+        .eq('company_id', companyId);
+
+      // Calculate customer balances dynamically
+      const customersWithBalances = (customers || []).map(customer => {
+        const customerInvoices = (allInvoices || []).filter(inv => inv.customer_id === customer.id);
+        const customerPayments = (allPayments || []).filter(p => p.customer_id === customer.id);
+        const customerAdjustments = (adjustments || []).filter(a => a.customer_id === customer.id);
+        
+        const totalInvoices = customerInvoices.reduce((sum, inv) => sum + (inv.total || 0), 0);
+        const totalPayments = customerPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
+        const totalAdjustments = customerAdjustments.reduce((sum, a) => {
+          return sum + (a.type === 'deduction' ? a.amount : -a.amount);
+        }, 0);
+        
+        const calculatedBalance = (customer.opening_balance || 0) + totalInvoices - totalPayments - totalAdjustments;
+        
+        return {
+          ...customer,
+          balance: calculatedBalance,
+        };
+      });
+
+      // Calculate vendor balances dynamically (fetch purchases for vendors)
+      const { data: purchases } = await supabase
+        .from('purchases')
+        .select('*')
+        .eq('company_id', companyId);
+
+      const vendorsWithBalances = (vendors || []).map(vendor => {
+        const vendorPurchases = (purchases || []).filter(p => p.vendor_id === vendor.id);
+        const totalPurchases = vendorPurchases.reduce((sum, p) => sum + (p.total || 0), 0);
+        
+        // Vendors don't have payments in same table, balance = opening_balance + purchases
+        const calculatedBalance = (vendor.opening_balance || 0) + totalPurchases;
+        
+        return {
+          ...vendor,
+          balance: calculatedBalance,
+        };
+      });
 
       // Calculate stats
-      const totalSales = invoices?.reduce((sum, inv) => sum + (inv.total || 0), 0) || 0;
-      const totalPayments = payments?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
-      const pendingAmount = totalSales - totalPayments;
-      const lastInvoiceDate = invoices?.[0]?.date || null;
+      const totalSales = allInvoices?.reduce((sum, inv) => sum + (inv.total || 0), 0) || 0;
+      const totalPaymentsAmount = allPayments?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
+      const pendingAmount = totalSales - totalPaymentsAmount;
+      const lastInvoiceDate = allInvoices?.[0]?.date || null;
 
       // This month stats
       const now = new Date();
       const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-      const thisMonthInvoices = invoices?.filter(inv => new Date(inv.date) >= thisMonthStart) || [];
+      const thisMonthInvoices = allInvoices?.filter(inv => new Date(inv.date) >= thisMonthStart) || [];
       const thisMonthSales = thisMonthInvoices.reduce((sum, inv) => sum + (inv.total || 0), 0);
 
       setDetails({
         company,
         users: users || [],
-        customers: customers || [],
-        vendors: vendors || [],
-        invoices: invoices || [],
+        customers: customersWithBalances,
+        vendors: vendorsWithBalances,
+        invoices: (allInvoices || []).slice(0, 50), // Limit display to 50
         products: products || [],
-        payments: payments || [],
+        payments: (allPayments || []).slice(0, 50), // Limit display to 50
         stats: {
           totalSales,
-          totalPayments,
+          totalPayments: totalPaymentsAmount,
           pendingAmount,
           lastInvoiceDate,
           thisMonthSales,
