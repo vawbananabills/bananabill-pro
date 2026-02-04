@@ -26,6 +26,7 @@ export function GlobalPaymentDialog() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
     amount: '',
+    discount: '',
     payment_date: format(new Date(), 'yyyy-MM-dd'),
     payment_method: 'cash',
     customer_id: '',
@@ -54,13 +55,18 @@ export function GlobalPaymentDialog() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    const discountAmount = parseFloat(formData.discount) || 0;
+    const paymentAmount = parseFloat(formData.amount) || 0;
+    
     const paymentData = {
-      amount: parseFloat(formData.amount) || 0,
+      amount: paymentAmount + discountAmount, // Total amount including discount applied
       payment_date: formData.payment_date,
       payment_method: formData.payment_method,
       customer_id: formData.customer_id || null,
       invoice_id: formData.invoice_id || null,
-      notes: formData.notes || null,
+      notes: discountAmount > 0 
+        ? `${formData.notes ? formData.notes + ' | ' : ''}Discount: ₹${discountAmount.toLocaleString()}, Paid: ₹${paymentAmount.toLocaleString()}`
+        : formData.notes || null,
     };
 
     await createPayment.mutateAsync(paymentData);
@@ -70,6 +76,7 @@ export function GlobalPaymentDialog() {
   const resetForm = () => {
     setFormData({
       amount: '',
+      discount: '',
       payment_date: format(new Date(), 'yyyy-MM-dd'),
       payment_method: 'cash',
       customer_id: '',
@@ -155,7 +162,7 @@ export function GlobalPaymentDialog() {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="global-amount">Amount *</Label>
+              <Label htmlFor="global-amount">Amount Paid *</Label>
               <Input
                 id="global-amount"
                 type="number"
@@ -167,15 +174,46 @@ export function GlobalPaymentDialog() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="global-payment_date">Date *</Label>
+              <Label htmlFor="global-discount">Discount</Label>
               <Input
-                id="global-payment_date"
-                type="date"
-                value={formData.payment_date}
-                onChange={(e) => setFormData({ ...formData, payment_date: e.target.value })}
-                required
+                id="global-discount"
+                type="number"
+                step="0.01"
+                value={formData.discount}
+                onChange={(e) => setFormData({ ...formData, discount: e.target.value })}
+                placeholder="0.00"
               />
             </div>
+          </div>
+
+          {(parseFloat(formData.amount) > 0 || parseFloat(formData.discount) > 0) && (
+            <div className="text-sm p-3 bg-primary/10 rounded-lg space-y-1">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Amount Paid:</span>
+                <span className="font-medium">₹{(parseFloat(formData.amount) || 0).toLocaleString()}</span>
+              </div>
+              {parseFloat(formData.discount) > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Discount:</span>
+                  <span className="font-medium text-green-600">₹{(parseFloat(formData.discount) || 0).toLocaleString()}</span>
+                </div>
+              )}
+              <div className="flex justify-between border-t pt-1">
+                <span className="text-muted-foreground font-medium">Total Applied:</span>
+                <span className="font-bold text-primary">₹{((parseFloat(formData.amount) || 0) + (parseFloat(formData.discount) || 0)).toLocaleString()}</span>
+              </div>
+            </div>
+          )}
+
+          <div className="space-y-2">
+            <Label htmlFor="global-payment_date">Date *</Label>
+            <Input
+              id="global-payment_date"
+              type="date"
+              value={formData.payment_date}
+              onChange={(e) => setFormData({ ...formData, payment_date: e.target.value })}
+              required
+            />
           </div>
 
           <div className="space-y-2">
