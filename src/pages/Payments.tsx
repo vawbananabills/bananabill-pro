@@ -53,6 +53,7 @@ export default function Payments() {
   
   const [formData, setFormData] = useState({
     amount: '',
+    discount: '',
     payment_date: format(new Date(), 'yyyy-MM-dd'),
     payment_method: 'cash',
     customer_id: '',
@@ -76,6 +77,7 @@ export default function Payments() {
     
     const paymentData = {
       amount: parseFloat(formData.amount) || 0,
+      discount: parseFloat(formData.discount) || 0,
       payment_date: formData.payment_date,
       payment_method: formData.payment_method,
       customer_id: formData.customer_id || null,
@@ -95,6 +97,7 @@ export default function Payments() {
   const resetForm = () => {
     setFormData({
       amount: '',
+      discount: '',
       payment_date: format(new Date(), 'yyyy-MM-dd'),
       payment_method: 'cash',
       customer_id: '',
@@ -108,6 +111,7 @@ export default function Payments() {
   const handleEdit = (payment: any) => {
     setFormData({
       amount: payment.amount?.toString() || '',
+      discount: payment.discount?.toString() || '',
       payment_date: payment.payment_date,
       payment_method: payment.payment_method || 'cash',
       customer_id: payment.customer_id || '',
@@ -231,7 +235,7 @@ export default function Payments() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="amount">Amount *</Label>
+                    <Label htmlFor="amount">Amount Paid *</Label>
                     <Input
                       id="amount"
                       type="number"
@@ -243,15 +247,27 @@ export default function Payments() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="payment_date">Date *</Label>
+                    <Label htmlFor="discount">Discount</Label>
                     <Input
-                      id="payment_date"
-                      type="date"
-                      value={formData.payment_date}
-                      onChange={(e) => setFormData({ ...formData, payment_date: e.target.value })}
-                      required
+                      id="discount"
+                      type="number"
+                      step="0.01"
+                      value={formData.discount}
+                      onChange={(e) => setFormData({ ...formData, discount: e.target.value })}
+                      placeholder="0.00"
                     />
                   </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="payment_date">Date *</Label>
+                  <Input
+                    id="payment_date"
+                    type="date"
+                    value={formData.payment_date}
+                    onChange={(e) => setFormData({ ...formData, payment_date: e.target.value })}
+                    required
+                  />
                 </div>
 
                 <div className="space-y-2">
@@ -329,6 +345,7 @@ export default function Payments() {
                   <TableHead>Customer</TableHead>
                   <TableHead>Invoice</TableHead>
                   <TableHead>Method</TableHead>
+                  <TableHead className="text-right">Discount</TableHead>
                   <TableHead className="text-right">Amount</TableHead>
                   <TableHead>Notes</TableHead>
                   <TableHead className="w-[50px]"></TableHead>
@@ -337,13 +354,13 @@ export default function Payments() {
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8">
+                    <TableCell colSpan={8} className="text-center py-8">
                       Loading...
                     </TableCell>
                   </TableRow>
                 ) : filteredPayments.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                       No payments found
                     </TableCell>
                   </TableRow>
@@ -364,6 +381,9 @@ export default function Payments() {
                           {getPaymentIcon(payment.payment_method)}
                           <span className="capitalize">{payment.payment_method?.replace('_', ' ') || 'Cash'}</span>
                         </div>
+                      </TableCell>
+                      <TableCell className="text-right font-medium text-green-600">
+                        {(payment.discount || 0) > 0 ? `₹${payment.discount.toLocaleString()}` : '-'}
                       </TableCell>
                       <TableCell className="text-right font-medium">
                         ₹{payment.amount.toLocaleString()}

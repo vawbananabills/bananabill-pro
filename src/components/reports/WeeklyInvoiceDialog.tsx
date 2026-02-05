@@ -356,6 +356,7 @@ export function WeeklyInvoiceDialog({ open, onOpenChange }: WeeklyInvoiceDialogP
         customer_id: selectedCustomer,
         invoice_id: null, // Not linked to specific invoice
         amount: paymentAmount,
+        discount: 0,
         payment_date: format(paymentDate, 'yyyy-MM-dd'),
         payment_method: paymentMethod,
         notes: paymentNotes || `Weekly Invoice Payment - ${format(dateFrom, 'dd MMM')} to ${format(dateTo, 'dd MMM')}`,
