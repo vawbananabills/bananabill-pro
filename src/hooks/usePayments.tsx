@@ -9,6 +9,7 @@ export interface Payment {
   invoice_id: string | null;
   customer_id: string | null;
   amount: number;
+  discount: number;
   payment_date: string;
   payment_method: string | null;
   notes: string | null;
@@ -76,7 +77,8 @@ export function usePayments() {
           .single() as any;
         
         if (invoice) {
-          const newReceivedAmount = (invoice.received_amount || 0) + payment.amount;
+          const totalApplied = payment.amount + (payment.discount || 0);
+          const newReceivedAmount = (invoice.received_amount || 0) + totalApplied;
           const newStatus = newReceivedAmount >= (invoice.total || 0) ? 'paid' : 
                            newReceivedAmount > 0 ? 'partial' : 'pending';
           

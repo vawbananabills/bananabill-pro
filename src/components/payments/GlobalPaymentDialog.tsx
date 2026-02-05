@@ -59,14 +59,13 @@ export function GlobalPaymentDialog() {
     const paymentAmount = parseFloat(formData.amount) || 0;
     
     const paymentData = {
-      amount: paymentAmount + discountAmount, // Total amount including discount applied
+      amount: paymentAmount,
+      discount: discountAmount,
       payment_date: formData.payment_date,
       payment_method: formData.payment_method,
       customer_id: formData.customer_id || null,
       invoice_id: formData.invoice_id || null,
-      notes: discountAmount > 0 
-        ? `${formData.notes ? formData.notes + ' | ' : ''}Discount: ₹${discountAmount.toLocaleString()}, Paid: ₹${paymentAmount.toLocaleString()}`
-        : formData.notes || null,
+      notes: formData.notes || null,
     };
 
     await createPayment.mutateAsync(paymentData);
