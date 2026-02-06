@@ -22,6 +22,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { SubscriptionBox } from '@/components/subscription/SubscriptionBox';
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
@@ -153,6 +154,9 @@ export function Sidebar() {
           </>
         )}
       </nav>
+
+      {/* Subscription Box */}
+      <SubscriptionBox collapsed={collapsed} />
 
       {/* Collapse Toggle */}
       <div className="px-3 py-2 border-t border-sidebar-border">

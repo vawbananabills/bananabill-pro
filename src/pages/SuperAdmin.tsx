@@ -25,10 +25,12 @@ import {
   Shield,
   Calendar,
   Mail,
-  Eye
+  Eye,
+  Crown
 } from 'lucide-react';
 import { useSuperAdmin } from '@/hooks/useSuperAdmin';
 import { CompanyDetailsDialog } from '@/components/superadmin/CompanyDetailsDialog';
+import { SubscriptionManagement } from '@/components/admin/SubscriptionManagement';
 import { format } from 'date-fns';
 
 function formatCurrency(amount: number) {
@@ -155,6 +157,10 @@ export default function SuperAdmin() {
             <TabsTrigger value="users" className="gap-2">
               <Users className="w-4 h-4" />
               Users
+            </TabsTrigger>
+            <TabsTrigger value="subscriptions" className="gap-2">
+              <Crown className="w-4 h-4" />
+              Subscriptions
             </TabsTrigger>
           </TabsList>
 
@@ -349,6 +355,10 @@ export default function SuperAdmin() {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="subscriptions">
+            <SubscriptionManagement />
           </TabsContent>
         </Tabs>
       </div>
