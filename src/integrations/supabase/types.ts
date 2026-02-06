@@ -31,6 +31,9 @@ export type Database = {
           next_invoice_number: number | null
           phone: string | null
           show_logo_on_invoice: boolean | null
+          subscription_expires_at: string | null
+          subscription_started_at: string | null
+          subscription_status: string | null
           updated_at: string | null
           upi_id: string | null
         }
@@ -50,6 +53,9 @@ export type Database = {
           next_invoice_number?: number | null
           phone?: string | null
           show_logo_on_invoice?: boolean | null
+          subscription_expires_at?: string | null
+          subscription_started_at?: string | null
+          subscription_status?: string | null
           updated_at?: string | null
           upi_id?: string | null
         }
@@ -69,6 +75,9 @@ export type Database = {
           next_invoice_number?: number | null
           phone?: string | null
           show_logo_on_invoice?: boolean | null
+          subscription_expires_at?: string | null
+          subscription_started_at?: string | null
+          subscription_status?: string | null
           updated_at?: string | null
           upi_id?: string | null
         }
@@ -691,6 +700,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      subscription_settings: {
+        Row: {
+          created_at: string
+          duration_days: number
+          first_time_price: number
+          id: string
+          renewal_price: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          duration_days?: number
+          first_time_price?: number
+          id?: string
+          renewal_price?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          duration_days?: number
+          first_time_price?: number
+          id?: string
+          renewal_price?: number
+          updated_at?: string
+        }
+        Relationships: []
       }
       units: {
         Row: {

@@ -21,6 +21,7 @@ import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import SuperAdmin from "./pages/SuperAdmin";
 import Payments from "./pages/Payments";
+import Subscription from "./pages/Subscription";
 import Install from "./pages/Install";
 import NotFound from "./pages/NotFound";
 
@@ -73,6 +74,9 @@ const App = () => (
             } />
             <Route path="/super-admin" element={
               <ProtectedRoute><SuperAdmin /></ProtectedRoute>
+            } />
+            <Route path="/subscription" element={
+              <ProtectedRoute><Subscription /></ProtectedRoute>
             } />
             <Route path="/install" element={<Install />} />
             <Route path="*" element={<NotFound />} />
