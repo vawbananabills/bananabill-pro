@@ -9,6 +9,7 @@ export interface SubscriptionSettings {
   first_time_price: number;
   renewal_price: number;
   duration_days: number;
+  trial_duration_days: number;
   created_at: string;
   updated_at: string;
 }
@@ -61,12 +62,14 @@ export function useSubscription() {
     ? Math.max(0, differenceInDays(parseISO(subscription.subscription_expires_at), new Date()))
     : 0;
 
+  const isTrial = subscription?.subscription_status === 'trial' || !subscription?.subscription_status;
+
   const isExpired = subscription?.subscription_expires_at
     ? new Date() > parseISO(subscription.subscription_expires_at)
-    : true;
+    : !isTrial;
 
-  const isActive = subscription?.subscription_status === 'active' && !isExpired;
-  const isTrial = subscription?.subscription_status === 'trial' || !subscription?.subscription_status;
+  const isTrialActive = isTrial && !!subscription?.subscription_expires_at && !isExpired;
+  const isActive = (subscription?.subscription_status === 'active' && !isExpired) || isTrialActive;
 
   // Update subscription settings (admin only)
   const updateSettings = useMutation({

@@ -708,6 +708,7 @@ export type Database = {
           first_time_price: number
           id: string
           renewal_price: number
+          trial_duration_days: number | null
           updated_at: string
         }
         Insert: {
@@ -716,6 +717,7 @@ export type Database = {
           first_time_price?: number
           id?: string
           renewal_price?: number
+          trial_duration_days?: number | null
           updated_at?: string
         }
         Update: {
@@ -724,6 +726,7 @@ export type Database = {
           first_time_price?: number
           id?: string
           renewal_price?: number
+          trial_duration_days?: number | null
           updated_at?: string
         }
         Relationships: []
