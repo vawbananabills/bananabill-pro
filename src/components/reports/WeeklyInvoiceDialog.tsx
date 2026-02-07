@@ -178,7 +178,7 @@ export function WeeklyInvoiceDialog({ open, onOpenChange }: WeeklyInvoiceDialogP
       // Get payments BEFORE the selected date range
       const { data: priorPayments } = await supabase
         .from('payments')
-        .select('amount')
+        .select('amount, discount')
         .eq('company_id', company.id)
         .eq('customer_id', selectedCustomer)
         .lt('payment_date', format(dateFrom, 'yyyy-MM-dd'));
@@ -193,7 +193,7 @@ export function WeeklyInvoiceDialog({ open, onOpenChange }: WeeklyInvoiceDialogP
 
       // Calculate prior period totals
       const priorInvoiceTotal = priorInvoices?.reduce((sum, inv) => sum + Number(inv.total || 0), 0) || 0;
-      const priorPaymentTotal = priorPayments?.reduce((sum, p) => sum + Number(p.amount || 0), 0) || 0;
+      const priorPaymentTotal = priorPayments?.reduce((sum, p) => sum + Number(p.amount || 0) + Number(p.discount || 0), 0) || 0;
       const priorDiscountTotal = (priorAdjustments || [])
         .filter(a => a.type === 'discount')
         .reduce((sum, a) => sum + Number(a.amount || 0), 0);
@@ -249,7 +249,7 @@ export function WeeklyInvoiceDialog({ open, onOpenChange }: WeeklyInvoiceDialogP
       });
 
       // Calculate total payments received in the period
-      const totalPayments = payments?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
+      const totalPayments = payments?.reduce((sum, p) => sum + (p.amount || 0) + (p.discount || 0), 0) || 0;
 
       return {
         items: allItems,

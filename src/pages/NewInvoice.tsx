@@ -105,7 +105,7 @@ export default function NewInvoice() {
       // Get all payments for this customer
       const { data: payments } = await supabase
         .from('payments')
-        .select('amount')
+        .select('amount, discount')
         .eq('customer_id', customerId);
 
       // Get all adjustments for this customer
@@ -119,7 +119,7 @@ export default function NewInvoice() {
         sum + (Number(inv.total) || 0), 0);
       
       const paymentTotal = (payments || []).reduce((sum, pay) => 
-        sum + (Number(pay.amount) || 0), 0);
+        sum + (Number(pay.amount) || 0) + (Number(pay.discount) || 0), 0);
       
       const adjustmentTotal = (adjustments || []).reduce((sum, adj) => {
         const amount = Number(adj.amount) || 0;

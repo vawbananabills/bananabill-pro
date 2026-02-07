@@ -40,7 +40,7 @@ export function BalanceSheetDialog({ open, onOpenChange }: BalanceSheetDialogPro
       // Get all payments
       const { data: payments, error: payError } = await supabase
         .from('payments')
-        .select('customer_id, amount')
+        .select('customer_id, amount, discount')
         .eq('company_id', company.id);
 
       if (payError) throw payError;
@@ -60,7 +60,7 @@ export function BalanceSheetDialog({ open, onOpenChange }: BalanceSheetDialogPro
         const customerAdjustments = (adjustments || []).filter(a => a.customer_id === customer.id);
 
         const totalInvoices = customerInvoices.reduce((sum, i) => sum + Number(i.total || 0), 0);
-        const totalPayments = customerPayments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
+        const totalPayments = customerPayments.reduce((sum, p) => sum + Number(p.amount || 0) + Number(p.discount || 0), 0);
         const totalAdjustments = customerAdjustments.reduce((sum, a) => {
           const amount = Number(a.amount || 0);
           return sum + (a.type === 'discount' ? amount : -amount);
