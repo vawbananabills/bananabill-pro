@@ -37,16 +37,20 @@ export function SubscriptionBox({ collapsed = false }: SubscriptionBoxProps) {
       <div
         className={cn(
           "p-3 rounded-lg border transition-colors hover:bg-sidebar-accent/50",
-          isActive 
-            ? "bg-success/10 border-success/30" 
-            : isExpired 
-              ? "bg-destructive/10 border-destructive/30" 
-              : "bg-warning/10 border-warning/30"
+          isActive && !isTrial
+            ? "bg-success/10 border-success/30"
+            : isActive && isTrial
+              ? "bg-blue-500/10 border-blue-500/30"
+              : isExpired 
+                ? "bg-destructive/10 border-destructive/30" 
+                : "bg-warning/10 border-warning/30"
         )}
       >
         <div className="flex items-center gap-2 mb-2">
-          {isActive ? (
+          {isActive && !isTrial ? (
             <Crown className="w-4 h-4 text-success" />
+          ) : isActive && isTrial ? (
+            <Clock className="w-4 h-4 text-blue-500" />
           ) : isExpired ? (
             <AlertTriangle className="w-4 h-4 text-destructive" />
           ) : (
@@ -54,9 +58,9 @@ export function SubscriptionBox({ collapsed = false }: SubscriptionBoxProps) {
           )}
           <span className={cn(
             "text-xs font-semibold uppercase tracking-wide",
-            isActive ? "text-success" : isExpired ? "text-destructive" : "text-warning"
+            isActive && !isTrial ? "text-success" : isActive && isTrial ? "text-blue-500" : isExpired ? "text-destructive" : "text-warning"
           )}>
-            {isActive ? 'Pro Active' : isExpired ? 'Expired' : isTrial ? 'Trial' : 'Pending'}
+            {isActive && !isTrial ? 'Pro Active' : isTrial && isActive ? 'Trial' : isExpired ? 'Expired' : 'Pending'}
           </span>
         </div>
 
