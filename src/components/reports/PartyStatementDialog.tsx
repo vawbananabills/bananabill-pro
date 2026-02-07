@@ -194,7 +194,7 @@ export function PartyStatementDialog({ open, onOpenChange, initialCustomerId }: 
       // Get payments BEFORE the selected date range
       const { data: priorPayments } = await supabase
         .from('payments')
-        .select('amount')
+        .select('amount, discount')
         .eq('company_id', company.id)
         .eq('customer_id', selectedCustomer)
         .lt('payment_date', format(dateFrom, 'yyyy-MM-dd'));
@@ -209,7 +209,7 @@ export function PartyStatementDialog({ open, onOpenChange, initialCustomerId }: 
 
       // Calculate prior period totals
       const priorInvoiceTotal = priorInvoices?.reduce((sum, inv) => sum + Number(inv.total || 0), 0) || 0;
-      const priorPaymentTotal = priorPayments?.reduce((sum, p) => sum + Number(p.amount || 0), 0) || 0;
+      const priorPaymentTotal = priorPayments?.reduce((sum, p) => sum + Number(p.amount || 0) + Number(p.discount || 0), 0) || 0;
       const priorDiscountTotal = (priorAdjustments || [])
         .filter(a => a.type === 'discount')
         .reduce((sum, a) => sum + Number(a.amount || 0), 0);
@@ -254,12 +254,15 @@ export function PartyStatementDialog({ open, onOpenChange, initialCustomerId }: 
             balance: runningBalance,
           };
         } else if (entry.type === 'payment') {
-          const credit = entry.data.amount || 0;
+          const paymentAmount = entry.data.amount || 0;
+          const discountAmount = entry.data.discount || 0;
+          const credit = paymentAmount + discountAmount;
           runningBalance -= credit;
+          const discountNote = discountAmount > 0 ? ` (incl. ₹${discountAmount.toLocaleString()} discount)` : '';
           return {
             id: entry.data.id,
             date: entry.data.payment_date,
-            particulars: `Payment (${entry.data.payment_method || 'Cash'})${entry.data.notes ? ' - ' + entry.data.notes : ''}`,
+            particulars: `Payment (${entry.data.payment_method || 'Cash'})${discountNote}${entry.data.notes ? ' - ' + entry.data.notes : ''}`,
             type: 'payment' as const,
             debit: 0,
             credit,
