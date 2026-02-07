@@ -97,6 +97,14 @@ export function usePayments() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['payments'] });
       queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      queryClient.invalidateQueries({ queryKey: ['party-statement'] });
+      queryClient.invalidateQueries({ queryKey: ['party-adjustments'] });
+      queryClient.invalidateQueries({ queryKey: ['cash-ledger'] });
+      queryClient.invalidateQueries({ queryKey: ['day-book'] });
+      queryClient.invalidateQueries({ queryKey: ['balance-sheet'] });
+      queryClient.invalidateQueries({ queryKey: ['weekly-invoices'] });
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
+      queryClient.invalidateQueries({ queryKey: ['vendor-statement'] });
       toast.success('Payment recorded successfully');
     },
     onError: (error) => {
@@ -119,6 +127,14 @@ export function usePayments() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['payments'] });
       queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      queryClient.invalidateQueries({ queryKey: ['party-statement'] });
+      queryClient.invalidateQueries({ queryKey: ['party-adjustments'] });
+      queryClient.invalidateQueries({ queryKey: ['cash-ledger'] });
+      queryClient.invalidateQueries({ queryKey: ['day-book'] });
+      queryClient.invalidateQueries({ queryKey: ['balance-sheet'] });
+      queryClient.invalidateQueries({ queryKey: ['weekly-invoices'] });
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
+      queryClient.invalidateQueries({ queryKey: ['vendor-statement'] });
       toast.success('Payment updated successfully');
     },
     onError: (error) => {
@@ -168,6 +184,14 @@ export function usePayments() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['payments'] });
       queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      queryClient.invalidateQueries({ queryKey: ['party-statement'] });
+      queryClient.invalidateQueries({ queryKey: ['party-adjustments'] });
+      queryClient.invalidateQueries({ queryKey: ['cash-ledger'] });
+      queryClient.invalidateQueries({ queryKey: ['day-book'] });
+      queryClient.invalidateQueries({ queryKey: ['balance-sheet'] });
+      queryClient.invalidateQueries({ queryKey: ['weekly-invoices'] });
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
+      queryClient.invalidateQueries({ queryKey: ['vendor-statement'] });
       toast.success('Payment deleted successfully');
     },
     onError: (error) => {
