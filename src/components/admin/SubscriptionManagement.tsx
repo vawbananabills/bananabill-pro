@@ -8,13 +8,11 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Crown, Settings, CalendarIcon, Loader2 } from 'lucide-react';
+import { Crown, Settings, CalendarIcon, Loader2, Gift } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useSubscription } from '@/hooks/useSubscription';
 import { format, addDays, parseISO, differenceInDays } from 'date-fns';
-import { cn } from '@/lib/utils';
-import { toast } from 'sonner';
 
 interface Company {
   id: string;
@@ -30,11 +28,14 @@ export function SubscriptionManagement() {
     first_time_price: settings?.first_time_price?.toString() || '999',
     renewal_price: settings?.renewal_price?.toString() || '499',
     duration_days: settings?.duration_days?.toString() || '30',
+    trial_duration_days: settings?.trial_duration_days?.toString() || '14',
   });
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
   const [renewDialogOpen, setRenewDialogOpen] = useState(false);
+  const [trialDialogOpen, setTrialDialogOpen] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [renewDate, setRenewDate] = useState<Date>(addDays(new Date(), 30));
+  const [trialDays, setTrialDays] = useState<string>('14');
 
   // Fetch all companies
   const { data: companies = [], isLoading } = useQuery({
@@ -55,8 +56,23 @@ export function SubscriptionManagement() {
       first_time_price: parseFloat(settingsForm.first_time_price) || 0,
       renewal_price: parseFloat(settingsForm.renewal_price) || 0,
       duration_days: parseInt(settingsForm.duration_days) || 30,
+      trial_duration_days: parseInt(settingsForm.trial_duration_days) || 14,
     });
     setSettingsDialogOpen(false);
+  };
+
+  const handleIssueTrial = async () => {
+    if (!selectedCompany) return;
+    const days = parseInt(trialDays) || (settings?.trial_duration_days || 14);
+    const expiresAt = addDays(new Date(), days);
+
+    await updateCompanySubscription.mutateAsync({
+      companyId: selectedCompany.id,
+      expiresAt: expiresAt.toISOString(),
+      status: 'trial',
+    });
+    setTrialDialogOpen(false);
+    setSelectedCompany(null);
   };
 
   const handleRenewSubscription = async () => {
@@ -73,24 +89,34 @@ export function SubscriptionManagement() {
 
   const openRenewDialog = (company: Company) => {
     setSelectedCompany(company);
-    // Default to extending from current expiry or from today + duration days
     const baseDate = company.subscription_expires_at 
       ? parseISO(company.subscription_expires_at) 
       : new Date();
     setRenewDate(addDays(baseDate, settings?.duration_days || 30));
     setRenewDialogOpen(true);
+    setRenewDialogOpen(true);
+  };
+
+  const openTrialDialog = (company: Company) => {
+    setSelectedCompany(company);
+    setTrialDays(settings?.trial_duration_days?.toString() || '14');
+    setTrialDialogOpen(true);
   };
 
   const getStatusBadge = (company: Company) => {
     if (!company.subscription_expires_at) {
-      return <Badge variant="outline" className="bg-muted">Never Subscribed</Badge>;
+      return <Badge variant="outline" className="bg-muted">No Subscription</Badge>;
     }
 
     const isExpired = new Date() > parseISO(company.subscription_expires_at);
     const daysLeft = differenceInDays(parseISO(company.subscription_expires_at), new Date());
+    const isTrial = company.subscription_status === 'trial';
 
     if (isExpired) {
       return <Badge variant="destructive">Expired</Badge>;
+    }
+    if (isTrial) {
+      return <Badge className="bg-blue-500/20 text-blue-700 dark:text-blue-400 border-blue-500/30">Trial ({daysLeft}d left)</Badge>;
     }
     if (daysLeft <= 7) {
       return <Badge className="bg-warning text-warning-foreground">Expiring Soon ({daysLeft}d)</Badge>;
@@ -146,6 +172,14 @@ export function SubscriptionManagement() {
                     onChange={(e) => setSettingsForm({ ...settingsForm, duration_days: e.target.value })}
                   />
                 </div>
+                 <div className="space-y-2">
+                  <Label>Trial Duration (Days) — for new signups</Label>
+                  <Input
+                    type="number"
+                    value={settingsForm.trial_duration_days}
+                    onChange={(e) => setSettingsForm({ ...settingsForm, trial_duration_days: e.target.value })}
+                  />
+                </div>
                 <div className="flex justify-end gap-2 pt-4">
                   <Button variant="outline" onClick={() => setSettingsDialogOpen(false)}>
                     Cancel
@@ -159,7 +193,7 @@ export function SubscriptionManagement() {
           </Dialog>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-4 gap-4">
             <div className="p-4 rounded-lg bg-muted">
               <p className="text-sm text-muted-foreground">First Time Price</p>
               <p className="text-2xl font-bold">₹{settings?.first_time_price?.toLocaleString() || 0}</p>
@@ -171,6 +205,10 @@ export function SubscriptionManagement() {
             <div className="p-4 rounded-lg bg-muted">
               <p className="text-sm text-muted-foreground">Duration</p>
               <p className="text-2xl font-bold">{settings?.duration_days || 30} days</p>
+            </div>
+            <div className="p-4 rounded-lg bg-muted">
+              <p className="text-sm text-muted-foreground">Trial Duration</p>
+              <p className="text-2xl font-bold">{settings?.trial_duration_days || 14} days</p>
             </div>
           </div>
         </CardContent>
@@ -214,12 +252,23 @@ export function SubscriptionManagement() {
                         : '-'}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button
-                        size="sm"
-                        onClick={() => openRenewDialog(company)}
-                      >
-                        {company.subscription_expires_at ? 'Extend' : 'Activate'}
-                      </Button>
+                      <div className="flex gap-2 justify-end">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="gap-1"
+                          onClick={() => openTrialDialog(company)}
+                        >
+                          <Gift className="w-3 h-3" />
+                          Trial
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={() => openRenewDialog(company)}
+                        >
+                          {company.subscription_expires_at ? 'Extend' : 'Activate'}
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -271,6 +320,46 @@ export function SubscriptionManagement() {
               </Button>
               <Button onClick={handleRenewSubscription} disabled={updateCompanySubscription.isPending}>
                 {updateCompanySubscription.isPending ? 'Saving...' : 'Confirm'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Trial Dialog */}
+      <Dialog open={trialDialogOpen} onOpenChange={setTrialDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Gift className="w-5 h-5 text-blue-500" />
+              Issue Trial Subscription
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-4">
+            <div>
+              <p className="text-sm text-muted-foreground">Company</p>
+              <p className="font-medium">{selectedCompany?.name}</p>
+            </div>
+            <div className="space-y-2">
+              <Label>Trial Duration (Days)</Label>
+              <Input
+                type="number"
+                value={trialDays}
+                onChange={(e) => setTrialDays(e.target.value)}
+                min="1"
+                placeholder={settings?.trial_duration_days?.toString() || '14'}
+              />
+            </div>
+            <div className="p-3 bg-blue-500/10 rounded-lg">
+              <p className="text-sm text-muted-foreground">Trial will expire on</p>
+              <p className="font-medium">{format(addDays(new Date(), parseInt(trialDays) || 14), 'dd MMMM yyyy')}</p>
+            </div>
+            <div className="flex justify-end gap-2 pt-4">
+              <Button variant="outline" onClick={() => setTrialDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleIssueTrial} disabled={updateCompanySubscription.isPending}>
+                {updateCompanySubscription.isPending ? 'Saving...' : 'Issue Trial'}
               </Button>
             </div>
           </div>
