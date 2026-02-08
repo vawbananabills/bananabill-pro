@@ -3,6 +3,7 @@ import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { GlobalKeyboardShortcuts } from '@/components/GlobalKeyboardShortcuts';
 import { OfflineBanner } from '@/components/sync/SyncStatusIndicator';
+import { SubscriptionExpiredDialog } from '@/components/subscription/SubscriptionExpiredDialog';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -14,6 +15,7 @@ export function DashboardLayout({ children, title, subtitle }: DashboardLayoutPr
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <GlobalKeyboardShortcuts />
+      <SubscriptionExpiredDialog />
       <Sidebar />
       <div className="md:pl-[260px] transition-all duration-300 flex-1 flex flex-col">
         <OfflineBanner />
