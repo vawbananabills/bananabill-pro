@@ -31,6 +31,7 @@ export type Database = {
           next_invoice_number: number | null
           phone: string | null
           show_logo_on_invoice: boolean | null
+          subscription_amount: number | null
           subscription_expires_at: string | null
           subscription_started_at: string | null
           subscription_status: string | null
@@ -53,6 +54,7 @@ export type Database = {
           next_invoice_number?: number | null
           phone?: string | null
           show_logo_on_invoice?: boolean | null
+          subscription_amount?: number | null
           subscription_expires_at?: string | null
           subscription_started_at?: string | null
           subscription_status?: string | null
@@ -75,6 +77,7 @@ export type Database = {
           next_invoice_number?: number | null
           phone?: string | null
           show_logo_on_invoice?: boolean | null
+          subscription_amount?: number | null
           subscription_expires_at?: string | null
           subscription_started_at?: string | null
           subscription_status?: string | null

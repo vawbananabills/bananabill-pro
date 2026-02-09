@@ -35,6 +35,7 @@ export function SubscriptionManagement() {
   const [trialDialogOpen, setTrialDialogOpen] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [renewDate, setRenewDate] = useState<Date>(addDays(new Date(), 30));
+  const [renewAmount, setRenewAmount] = useState<string>('');
   const [trialDays, setTrialDays] = useState<string>('14');
 
   // Fetch all companies
@@ -82,9 +83,11 @@ export function SubscriptionManagement() {
       companyId: selectedCompany.id,
       expiresAt: renewDate.toISOString(),
       status: 'active',
+      amount: renewAmount ? parseFloat(renewAmount) : undefined,
     });
     setRenewDialogOpen(false);
     setSelectedCompany(null);
+    setRenewAmount('');
   };
 
   const openRenewDialog = (company: Company) => {
@@ -92,8 +95,8 @@ export function SubscriptionManagement() {
     const baseDate = company.subscription_expires_at 
       ? parseISO(company.subscription_expires_at) 
       : new Date();
-    setRenewDate(addDays(baseDate, settings?.duration_days || 30));
-    setRenewDialogOpen(true);
+    setRenewDate(addDays(baseDate, settings?.duration_days || 365));
+    setRenewAmount(settings?.renewal_price?.toString() || '5000');
     setRenewDialogOpen(true);
   };
 
@@ -290,6 +293,16 @@ export function SubscriptionManagement() {
             <div>
               <p className="text-sm text-muted-foreground">Company</p>
               <p className="font-medium">{selectedCompany?.name}</p>
+            </div>
+            <div className="space-y-2">
+              <Label>Amount Charged (₹)</Label>
+              <Input
+                type="number"
+                value={renewAmount}
+                onChange={(e) => setRenewAmount(e.target.value)}
+                placeholder="e.g. 5000"
+                min="0"
+              />
             </div>
             <div className="space-y-2">
               <Label>Subscription Expires On</Label>

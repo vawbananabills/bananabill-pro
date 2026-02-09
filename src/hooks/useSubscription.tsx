@@ -95,19 +95,26 @@ export function useSubscription() {
     mutationFn: async ({ 
       companyId, 
       expiresAt, 
-      status = 'active' 
+      status = 'active',
+      amount,
     }: { 
       companyId: string; 
       expiresAt: string; 
       status?: string;
+      amount?: number;
     }) => {
+      const updateData: Record<string, any> = {
+        subscription_status: status,
+        subscription_expires_at: expiresAt,
+        subscription_started_at: new Date().toISOString(),
+      };
+      if (amount !== undefined) {
+        updateData.subscription_amount = amount;
+      }
+
       const { error } = await supabase
         .from('companies')
-        .update({
-          subscription_status: status,
-          subscription_expires_at: expiresAt,
-          subscription_started_at: new Date().toISOString(),
-        })
+        .update(updateData)
         .eq('id', companyId);
 
       if (error) throw error;
