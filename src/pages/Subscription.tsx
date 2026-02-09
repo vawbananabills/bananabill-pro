@@ -110,13 +110,17 @@ export default function Subscription() {
                 <div className="text-center">
                   <div className="flex items-baseline justify-center gap-1">
                     <span className="text-4xl font-bold">{formatCurrency(currentPrice || 0)}</span>
-                    <span className="text-muted-foreground">/ {settings?.duration_days || 30} days</span>
+                    <span className="text-muted-foreground">/ {settings?.duration_days || 365} days</span>
                   </div>
                   {isFirstTime && settings?.renewal_price !== settings?.first_time_price && (
                     <p className="text-sm text-muted-foreground mt-1">
-                      Renewal: {formatCurrency(settings?.renewal_price || 0)} / {settings?.duration_days || 30} days
+                      Renewal: {formatCurrency(settings?.renewal_price || 0)} / year
                     </p>
                   )}
+                  <div className="mt-3 p-3 rounded-lg bg-primary/5 border border-primary/10">
+                    <p className="text-sm text-muted-foreground">Next Year Renewal Cost</p>
+                    <p className="text-2xl font-bold text-primary">₹5,000 <span className="text-sm font-normal text-muted-foreground">/ year</span></p>
+                  </div>
                 </div>
 
                 <div className="space-y-3">
