@@ -189,7 +189,7 @@ export default function Landing() {
             Ready to Streamline Your Banana Business?
           </h2>
           <p className="text-sm md:text-lg text-primary-foreground/90 mb-6 md:mb-8 max-w-2xl mx-auto">
-            Join hundreds of traders who have simplified their billing and accounting with BananaBills
+            Join hundreds of traders who have simplified their billing and accounting with BananaBills.
           </p>
           <Link to="/auth?signup=true">
             <Button size="lg" variant="secondary" className="gap-2 font-semibold">
