@@ -68,7 +68,7 @@ export function VendorStatementDialog({ open, onOpenChange, initialVendorId }: V
         .select(`
           *,
           products(name),
-          invoices!inner(date, company_id)
+          invoices!inner(date, company_id, customers(name))
         `)
         .eq('vendor_id', selectedVendor)
         .eq('invoices.company_id', company.id)
@@ -92,7 +92,7 @@ export function VendorStatementDialog({ open, onOpenChange, initialVendorId }: V
         .from('loose_invoice_items')
         .select(`
           *,
-          invoices!inner(date, company_id)
+          invoices!inner(date, company_id, customers(name))
         `)
         .eq('vendor_id', selectedVendor)
         .eq('invoices.company_id', company.id)
@@ -126,7 +126,7 @@ export function VendorStatementDialog({ open, onOpenChange, initialVendorId }: V
   const saveStatementMutation = useMutation({
     mutationFn: async () => {
       if (!company?.id || !selectedVendor || !user?.id) throw new Error('Missing required data');
-      
+
       const statementData = {
         company_id: company.id,
         vendor_id: selectedVendor,
@@ -275,13 +275,13 @@ export function VendorStatementDialog({ open, onOpenChange, initialVendorId }: V
 
   const aggregatedItems = Object.values(groupedItems);
   const aggregatedLooseItems = Object.values(groupedLooseItems);
-  
+
 
   // Get detail items for the selected product
-  const detailItems = detailViewProduct 
-    ? (groupedItems[detailViewProduct]?.items || groupedLooseItems[detailViewProduct]?.items || []) 
+  const detailItems = detailViewProduct
+    ? (groupedItems[detailViewProduct]?.items || groupedLooseItems[detailViewProduct]?.items || [])
     : [];
-  
+
 
   // Calculate totals for regular items
   const regularTotalAmount = vendorItems?.reduce((sum, item) => sum + (item.total || 0), 0) || 0;
@@ -309,10 +309,10 @@ export function VendorStatementDialog({ open, onOpenChange, initialVendorId }: V
 
   const handleExport = () => {
     if (!vendorItems) return;
-    
+
     const csvContent = [
       ['Date', 'Item Name', 'No. of Items', 'Gross Weight (kg)', 'Net Weight (kg)', 'Total'].join(','),
-      ...vendorItems.map((item: any) => 
+      ...vendorItems.map((item: any) =>
         [
           item.invoices?.date || '',
           item.products?.name || '',
@@ -728,426 +728,428 @@ export function VendorStatementDialog({ open, onOpenChange, initialVendorId }: V
               </div>
             </div>
 
-        {!selectedVendor ? (
-          <div className="text-center py-12 text-muted-foreground">
-            Please select a vendor to view their statement
-          </div>
-        ) : isLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
-          </div>
-        ) : (
-          <>
-            {/* Vehicle & Loader Info */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="vehicleNumber">Vehicle Number</Label>
-                <Input
-                  id="vehicleNumber"
-                  value={vehicleNumber}
-                  onChange={(e) => setVehicleNumber(e.target.value)}
-                  placeholder="Enter vehicle number"
-                />
+            {!selectedVendor ? (
+              <div className="text-center py-12 text-muted-foreground">
+                Please select a vendor to view their statement
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="loaderName">Loader Name</Label>
-                <Input
-                  id="loaderName"
-                  value={loaderName}
-                  onChange={(e) => setLoaderName(e.target.value)}
-                  placeholder="Enter loader name"
-                />
+            ) : isLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
               </div>
-            </div>
-
-            {/* Load/MT Calculation Box */}
-            <Card className="border-2 border-primary/20 bg-primary/5">
-              <CardContent className="pt-4">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+            ) : (
+              <>
+                {/* Vehicle & Loader Info */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="load">Load</Label>
+                    <Label htmlFor="vehicleNumber">Vehicle Number</Label>
                     <Input
-                      id="load"
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={load || ''}
-                      onChange={(e) => setLoad(Number(e.target.value) || 0)}
-                      placeholder="Enter load"
-                      className="font-mono"
+                      id="vehicleNumber"
+                      value={vehicleNumber}
+                      onChange={(e) => setVehicleNumber(e.target.value)}
+                      placeholder="Enter vehicle number"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="mt">MT</Label>
+                    <Label htmlFor="loaderName">Loader Name</Label>
                     <Input
-                      id="mt"
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={mt || ''}
-                      onChange={(e) => setMt(Number(e.target.value) || 0)}
-                      placeholder="Enter MT"
-                      className="font-mono"
+                      id="loaderName"
+                      value={loaderName}
+                      onChange={(e) => setLoaderName(e.target.value)}
+                      placeholder="Enter loader name"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label className="text-muted-foreground">Gross Weight (Auto)</Label>
-                    <div className="h-10 px-3 py-2 border rounded-md bg-muted font-mono flex items-center">
-                      {totalGrossWeight.toFixed(2)} kg
+                </div>
+
+                {/* Load/MT Calculation Box */}
+                <Card className="border-2 border-primary/20 bg-primary/5">
+                  <CardContent className="pt-4">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                      <div className="space-y-2">
+                        <Label htmlFor="load">Load</Label>
+                        <Input
+                          id="load"
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={load || ''}
+                          onChange={(e) => setLoad(Number(e.target.value) || 0)}
+                          placeholder="Enter load"
+                          className="font-mono"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="mt">MT</Label>
+                        <Input
+                          id="mt"
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={mt || ''}
+                          onChange={(e) => setMt(Number(e.target.value) || 0)}
+                          placeholder="Enter MT"
+                          className="font-mono"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-muted-foreground">Gross Weight (Auto)</Label>
+                        <div className="h-10 px-3 py-2 border rounded-md bg-muted font-mono flex items-center">
+                          {totalGrossWeight.toFixed(2)} kg
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="font-semibold">Total (Load − MT − Gross)</Label>
+                        <div className={cn(
+                          "h-10 px-3 py-2 border-2 rounded-md font-mono font-bold flex items-center",
+                          loadMtTotal >= 0 ? "border-green-500 bg-green-50 text-green-700" : "border-red-500 bg-red-50 text-red-700"
+                        )}>
+                          {loadMtTotal.toFixed(2)} kg
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="font-semibold">Total (Load − MT − Gross)</Label>
-                    <div className={cn(
-                      "h-10 px-3 py-2 border-2 rounded-md font-mono font-bold flex items-center",
-                      loadMtTotal >= 0 ? "border-green-500 bg-green-50 text-green-700" : "border-red-500 bg-red-50 text-red-700"
-                    )}>
-                      {loadMtTotal.toFixed(2)} kg
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <Card className="md:col-span-2">
-                <CardContent className="pt-4">
-                  <div className="text-lg font-semibold">{selectedVendorData?.name}</div>
-                  <div className="text-sm text-muted-foreground">{selectedVendorData?.phone}</div>
-                  <div className="text-sm text-muted-foreground">{selectedVendorData?.address}</div>
-                </CardContent>
-            </Card>
-              <Card>
-                <CardContent className="pt-4">
-                  <div className="text-sm text-muted-foreground">Total Items</div>
-                  <div className="text-xl font-bold">{totalItems}</div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-4">
-                  <div className="text-sm text-muted-foreground">Gross Weight (kg)</div>
-                  <div className="text-xl font-bold">{totalGrossWeight.toFixed(2)}</div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-4">
-                  <div className="text-sm text-muted-foreground">Net Weight (kg)</div>
-                  <div className="text-xl font-bold">{totalNetWeight.toFixed(2)}</div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-4">
-                  <div className="text-sm text-muted-foreground">Total Amount</div>
-                  <div className="text-xl font-bold text-primary">₹{totalAmount.toLocaleString()}</div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Regular Items Table */}
-            {aggregatedItems.length > 0 && (
-              <div className="border rounded-lg overflow-hidden">
-                <div className="bg-muted/30 px-4 py-2 font-semibold border-b">Regular Items</div>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-10"></TableHead>
-                      <TableHead>Item Name</TableHead>
-                      <TableHead className="text-right">No. of Items</TableHead>
-                      <TableHead className="text-right">Gross Weight (kg)</TableHead>
-                      <TableHead className="text-right">Net Weight (kg)</TableHead>
-                      <TableHead className="text-right">Total</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {aggregatedItems.map((item: any, index: number) => (
-                      <TableRow key={item.name + index}>
-                        <TableCell>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7"
-                            onClick={() => setDetailViewProduct(item.name)}
-                            title="View details"
-                          >
-                            <Eye className="h-4 w-4 text-muted-foreground" />
-                          </Button>
-                        </TableCell>
-                        <TableCell className="font-medium">{item.name}</TableCell>
-                        <TableCell className="text-right">{item.quantity}</TableCell>
-                        <TableCell className="text-right">{item.grossWeight.toFixed(2)}</TableCell>
-                        <TableCell className="text-right">{item.netWeight.toFixed(2)}</TableCell>
-                        <TableCell className="text-right font-medium">₹{item.total.toLocaleString()}</TableCell>
-                      </TableRow>
-                    ))}
-                    <TableRow className="bg-muted/50 font-semibold border-t-2">
-                      <TableCell></TableCell>
-                      <TableCell>Subtotal (Regular)</TableCell>
-                      <TableCell className="text-right">{regularTotalItems}</TableCell>
-                      <TableCell className="text-right">{totalGrossWeight.toFixed(2)}</TableCell>
-                      <TableCell className="text-right">{regularTotalNetWeight.toFixed(2)}</TableCell>
-                      <TableCell className="text-right">₹{regularTotalAmount.toLocaleString()}</TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-
-            {/* Loose Items Table */}
-            {aggregatedLooseItems.length > 0 && (
-              <div className="border rounded-lg overflow-hidden border-amber-200 dark:border-amber-800">
-                <div className="bg-amber-50 dark:bg-amber-900/20 px-4 py-2 font-semibold border-b border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-400">
-                  Loose Items
-                </div>
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-amber-50/50 dark:bg-amber-900/10">
-                      <TableHead className="w-10"></TableHead>
-                      <TableHead>Item Name</TableHead>
-                      <TableHead className="text-right">Weight (kg)</TableHead>
-                      <TableHead className="text-right">Rate</TableHead>
-                      <TableHead className="text-right">Total</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {aggregatedLooseItems.map((item: any, index: number) => (
-                      <TableRow key={`loose-${item.name}-${index}`} className="bg-amber-50/30 dark:bg-amber-900/5">
-                        <TableCell>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7"
-                            onClick={() => setDetailViewProduct(`loose_${item.name.replace(' (Loose)', '')}`)}
-                            title="View details"
-                          >
-                            <Eye className="h-4 w-4 text-muted-foreground" />
-                          </Button>
-                        </TableCell>
-                        <TableCell className="font-medium">{item.name}</TableCell>
-                        <TableCell className="text-right">{item.netWeight.toFixed(2)}</TableCell>
-                        <TableCell className="text-right text-muted-foreground">-</TableCell>
-                        <TableCell className="text-right font-medium">₹{item.total.toLocaleString()}</TableCell>
-                      </TableRow>
-                    ))}
-                    <TableRow className="bg-amber-100/50 dark:bg-amber-900/20 font-semibold border-t-2 border-amber-200 dark:border-amber-700">
-                      <TableCell></TableCell>
-                      <TableCell>Subtotal (Loose)</TableCell>
-                      <TableCell className="text-right">{looseTotalNetWeight.toFixed(2)}</TableCell>
-                      <TableCell className="text-right">-</TableCell>
-                      <TableCell className="text-right">₹{looseTotalAmount.toLocaleString()}</TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-
-            {aggregatedItems.length === 0 && aggregatedLooseItems.length === 0 && (
-              <div className="border rounded-lg p-8 text-center text-muted-foreground">
-                No items found for selected period
-              </div>
-            )}
-
-            {/* Grand Total */}
-            {(aggregatedItems.length > 0 || aggregatedLooseItems.length > 0) && (
-              <div className="border-2 border-primary/30 rounded-lg bg-primary/5 p-4">
-                <div className="flex justify-between items-center">
-                  <span className="font-semibold text-lg">Grand Total</span>
-                  <div className="text-right">
-                    <div className="text-sm text-muted-foreground">
-                      {totalItems} items | {totalNetWeight.toFixed(2)} kg net
-                    </div>
-                    <div className="text-xl font-bold text-primary">₹{totalAmount.toLocaleString()}</div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Detail View Dialog */}
-            <Dialog open={!!detailViewProduct} onOpenChange={(open) => !open && setDetailViewProduct(null)}>
-              <DialogContent className="max-w-2xl">
-                <DialogHeader>
-                  <DialogTitle className="flex items-center gap-2">
-                    <Eye className="w-5 h-5 text-primary" />
-                    {detailViewProduct?.startsWith('loose_') 
-                      ? `${detailViewProduct.replace('loose_', '')} (Loose)` 
-                      : detailViewProduct} - Detailed Breakdown
-                  </DialogTitle>
-                </DialogHeader>
-                <div className="rounded-lg border overflow-hidden">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Date</TableHead>
-                        {!detailViewProduct?.startsWith('loose_') && (
-                          <TableHead className="text-right">Qty</TableHead>
-                        )}
-                        {!detailViewProduct?.startsWith('loose_') && (
-                          <TableHead className="text-right">Gross Wt (kg)</TableHead>
-                        )}
-                        <TableHead className="text-right">Net Wt (kg)</TableHead>
-                        <TableHead className="text-right">Rate</TableHead>
-                        <TableHead className="text-right">Total</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {detailItems.map((item: any, idx: number) => {
-                        const isLooseItem = detailViewProduct?.startsWith('loose_');
-                        const netWeight = isLooseItem 
-                          ? (item.weight_unit === 'g' ? (item.net_weight || 0) / 1000 : (item.net_weight || 0))
-                          : (item.net_weight || 0);
-                        return (
-                          <TableRow key={item.id || idx}>
-                            <TableCell>{item.invoices?.date ? format(new Date(item.invoices.date), 'dd MMM yyyy') : '-'}</TableCell>
-                            {!isLooseItem && (
-                              <TableCell className="text-right">{item.quantity || 0}</TableCell>
-                            )}
-                            {!isLooseItem && (
-                              <TableCell className="text-right">{getAdjustedGrossWeight(item).toFixed(2)}</TableCell>
-                            )}
-                            <TableCell className="text-right">{netWeight.toFixed(2)}</TableCell>
-                            <TableCell className="text-right">₹{item.rate?.toLocaleString() || 0}</TableCell>
-                            <TableCell className="text-right font-medium">₹{item.total?.toLocaleString() || 0}</TableCell>
-                          </TableRow>
-                        );
-                      })}
-                      <TableRow className="bg-muted/50 font-semibold">
-                        <TableCell>Total</TableCell>
-                        {!detailViewProduct?.startsWith('loose_') && (
-                          <TableCell className="text-right">{detailItems.reduce((sum: number, i: any) => sum + (i.quantity || 0), 0)}</TableCell>
-                        )}
-                        {!detailViewProduct?.startsWith('loose_') && (
-                          <TableCell className="text-right">{detailItems.reduce((sum: number, i: any) => sum + getAdjustedGrossWeight(i), 0).toFixed(2)}</TableCell>
-                        )}
-                        <TableCell className="text-right">
-                          {detailViewProduct?.startsWith('loose_')
-                            ? detailItems.reduce((sum: number, i: any) => {
-                                const nw = i.weight_unit === 'g' ? (i.net_weight || 0) / 1000 : (i.net_weight || 0);
-                                return sum + nw;
-                              }, 0).toFixed(2)
-                            : detailItems.reduce((sum: number, i: any) => sum + (i.net_weight || 0), 0).toFixed(2)
-                          }
-                        </TableCell>
-                        <TableCell className="text-right">-</TableCell>
-                        <TableCell className="text-right">₹{detailItems.reduce((sum: number, i: any) => sum + (i.total || 0), 0).toLocaleString()}</TableCell>
-                      </TableRow>
-                    </TableBody>
-                  </Table>
-                </div>
-              </DialogContent>
-            </Dialog>
-
-            {/* Additional Expenses Section */}
-            <div className="mt-6 space-y-4">
-              <Separator />
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="rent">Rent</Label>
-                    <div className="flex items-center gap-2">
-                      <span className={cn("text-xs font-medium", !rentIsAddition ? "text-red-600" : "text-muted-foreground")}>
-                        Reduce
-                      </span>
-                      <Switch
-                        checked={rentIsAddition}
-                        onCheckedChange={setRentIsAddition}
-                        className="data-[state=checked]:bg-green-600 data-[state=unchecked]:bg-red-500"
-                      />
-                      <span className={cn("text-xs font-medium", rentIsAddition ? "text-green-600" : "text-muted-foreground")}>
-                        Add
-                      </span>
-                    </div>
-                  </div>
-                  <Input
-                    id="rent"
-                    type="number"
-                    min="0"
-                    value={rent || ''}
-                    onChange={(e) => setRent(Number(e.target.value) || 0)}
-                    placeholder="Enter rent amount"
-                    className="font-mono"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="otherExpenses">Other Expenses</Label>
-                    <div className="flex items-center gap-2">
-                      <span className={cn("text-xs font-medium", !otherExpensesIsAddition ? "text-red-600" : "text-muted-foreground")}>
-                        Reduce
-                      </span>
-                      <Switch
-                        checked={otherExpensesIsAddition}
-                        onCheckedChange={setOtherExpensesIsAddition}
-                        className="data-[state=checked]:bg-green-600 data-[state=unchecked]:bg-red-500"
-                      />
-                      <span className={cn("text-xs font-medium", otherExpensesIsAddition ? "text-green-600" : "text-muted-foreground")}>
-                        Add
-                      </span>
-                    </div>
-                  </div>
-                  <Input
-                    id="otherExpenses"
-                    type="number"
-                    min="0"
-                    value={otherExpenses || ''}
-                    onChange={(e) => setOtherExpenses(Number(e.target.value) || 0)}
-                    placeholder="Enter other expenses"
-                    className="font-mono"
-                  />
-                </div>
-                <Card className="bg-primary/5 border-primary/20">
-                  <CardContent className="py-3">
-                    <div className="text-sm text-muted-foreground">Final Total Amount</div>
-                    <div className="text-2xl font-bold text-primary">₹{finalTotal.toLocaleString()}</div>
                   </CardContent>
                 </Card>
-              </div>
 
-              {/* Summary Breakdown */}
-              <div className="bg-muted/50 rounded-lg p-4 space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Items Total</span>
-                  <span className="font-medium">₹{totalAmount.toLocaleString()}</span>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <Card className="md:col-span-2">
+                    <CardContent className="pt-4">
+                      <div className="text-lg font-semibold">{selectedVendorData?.name}</div>
+                      <div className="text-sm text-muted-foreground">{selectedVendorData?.phone}</div>
+                      <div className="text-sm text-muted-foreground">{selectedVendorData?.address}</div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="pt-4">
+                      <div className="text-sm text-muted-foreground">Total Items</div>
+                      <div className="text-xl font-bold">{totalItems}</div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="pt-4">
+                      <div className="text-sm text-muted-foreground">Gross Weight (kg)</div>
+                      <div className="text-xl font-bold">{totalGrossWeight.toFixed(2)}</div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="pt-4">
+                      <div className="text-sm text-muted-foreground">Net Weight (kg)</div>
+                      <div className="text-xl font-bold">{totalNetWeight.toFixed(2)}</div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="pt-4">
+                      <div className="text-sm text-muted-foreground">Total Amount</div>
+                      <div className="text-xl font-bold text-primary">₹{totalAmount.toLocaleString()}</div>
+                    </CardContent>
+                  </Card>
                 </div>
-                {rent > 0 && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Rent {rentIsAddition ? '(+)' : '(-)'}</span>
-                    <span className={cn("font-medium", rentIsAddition ? "text-green-600" : "text-red-600")}>
-                      {rentIsAddition ? '+' : '-'}₹{rent.toLocaleString()}
-                    </span>
+
+                {/* Regular Items Table */}
+                {aggregatedItems.length > 0 && (
+                  <div className="border rounded-lg overflow-hidden">
+                    <div className="bg-muted/30 px-4 py-2 font-semibold border-b">Regular Items</div>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="w-10"></TableHead>
+                          <TableHead>Item Name</TableHead>
+                          <TableHead className="text-right">No. of Items</TableHead>
+                          <TableHead className="text-right">Gross Weight (kg)</TableHead>
+                          <TableHead className="text-right">Net Weight (kg)</TableHead>
+                          <TableHead className="text-right">Total</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {aggregatedItems.map((item: any, index: number) => (
+                          <TableRow key={item.name + index}>
+                            <TableCell>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7"
+                                onClick={() => setDetailViewProduct(item.name)}
+                                title="View details"
+                              >
+                                <Eye className="h-4 w-4 text-muted-foreground" />
+                              </Button>
+                            </TableCell>
+                            <TableCell className="font-medium">{item.name}</TableCell>
+                            <TableCell className="text-right">{item.quantity}</TableCell>
+                            <TableCell className="text-right">{item.grossWeight.toFixed(2)}</TableCell>
+                            <TableCell className="text-right">{item.netWeight.toFixed(2)}</TableCell>
+                            <TableCell className="text-right font-medium">₹{item.total.toLocaleString()}</TableCell>
+                          </TableRow>
+                        ))}
+                        <TableRow className="bg-muted/50 font-semibold border-t-2">
+                          <TableCell></TableCell>
+                          <TableCell>Subtotal (Regular)</TableCell>
+                          <TableCell className="text-right">{regularTotalItems}</TableCell>
+                          <TableCell className="text-right">{totalGrossWeight.toFixed(2)}</TableCell>
+                          <TableCell className="text-right">{regularTotalNetWeight.toFixed(2)}</TableCell>
+                          <TableCell className="text-right">₹{regularTotalAmount.toLocaleString()}</TableCell>
+                        </TableRow>
+                      </TableBody>
+                    </Table>
                   </div>
                 )}
-                {otherExpenses > 0 && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Other Expenses {otherExpensesIsAddition ? '(+)' : '(-)'}</span>
-                    <span className={cn("font-medium", otherExpensesIsAddition ? "text-green-600" : "text-red-600")}>
-                      {otherExpensesIsAddition ? '+' : '-'}₹{otherExpenses.toLocaleString()}
-                    </span>
+
+                {/* Loose Items Table */}
+                {aggregatedLooseItems.length > 0 && (
+                  <div className="border rounded-lg overflow-hidden border-amber-200 dark:border-amber-800">
+                    <div className="bg-amber-50 dark:bg-amber-900/20 px-4 py-2 font-semibold border-b border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-400">
+                      Loose Items
+                    </div>
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="bg-amber-50/50 dark:bg-amber-900/10">
+                          <TableHead className="w-10"></TableHead>
+                          <TableHead>Item Name</TableHead>
+                          <TableHead className="text-right">Weight (kg)</TableHead>
+                          <TableHead className="text-right">Rate</TableHead>
+                          <TableHead className="text-right">Total</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {aggregatedLooseItems.map((item: any, index: number) => (
+                          <TableRow key={`loose-${item.name}-${index}`} className="bg-amber-50/30 dark:bg-amber-900/5">
+                            <TableCell>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7"
+                                onClick={() => setDetailViewProduct(`loose_${item.name.replace(' (Loose)', '')}`)}
+                                title="View details"
+                              >
+                                <Eye className="h-4 w-4 text-muted-foreground" />
+                              </Button>
+                            </TableCell>
+                            <TableCell className="font-medium">{item.name}</TableCell>
+                            <TableCell className="text-right">{item.netWeight.toFixed(2)}</TableCell>
+                            <TableCell className="text-right text-muted-foreground">-</TableCell>
+                            <TableCell className="text-right font-medium">₹{item.total.toLocaleString()}</TableCell>
+                          </TableRow>
+                        ))}
+                        <TableRow className="bg-amber-100/50 dark:bg-amber-900/20 font-semibold border-t-2 border-amber-200 dark:border-amber-700">
+                          <TableCell></TableCell>
+                          <TableCell>Subtotal (Loose)</TableCell>
+                          <TableCell className="text-right">{looseTotalNetWeight.toFixed(2)}</TableCell>
+                          <TableCell className="text-right">-</TableCell>
+                          <TableCell className="text-right">₹{looseTotalAmount.toLocaleString()}</TableCell>
+                        </TableRow>
+                      </TableBody>
+                    </Table>
                   </div>
                 )}
-                <Separator className="my-2" />
-                <div className="flex justify-between font-semibold">
-                  <span>Final Total</span>
-                  <span className="text-primary">₹{finalTotal.toLocaleString()}</span>
-                </div>
-              </div>
 
-              {/* Save Button */}
-              <div className="flex justify-end">
-                <Button 
-                  onClick={() => saveStatementMutation.mutate()}
-                  disabled={!selectedVendor || saveStatementMutation.isPending}
-                  className="gap-2"
-                >
-                  {saveStatementMutation.isPending ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Save className="w-4 h-4" />
-                  )}
-                  {editingStatementId ? 'Update Statement' : 'Save Statement'}
-                </Button>
-              </div>
-            </div>
-          </>
-        )}
+                {aggregatedItems.length === 0 && aggregatedLooseItems.length === 0 && (
+                  <div className="border rounded-lg p-8 text-center text-muted-foreground">
+                    No items found for selected period
+                  </div>
+                )}
+
+                {/* Grand Total */}
+                {(aggregatedItems.length > 0 || aggregatedLooseItems.length > 0) && (
+                  <div className="border-2 border-primary/30 rounded-lg bg-primary/5 p-4">
+                    <div className="flex justify-between items-center">
+                      <span className="font-semibold text-lg">Grand Total</span>
+                      <div className="text-right">
+                        <div className="text-sm text-muted-foreground">
+                          {totalItems} items | {totalNetWeight.toFixed(2)} kg net
+                        </div>
+                        <div className="text-xl font-bold text-primary">₹{totalAmount.toLocaleString()}</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Detail View Dialog */}
+                <Dialog open={!!detailViewProduct} onOpenChange={(open) => !open && setDetailViewProduct(null)}>
+                  <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                      <DialogTitle className="flex items-center gap-2">
+                        <Eye className="w-5 h-5 text-primary" />
+                        {detailViewProduct?.startsWith('loose_')
+                          ? `${detailViewProduct.replace('loose_', '')} (Loose)`
+                          : detailViewProduct} - Detailed Breakdown
+                      </DialogTitle>
+                    </DialogHeader>
+                    <div className="rounded-lg border overflow-hidden">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Date</TableHead>
+                            <TableHead>Customer</TableHead>
+                            {!detailViewProduct?.startsWith('loose_') && (
+                              <TableHead className="text-right">Qty</TableHead>
+                            )}
+                            {!detailViewProduct?.startsWith('loose_') && (
+                              <TableHead className="text-right">Gross Wt (kg)</TableHead>
+                            )}
+                            <TableHead className="text-right">Net Wt (kg)</TableHead>
+                            <TableHead className="text-right">Rate</TableHead>
+                            <TableHead className="text-right">Total</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {detailItems.map((item: any, idx: number) => {
+                            const isLooseItem = detailViewProduct?.startsWith('loose_');
+                            const netWeight = isLooseItem
+                              ? (item.weight_unit === 'g' ? (item.net_weight || 0) / 1000 : (item.net_weight || 0))
+                              : (item.net_weight || 0);
+                            return (
+                              <TableRow key={item.id || idx}>
+                                <TableCell>{item.invoices?.date ? format(new Date(item.invoices.date), 'dd MMM yyyy') : '-'}</TableCell>
+                                <TableCell className="max-w-[120px] truncate">{item.invoices?.customers?.name || 'Walk-in'}</TableCell>
+                                {!isLooseItem && (
+                                  <TableCell className="text-right">{item.quantity || 0}</TableCell>
+                                )}
+                                {!isLooseItem && (
+                                  <TableCell className="text-right">{getAdjustedGrossWeight(item).toFixed(2)}</TableCell>
+                                )}
+                                <TableCell className="text-right">{netWeight.toFixed(2)}</TableCell>
+                                <TableCell className="text-right">₹{item.rate?.toLocaleString() || 0}</TableCell>
+                                <TableCell className="text-right font-medium">₹{item.total?.toLocaleString() || 0}</TableCell>
+                              </TableRow>
+                            );
+                          })}
+                          <TableRow className="bg-muted/50 font-semibold">
+                            <TableCell colSpan={2}>Total</TableCell>
+                            {!detailViewProduct?.startsWith('loose_') && (
+                              <TableCell className="text-right">{detailItems.reduce((sum: number, i: any) => sum + (i.quantity || 0), 0)}</TableCell>
+                            )}
+                            {!detailViewProduct?.startsWith('loose_') && (
+                              <TableCell className="text-right">{detailItems.reduce((sum: number, i: any) => sum + getAdjustedGrossWeight(i), 0).toFixed(2)}</TableCell>
+                            )}
+                            <TableCell className="text-right">
+                              {detailViewProduct?.startsWith('loose_')
+                                ? detailItems.reduce((sum: number, i: any) => {
+                                  const nw = i.weight_unit === 'g' ? (i.net_weight || 0) / 1000 : (i.net_weight || 0);
+                                  return sum + nw;
+                                }, 0).toFixed(2)
+                                : detailItems.reduce((sum: number, i: any) => sum + (i.net_weight || 0), 0).toFixed(2)
+                              }
+                            </TableCell>
+                            <TableCell className="text-right">-</TableCell>
+                            <TableCell className="text-right">₹{detailItems.reduce((sum: number, i: any) => sum + (i.total || 0), 0).toLocaleString()}</TableCell>
+                          </TableRow>
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+
+                {/* Additional Expenses Section */}
+                <div className="mt-6 space-y-4">
+                  <Separator />
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="rent">Rent</Label>
+                        <div className="flex items-center gap-2">
+                          <span className={cn("text-xs font-medium", !rentIsAddition ? "text-red-600" : "text-muted-foreground")}>
+                            Reduce
+                          </span>
+                          <Switch
+                            checked={rentIsAddition}
+                            onCheckedChange={setRentIsAddition}
+                            className="data-[state=checked]:bg-green-600 data-[state=unchecked]:bg-red-500"
+                          />
+                          <span className={cn("text-xs font-medium", rentIsAddition ? "text-green-600" : "text-muted-foreground")}>
+                            Add
+                          </span>
+                        </div>
+                      </div>
+                      <Input
+                        id="rent"
+                        type="number"
+                        min="0"
+                        value={rent || ''}
+                        onChange={(e) => setRent(Number(e.target.value) || 0)}
+                        placeholder="Enter rent amount"
+                        className="font-mono"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="otherExpenses">Other Expenses</Label>
+                        <div className="flex items-center gap-2">
+                          <span className={cn("text-xs font-medium", !otherExpensesIsAddition ? "text-red-600" : "text-muted-foreground")}>
+                            Reduce
+                          </span>
+                          <Switch
+                            checked={otherExpensesIsAddition}
+                            onCheckedChange={setOtherExpensesIsAddition}
+                            className="data-[state=checked]:bg-green-600 data-[state=unchecked]:bg-red-500"
+                          />
+                          <span className={cn("text-xs font-medium", otherExpensesIsAddition ? "text-green-600" : "text-muted-foreground")}>
+                            Add
+                          </span>
+                        </div>
+                      </div>
+                      <Input
+                        id="otherExpenses"
+                        type="number"
+                        min="0"
+                        value={otherExpenses || ''}
+                        onChange={(e) => setOtherExpenses(Number(e.target.value) || 0)}
+                        placeholder="Enter other expenses"
+                        className="font-mono"
+                      />
+                    </div>
+                    <Card className="bg-primary/5 border-primary/20">
+                      <CardContent className="py-3">
+                        <div className="text-sm text-muted-foreground">Final Total Amount</div>
+                        <div className="text-2xl font-bold text-primary">₹{finalTotal.toLocaleString()}</div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Summary Breakdown */}
+                  <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Items Total</span>
+                      <span className="font-medium">₹{totalAmount.toLocaleString()}</span>
+                    </div>
+                    {rent > 0 && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Rent {rentIsAddition ? '(+)' : '(-)'}</span>
+                        <span className={cn("font-medium", rentIsAddition ? "text-green-600" : "text-red-600")}>
+                          {rentIsAddition ? '+' : '-'}₹{rent.toLocaleString()}
+                        </span>
+                      </div>
+                    )}
+                    {otherExpenses > 0 && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Other Expenses {otherExpensesIsAddition ? '(+)' : '(-)'}</span>
+                        <span className={cn("font-medium", otherExpensesIsAddition ? "text-green-600" : "text-red-600")}>
+                          {otherExpensesIsAddition ? '+' : '-'}₹{otherExpenses.toLocaleString()}
+                        </span>
+                      </div>
+                    )}
+                    <Separator className="my-2" />
+                    <div className="flex justify-between font-semibold">
+                      <span>Final Total</span>
+                      <span className="text-primary">₹{finalTotal.toLocaleString()}</span>
+                    </div>
+                  </div>
+
+                  {/* Save Button */}
+                  <div className="flex justify-end">
+                    <Button
+                      onClick={() => saveStatementMutation.mutate()}
+                      disabled={!selectedVendor || saveStatementMutation.isPending}
+                      className="gap-2"
+                    >
+                      {saveStatementMutation.isPending ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Save className="w-4 h-4" />
+                      )}
+                      {editingStatementId ? 'Update Statement' : 'Save Statement'}
+                    </Button>
+                  </div>
+                </div>
+              </>
+            )}
           </TabsContent>
         </Tabs>
       </DialogContent>
