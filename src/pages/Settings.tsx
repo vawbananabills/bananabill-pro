@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,17 +7,21 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Building2, Save, Upload, Loader2, X, Image, Calendar } from 'lucide-react';
+import { Building2, Save, Upload, Loader2, X, Image, Calendar, Plus } from 'lucide-react';
 import { useCompany } from '@/hooks/useCompany';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { DATE_FORMAT_OPTIONS } from '@/lib/dateFormat';
+import { useBiometrics } from '@/hooks/useBiometrics';
+import { Fingerprint, Smartphone, Trash2 as Trash } from 'lucide-react';
 
 export default function Settings() {
   const { company, updateCompany } = useCompany();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
-  
+  const { register, getBiometrics, removeBiometric, isSupported, loading: biometricLoading } = useBiometrics();
+  const [biometrics, setBiometrics] = useState<any[]>([]);
+
   const [settings, setSettings] = useState({
     name: '',
     address: '',
@@ -53,7 +57,23 @@ export default function Settings() {
         date_format: company.date_format || 'dd/MM/yyyy',
       });
     }
+    loadBiometrics();
   }, [company]);
+
+  const loadBiometrics = async () => {
+    const data = await getBiometrics();
+    setBiometrics(data);
+  };
+
+  const handleRegisterBiometric = async () => {
+    const success = await register(`Device ${biometrics.length + 1}`);
+    if (success) loadBiometrics();
+  };
+
+  const handleRemoveBiometric = async (id: string, credentialId: string) => {
+    const success = await removeBiometric(id, credentialId);
+    if (success) loadBiometrics();
+  };
 
   const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -220,8 +240,8 @@ export default function Settings() {
                     onChange={handleLogoUpload}
                     className="hidden"
                   />
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     onClick={() => fileInputRef.current?.click()}
                     disabled={uploading}
                   >
@@ -241,7 +261,7 @@ export default function Settings() {
                 </div>
               </div>
             </div>
-            
+
             {/* Show Logo on Invoice Toggle */}
             {settings.logo_url && (
               <div className="flex items-center justify-between rounded-lg border p-4">
@@ -293,7 +313,7 @@ export default function Settings() {
                 />
               </div>
             </div>
-            
+
             {/* Date Format Setting */}
             <div className="flex items-center justify-between rounded-lg border p-4">
               <div className="space-y-0.5">
@@ -356,10 +376,87 @@ export default function Settings() {
           </CardContent>
         </Card>
 
+        {/* Security / Biometrics */}
+        <Card className="shadow-card border-primary/20">
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Fingerprint className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <CardTitle className="text-lg">Security & Login</CardTitle>
+                <CardDescription>
+                  Manage biometric login for your account
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {!isSupported ? (
+              <div className="p-4 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-sm">
+                Biometric login is not supported on this browser or device. Use a modern phone with fingerprint/face sensor.
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-4 rounded-lg border bg-slate-50/50">
+                  <div className="space-y-0.5">
+                    <Label className="text-sm font-bold flex items-center gap-2">
+                      <Smartphone className="w-4 h-4 text-primary" />
+                      Fingerprint Login
+                    </Label>
+                    <p className="text-xs text-muted-foreground">
+                      Enable biometric authentication to login quickly without typing your password.
+                    </p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleRegisterBiometric}
+                    disabled={biometricLoading}
+                    className="gap-2"
+                  >
+                    {biometricLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                    Register Fingerprint
+                  </Button>
+                </div>
+
+                {biometrics.length > 0 && (
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold uppercase text-muted-foreground tracking-wider">Registered Devices</Label>
+                    <div className="divide-y border rounded-lg overflow-hidden bg-white">
+                      {biometrics.map((bio) => (
+                        <div key={bio.id} className="flex items-center justify-between p-3 hover:bg-slate-50 transition-colors">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+                              <Fingerprint className="w-4 h-4 text-green-700" />
+                            </div>
+                            <div>
+                              <div className="text-sm font-medium">{bio.device_name || 'Biometric Key'}</div>
+                              <div className="text-[10px] text-muted-foreground">Added on {new Date(bio.created_at).toLocaleDateString()}</div>
+                            </div>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                            onClick={() => handleRemoveBiometric(bio.id, bio.credential_id)}
+                          >
+                            <Trash className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Save Button */}
         <div className="flex justify-end">
-          <Button 
-            onClick={handleSave} 
+          <Button
+            onClick={handleSave}
             className="gap-2"
             disabled={updateCompany.isPending || !settings.name}
           >

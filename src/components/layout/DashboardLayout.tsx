@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import React, { ReactNode } from 'react';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { GlobalKeyboardShortcuts } from '@/components/GlobalKeyboardShortcuts';
