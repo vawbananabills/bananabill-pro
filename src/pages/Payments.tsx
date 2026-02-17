@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
@@ -40,6 +40,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Search, Trash2, CreditCard, Banknote, Wallet, Pencil } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { usePayments } from '@/hooks/usePayments';
 import { useCustomers } from '@/hooks/useCustomers';
 import { useInvoices } from '@/hooks/useInvoices';
@@ -77,6 +78,25 @@ export default function Payments() {
       (inv.status !== 'paid' || inv.id === formData.invoice_id || selectedInvoiceIds.includes(inv.id))
   ) || [];
 
+  const totalAllocatedAmount: number = (Object.values(allocations) as number[]).reduce((sum: number, val: number) => sum + (Number(val) || 0), 0);
+
+  const autoAllocate = (totalAmount: number, discount: number, selectedIds: string[]) => {
+    const newAllocations: Record<string, number> = {};
+    let remaining = totalAmount + discount;
+
+    selectedIds.forEach((id) => {
+      const inv = filteredInvoices.find((i) => i.id === id);
+      if (inv) {
+        const balance = (inv.total || 0) - (inv.received_amount || 0);
+        const toApply = Math.max(0, Math.min(balance, remaining));
+        newAllocations[id] = parseFloat(toApply.toFixed(2));
+        remaining -= toApply;
+      }
+    });
+
+    setAllocations(newAllocations);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -104,8 +124,8 @@ export default function Payments() {
       }));
 
       // If there's extra amount not allocated, add it as a separate payment (advance)
-      const totalAllocated = Object.values(allocations).reduce((sum: number, val: number) => sum + val, 0);
-      const remainingAmount = (parseFloat(formData.amount) || 0) - totalAllocated;
+      const totalAllocated: number = (Object.values(allocations) as number[]).reduce((sum: number, val: number) => sum + (Number(val) || 0), 0);
+      const remainingAmount: number = (Number(parseFloat(formData.amount)) || 0) - totalAllocated;
 
       if (remainingAmount > 0) {
         paymentsToCreate.push({
@@ -248,62 +268,101 @@ export default function Payments() {
                 </div>
 
                 <div className="space-y-3">
-                  <Label>Link Invoices (Optional)</Label>
-                  <ScrollArea className="h-[180px] border rounded-md p-2">
-                    <div className="space-y-4">
-                      {filteredInvoices.length === 0 ? (
-                        <p className="text-sm text-muted-foreground text-center py-4">No pending invoices for this customer</p>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-semibold">Link Invoices</Label>
+                    <div className="flex items-center gap-2">
+                      <span className={cn(
+                        "text-[10px] px-2 py-0.5 rounded-full font-bold",
+                        Math.abs(totalAllocatedAmount - (parseFloat(formData.amount) || 0)) < 0.01
+                          ? "bg-green-100 text-green-700"
+                          : "bg-amber-100 text-amber-700"
+                      )}>
+                        Allocated: ₹{totalAllocatedAmount.toFixed(2)}
+                      </span>
+                      <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
+                        Selected: {selectedInvoiceIds.length}
+                      </span>
+                    </div>
+                  </div>
+                  <ScrollArea className="h-[220px] border rounded-md p-2 bg-slate-50/50">
+                    <div className="space-y-3">
+                      {!formData.customer_id ? (
+                        <p className="text-sm text-center py-8 text-muted-foreground italic">Select a customer first to view invoices</p>
+                      ) : filteredInvoices.length === 0 ? (
+                        <p className="text-sm text-muted-foreground text-center py-8">No pending invoices found</p>
                       ) : (
                         filteredInvoices.map((invoice) => {
                           const balance = (invoice.total || 0) - (invoice.received_amount || 0);
                           const isSelected = selectedInvoiceIds.includes(invoice.id);
 
                           return (
-                            <div key={invoice.id} className="flex items-start gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors">
-                              <Checkbox
-                                id={`inv-${invoice.id}`}
-                                checked={isSelected}
-                                onCheckedChange={(checked) => {
-                                  if (checked) {
-                                    setSelectedInvoiceIds([...selectedInvoiceIds, invoice.id]);
-                                    // Auto-calculate remaining amount to apply
-                                    const totalToDistribute = Number(parseFloat(formData.amount) || 0) + Number(parseFloat(formData.discount) || 0);
-                                    const alreadyAllocated = Object.entries(allocations)
-                                      .filter(([id]) => id !== invoice.id)
-                                      .reduce((sum: number, [_, val]) => sum + Number(val), 0);
-                                    const remaining = Math.max(0, Math.min(balance, totalToDistribute - alreadyAllocated));
-                                    setAllocations({ ...allocations, [invoice.id]: remaining });
-                                  } else {
-                                    setSelectedInvoiceIds(selectedInvoiceIds.filter(id => id !== invoice.id));
-                                    const newAllocations = { ...allocations };
-                                    delete newAllocations[invoice.id];
-                                    setAllocations(newAllocations);
-                                  }
-                                }}
-                              />
-                              <div className="flex-1 min-w-0">
-                                <Label
-                                  htmlFor={`inv-${invoice.id}`}
-                                  className="flex justify-between cursor-pointer"
-                                >
-                                  <span className="font-medium truncate">{invoice.invoice_number}</span>
-                                  <span className="text-muted-foreground ml-2">Bal: ₹{balance.toLocaleString()}</span>
-                                </Label>
-                                {isSelected && (
-                                  <div className="mt-2 flex items-center gap-2">
-                                    <span className="text-xs text-muted-foreground">Apply:</span>
-                                    <Input
-                                      type="number"
-                                      step="0.01"
-                                      className="h-8 text-xs"
-                                      value={allocations[invoice.id] || ''}
-                                      onChange={(e) => {
-                                        const val = parseFloat(e.target.value) || 0;
-                                        setAllocations({ ...allocations, [invoice.id]: Math.min(val, balance) });
-                                      }}
-                                    />
+                            <div key={invoice.id} className={cn(
+                              "relative flex flex-col gap-2 p-3 rounded-lg border transition-all",
+                              isSelected ? "bg-primary/5 border-primary/20 ring-1 ring-primary/10" : "bg-white border-transparent hover:border-slate-200"
+                            )}>
+                              <div className="flex items-start gap-3">
+                                <Checkbox
+                                  id={`inv-${invoice.id}`}
+                                  checked={isSelected}
+                                  onCheckedChange={(checked) => {
+                                    const newSelected = checked
+                                      ? [...selectedInvoiceIds, invoice.id]
+                                      : selectedInvoiceIds.filter(id => id !== invoice.id);
+
+                                    setSelectedInvoiceIds(newSelected);
+                                    autoAllocate(parseFloat(formData.amount) || 0, parseFloat(formData.discount) || 0, newSelected);
+                                  }}
+                                />
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex justify-between items-start mb-1">
+                                    <Label
+                                      htmlFor={`inv-${invoice.id}`}
+                                      className="font-bold text-sm cursor-pointer truncate mr-2"
+                                    >
+                                      {invoice.invoice_number}
+                                    </Label>
+                                    <Badge variant={invoice.status === 'partial' ? 'outline' : 'secondary'} className="text-[10px] h-4" {...{ children: invoice.status } as any}>
+                                      {invoice.status}
+                                    </Badge>
                                   </div>
-                                )}
+
+                                  <div className="grid grid-cols-3 gap-2 text-[10px] text-muted-foreground uppercase tracking-wider mb-2">
+                                    <div className="flex flex-col">
+                                      <span>Total</span>
+                                      <span className="font-semibold text-slate-700">₹{invoice.total?.toLocaleString()}</span>
+                                    </div>
+                                    <div className="flex flex-col">
+                                      <span>Paid</span>
+                                      <span className="font-semibold text-green-600">₹{invoice.received_amount?.toLocaleString()}</span>
+                                    </div>
+                                    <div className="flex flex-col">
+                                      <span>Balance</span>
+                                      <span className="font-semibold text-red-600">₹{balance.toLocaleString()}</span>
+                                    </div>
+                                  </div>
+
+                                  {isSelected && (
+                                    <div className="mt-2 bg-white/80 p-2 rounded border border-primary/10 shadow-sm animate-in fade-in slide-in-from-top-1">
+                                      <div className="flex items-center justify-between mb-1.5">
+                                        <Label className="text-[11px] font-bold text-primary">NOW ADDING</Label>
+                                        <span className="text-[10px] font-medium text-slate-500 italic">Remaining: ₹{(balance - (allocations[invoice.id] || 0)).toFixed(2)}</span>
+                                      </div>
+                                      <div className="relative">
+                                        <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">₹</span>
+                                        <Input
+                                          type="number"
+                                          step="0.01"
+                                          className="h-8 pl-5 text-sm font-bold bg-white"
+                                          value={allocations[invoice.id] || ''}
+                                          onChange={(e) => {
+                                            const val = parseFloat(e.target.value) || 0;
+                                            setAllocations({ ...allocations, [invoice.id]: Math.min(val, balance) });
+                                          }}
+                                        />
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
                               </div>
                             </div>
                           );
@@ -321,9 +380,14 @@ export default function Payments() {
                       type="number"
                       step="0.01"
                       value={formData.amount}
-                      onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setFormData({ ...formData, amount: val });
+                        autoAllocate(parseFloat(val) || 0, parseFloat(formData.discount) || 0, selectedInvoiceIds);
+                      }}
                       placeholder="0.00"
                       required
+                      className="font-bold text-primary"
                     />
                   </div>
                   <div className="space-y-2">
@@ -333,7 +397,11 @@ export default function Payments() {
                       type="number"
                       step="0.01"
                       value={formData.discount}
-                      onChange={(e) => setFormData({ ...formData, discount: e.target.value })}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setFormData({ ...formData, discount: val });
+                        autoAllocate(parseFloat(formData.amount) || 0, parseFloat(val) || 0, selectedInvoiceIds);
+                      }}
                       placeholder="0.00"
                     />
                   </div>
@@ -453,7 +521,7 @@ export default function Payments() {
                       <TableCell>{payment.customer_name || '-'}</TableCell>
                       <TableCell>
                         {payment.invoice_number ? (
-                          <Badge variant="outline">{payment.invoice_number}</Badge>
+                          <Badge variant="outline" {...{ children: payment.invoice_number } as any}>{payment.invoice_number}</Badge>
                         ) : '-'}
                       </TableCell>
                       <TableCell>
