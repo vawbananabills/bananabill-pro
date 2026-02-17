@@ -67,14 +67,14 @@ export default function Landing() {
             </Button>
           </Link>
           {!loading && (
-          user ?
-          <Link to="/dashboard">
+            user ?
+              <Link to="/dashboard">
                 <Button size="sm" className="gap-1 md:gap-2">
                   <span className="hidden sm:inline">Go to</span> Dashboard <ArrowRight className="w-4 h-4" />
                 </Button>
               </Link> :
 
-          <>
+              <>
                 <Link to="/auth" className="hidden sm:block">
                   <Button variant="ghost" size="sm">Sign In</Button>
                 </Link>
@@ -215,7 +215,7 @@ export default function Landing() {
               © 2024 BananaBills. All rights reserved.
             </p>
             <p className="text-xs text-muted-foreground">
-              Designed & Developed by <a href="https://vartsworld.netlify.app/" target="_blank" rel="noopener noreferrer" className="font-semibold text-primary hover:underline">VAW TECHNOLOGIES</a>
+              Designed & Developed by <a href="https://vawtech.in/" target="_blank" rel="noopener noreferrer" className="font-semibold text-primary hover:underline">VAW TECHNOLOGIES</a>
             </p>
           </div>
         </div>

@@ -48,7 +48,7 @@ export default function Install() {
 
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
-    
+
     if (outcome === 'accepted') {
       setIsInstalled(true);
     }
@@ -245,7 +245,7 @@ export default function Install() {
       <footer className="border-t border-border py-8 mt-12">
         <div className="container mx-auto px-4 text-center">
           <p className="text-xs text-muted-foreground">
-            Designed & Developed by <a href="https://vartsworld.netlify.app/" target="_blank" rel="noopener noreferrer" className="font-semibold text-primary hover:underline">VAW TECHNOLOGIES</a>
+            Designed & Developed by <a href="https://vawtech.in/" target="_blank" rel="noopener noreferrer" className="font-semibold text-primary hover:underline">VAW TECHNOLOGIES</a>
           </p>
         </div>
       </footer>

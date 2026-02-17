@@ -27,7 +27,7 @@ export function DashboardLayout({ children, title, subtitle }: DashboardLayoutPr
           <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-muted-foreground">
             <p>© 2024 BananaBills. All rights reserved.</p>
             <p>
-              Designed & Developed by <a href="https://vartsworld.netlify.app/" target="_blank" rel="noopener noreferrer" className="font-semibold text-primary hover:underline">VAW TECHNOLOGIES</a>
+              Designed & Developed by <a href="https://vawtech.in/" target="_blank" rel="noopener noreferrer" className="font-semibold text-primary hover:underline">VAW TECHNOLOGIES</a>
             </p>
           </div>
         </footer>
