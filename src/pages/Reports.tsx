@@ -2,12 +2,12 @@ import { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { 
-  FileText, 
-  Users, 
-  Truck, 
-  TrendingUp, 
-  BookOpen, 
+import {
+  FileText,
+  Users,
+  Truck,
+  TrendingUp,
+  BookOpen,
   Wallet,
   BarChart3,
   PieChart,
@@ -21,6 +21,7 @@ import { SalesReportDialog } from '@/components/reports/SalesReportDialog';
 import { PartyStatementDialog } from '@/components/reports/PartyStatementDialog';
 import { VendorStatementDialog } from '@/components/reports/VendorStatementDialog';
 import { WeeklyInvoiceDialog } from '@/components/reports/WeeklyInvoiceDialog';
+import { VendorReceiptDialog } from '@/components/reports/VendorReceiptDialog';
 import { DayBookDialog } from '@/components/reports/DayBookDialog';
 import { ProfitLossDialog } from '@/components/reports/ProfitLossDialog';
 import { BalanceSheetDialog } from '@/components/reports/BalanceSheetDialog';
@@ -33,12 +34,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
-type ReportType = 'sales' | 'party' | 'vendor' | 'weekly' | 'daybook' | 'pnl' | 'balance' | 'cash';
+type ReportType = 'sales' | 'party' | 'vendor' | 'weekly' | 'daybook' | 'pnl' | 'balance' | 'cash' | 'vendor_receipt';
 
 const reports: { title: string; description: string; icon: any; type: ReportType }[] = [
   { title: 'Sales Report', description: 'Detailed sales analysis by date, customer, or product', icon: TrendingUp, type: 'sales' },
   { title: 'Party Statement', description: 'Customer-wise transaction and balance report', icon: Users, type: 'party' },
   { title: 'Vendor Statement', description: 'Vendor-wise purchase summary and balance', icon: Truck, type: 'vendor' },
+  { title: 'Vendor Receipt', description: 'Create and manage vendor receipts with detailed charges', icon: FileText, type: 'vendor_receipt' },
   { title: 'Weekly Invoice', description: 'Generate invoice-style report for date range', icon: Calendar, type: 'weekly' },
   { title: 'Day Book', description: 'Daily transaction register', icon: BookOpen, type: 'daybook' },
   { title: 'Profit & Loss', description: 'Income vs expense summary', icon: BarChart3, type: 'pnl' },
@@ -61,7 +63,7 @@ export default function Reports() {
   const { customers } = useCustomers();
   const { vendors } = useVendors();
   const { invoices } = useInvoices();
-  
+
   const [openDialog, setOpenDialog] = useState<ReportType | null>(null);
   const [exporting, setExporting] = useState<string | null>(null);
 
@@ -78,7 +80,7 @@ export default function Reports() {
 
       const csvContent = [
         ['Date', 'Invoice #', 'Customer', 'Subtotal', 'Discount', 'Other Charges', 'Total', 'Payment Type', 'Status'].join(','),
-        ...(data || []).map((inv: any) => 
+        ...(data || []).map((inv: any) =>
           [inv.date, inv.invoice_number, inv.customers?.name || 'Walk-in', inv.subtotal, inv.discount, inv.other_charges, inv.total, inv.payment_type, inv.status].join(',')
         )
       ].join('\n');
@@ -268,6 +270,7 @@ export default function Reports() {
       <SalesReportDialog open={openDialog === 'sales'} onOpenChange={(open) => !open && setOpenDialog(null)} />
       <PartyStatementDialog open={openDialog === 'party'} onOpenChange={(open) => !open && setOpenDialog(null)} />
       <VendorStatementDialog open={openDialog === 'vendor'} onOpenChange={(open) => !open && setOpenDialog(null)} />
+      <VendorReceiptDialog open={openDialog === 'vendor_receipt'} onOpenChange={(open) => !open && setOpenDialog(null)} />
       <WeeklyInvoiceDialog open={openDialog === 'weekly'} onOpenChange={(open) => !open && setOpenDialog(null)} />
       <DayBookDialog open={openDialog === 'daybook'} onOpenChange={(open) => !open && setOpenDialog(null)} />
       <ProfitLossDialog open={openDialog === 'pnl'} onOpenChange={(open) => !open && setOpenDialog(null)} />
