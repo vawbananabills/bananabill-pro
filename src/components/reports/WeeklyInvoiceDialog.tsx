@@ -273,7 +273,8 @@ export function WeeklyInvoiceDialog({ open, onOpenChange }: WeeklyInvoiceDialogP
   const finalTotal = subtotal - discount + otherCharges;
   const previousBalance = data?.previousBalance || 0;
   const totalPaymentsReceived = data?.totalPayments || 0;
-  const closingBalance = previousBalance + finalTotal - (showPaymentSummary ? totalPaymentsReceived : 0);
+  const paymentDeduction = showPaymentSummary ? totalPaymentsReceived : 0;
+  const closingBalance = previousBalance + finalTotal - paymentDeduction;
   // Alias for backward compatibility in the UI
   const openingBalance = previousBalance;
 
