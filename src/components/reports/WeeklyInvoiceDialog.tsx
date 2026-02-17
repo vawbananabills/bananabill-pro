@@ -48,7 +48,7 @@ export function WeeklyInvoiceDialog({ open, onOpenChange }: WeeklyInvoiceDialogP
   const [editingInvoiceId, setEditingInvoiceId] = useState<string | null>(null);
   const [showPaymentDetails, setShowPaymentDetails] = useState(true);
   const [showPaymentSummary, setShowPaymentSummary] = useState(true);
-  
+
   const [dateRange, setDateRange] = useState<'thisWeek' | 'lastWeek' | 'thisMonth' | 'custom'>('thisWeek');
   const [dateFrom, setDateFrom] = useState<Date>(startOfWeek(new Date(), { weekStartsOn: 1 }));
   const [dateTo, setDateTo] = useState<Date>(endOfWeek(new Date(), { weekStartsOn: 1 }));
@@ -58,7 +58,7 @@ export function WeeklyInvoiceDialog({ open, onOpenChange }: WeeklyInvoiceDialogP
   const [otherCharges, setOtherCharges] = useState<number>(0);
   const [notes, setNotes] = useState<string>('');
   const [isSaving, setIsSaving] = useState(false);
-  
+
   // Payment form state
   const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [paymentAmount, setPaymentAmount] = useState<number>(0);
@@ -66,7 +66,7 @@ export function WeeklyInvoiceDialog({ open, onOpenChange }: WeeklyInvoiceDialogP
   const [paymentDate, setPaymentDate] = useState<Date>(new Date());
   const [paymentNotes, setPaymentNotes] = useState<string>('');
   const [isSubmittingPayment, setIsSubmittingPayment] = useState(false);
-  
+
   const printRef = useRef<HTMLDivElement>(null);
 
   const selectedCustomerData = customers.find(c => c.id === selectedCustomer);
@@ -228,7 +228,7 @@ export function WeeklyInvoiceDialog({ open, onOpenChange }: WeeklyInvoiceDialogP
           });
           totalNetWeight += item.net_weight || 0;
         });
-        
+
         inv.loose_invoice_items?.forEach((item: any) => {
           const weightInKg = item.weight_unit === 'g' ? (item.net_weight || 0) / 1000 : (item.net_weight || 0);
           allLooseItems.push({
@@ -242,7 +242,7 @@ export function WeeklyInvoiceDialog({ open, onOpenChange }: WeeklyInvoiceDialogP
           });
           totalLooseWeight += weightInKg;
         });
-        
+
         grandTotal += inv.total || 0;
         totalInvoiceDiscount += inv.discount || 0;
         totalInvoiceOtherCharges += inv.other_charges || 0;
@@ -273,7 +273,7 @@ export function WeeklyInvoiceDialog({ open, onOpenChange }: WeeklyInvoiceDialogP
   const finalTotal = subtotal - discount + otherCharges;
   const previousBalance = data?.previousBalance || 0;
   const totalPaymentsReceived = data?.totalPayments || 0;
-  const closingBalance = previousBalance + finalTotal - totalPaymentsReceived;
+  const closingBalance = previousBalance + finalTotal - (showPaymentSummary ? totalPaymentsReceived : 0);
   // Alias for backward compatibility in the UI
   const openingBalance = previousBalance;
 
@@ -307,7 +307,7 @@ export function WeeklyInvoiceDialog({ open, onOpenChange }: WeeklyInvoiceDialogP
 
   const handleSave = async () => {
     if (!company?.id || !selectedCustomer || !data) return;
-    
+
     setIsSaving(true);
     try {
       const invoiceData = {
@@ -349,7 +349,7 @@ export function WeeklyInvoiceDialog({ open, onOpenChange }: WeeklyInvoiceDialogP
       toast.error('Please enter a valid payment amount');
       return;
     }
-    
+
     setIsSubmittingPayment(true);
     try {
       await createPayment.mutateAsync({
@@ -361,7 +361,7 @@ export function WeeklyInvoiceDialog({ open, onOpenChange }: WeeklyInvoiceDialogP
         payment_method: paymentMethod,
         notes: paymentNotes || `Weekly Invoice Payment - ${format(dateFrom, 'dd MMM')} to ${format(dateTo, 'dd MMM')}`,
       });
-      
+
       // Reset form and refetch data
       setPaymentAmount(0);
       setPaymentNotes('');
@@ -528,709 +528,709 @@ export function WeeklyInvoiceDialog({ open, onOpenChange }: WeeklyInvoiceDialogP
 
   return (
     <>
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <CalendarIcon2 className="w-5 h-5 text-primary" />
-            Weekly / Custom Date Invoice
-          </DialogTitle>
-        </DialogHeader>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CalendarIcon2 className="w-5 h-5 text-primary" />
+              Weekly / Custom Date Invoice
+            </DialogTitle>
+          </DialogHeader>
 
-        {/* View Saved Section */}
-        <div className="bg-muted/50 border rounded-lg p-3 mb-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <FolderOpen className="w-5 h-5 text-primary" />
-            <span className="text-sm font-medium">Saved Weekly Invoices</span>
-          </div>
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => setShowSavedInvoices(true)} 
-            className="gap-2"
-          >
-            View All Saved
-          </Button>
-        </div>
-
-        {/* Filters */}
-        <div className="flex flex-wrap gap-4 items-end mb-4">
-          <div className="space-y-1">
-            <label className="text-sm text-muted-foreground">Select Customer *</label>
-            <SearchableSelect
-              value={selectedCustomer}
-              onValueChange={setSelectedCustomer}
-              options={customers.map((c) => ({ value: c.id, label: c.name }))}
-              placeholder="Select customer"
-              searchPlaceholder="Search customers..."
-              emptyMessage="No customers found."
-              className="w-[200px]"
-            />
-          </div>
-
-          <div className="space-y-1">
-            <label className="text-sm text-muted-foreground">Date Range</label>
-            <Select value={dateRange} onValueChange={(v: any) => handleRangeChange(v)}>
-              <SelectTrigger className="w-[150px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="thisWeek">This Week</SelectItem>
-                <SelectItem value="lastWeek">Last Week</SelectItem>
-                <SelectItem value="thisMonth">This Month</SelectItem>
-                <SelectItem value="custom">Custom</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {dateRange === 'custom' && (
-            <>
-              <div className="space-y-1">
-                <label className="text-sm text-muted-foreground">From</label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className={cn("w-[140px] justify-start text-left font-normal")}>
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {format(dateFrom, 'dd MMM')}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar mode="single" selected={dateFrom} onSelect={(d) => d && setDateFrom(d)} />
-                  </PopoverContent>
-                </Popover>
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-sm text-muted-foreground">To</label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className={cn("w-[140px] justify-start text-left font-normal")}>
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {format(dateTo, 'dd MMM')}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar mode="single" selected={dateTo} onSelect={(d) => d && setDateTo(d)} />
-                  </PopoverContent>
-                </Popover>
-              </div>
-            </>
-          )}
-
-          {/* Payment Details Toggle */}
-          <div className="space-y-1">
-            <label className="text-sm text-muted-foreground">Payment Rows</label>
+          {/* View Saved Section */}
+          <div className="bg-muted/50 border rounded-lg p-3 mb-4 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <FolderOpen className="w-5 h-5 text-primary" />
+              <span className="text-sm font-medium">Saved Weekly Invoices</span>
+            </div>
             <Button
-              variant={showPaymentDetails ? "default" : "outline"}
+              variant="outline"
               size="sm"
-              onClick={() => setShowPaymentDetails(!showPaymentDetails)}
+              onClick={() => setShowSavedInvoices(true)}
               className="gap-2"
             >
-              {showPaymentDetails ? (
-                <>
-                  <Eye className="w-4 h-4" />
-                  Showing
-                </>
-              ) : (
-                <>
-                  <EyeOff className="w-4 h-4" />
-                  Hidden
-                </>
-              )}
+              View All Saved
             </Button>
           </div>
 
-          {/* Payment Summary Toggle */}
-          <div className="space-y-1">
-            <label className="text-sm text-muted-foreground">Payment Total</label>
-            <Button
-              variant={showPaymentSummary ? "default" : "outline"}
-              size="sm"
-              onClick={() => setShowPaymentSummary(!showPaymentSummary)}
-              className="gap-2"
-            >
-              {showPaymentSummary ? (
-                <>
-                  <Eye className="w-4 h-4" />
-                  Showing
-                </>
-              ) : (
-                <>
-                  <EyeOff className="w-4 h-4" />
-                  Hidden
-                </>
-              )}
-            </Button>
-          </div>
-        </div>
+          {/* Filters */}
+          <div className="flex flex-wrap gap-4 items-end mb-4">
+            <div className="space-y-1">
+              <label className="text-sm text-muted-foreground">Select Customer *</label>
+              <SearchableSelect
+                value={selectedCustomer}
+                onValueChange={setSelectedCustomer}
+                options={customers.map((c) => ({ value: c.id, label: c.name }))}
+                placeholder="Select customer"
+                searchPlaceholder="Search customers..."
+                emptyMessage="No customers found."
+                className="w-[200px]"
+              />
+            </div>
 
-        {!selectedCustomer ? (
-          <div className="text-center py-12 text-muted-foreground">
-            Please select a customer to generate invoice
-          </div>
-        ) : isLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
-          </div>
-        ) : (
-          <div ref={printRef} className="invoice-container">
-            {/* Header */}
-            <div className="header flex justify-between items-start pb-5 border-b-2 border-primary mb-5">
-              <div className="company-info flex items-start gap-4">
-                {/* Company Logo */}
-                {company?.show_logo_on_invoice && company?.logo_url && (
-                  <img 
-                    src={company.logo_url} 
-                    alt={company.name} 
-                    className="company-logo w-16 h-16 object-contain rounded-lg"
-                  />
+            <div className="space-y-1">
+              <label className="text-sm text-muted-foreground">Date Range</label>
+              <Select value={dateRange} onValueChange={(v: any) => handleRangeChange(v)}>
+                <SelectTrigger className="w-[150px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="thisWeek">This Week</SelectItem>
+                  <SelectItem value="lastWeek">Last Week</SelectItem>
+                  <SelectItem value="thisMonth">This Month</SelectItem>
+                  <SelectItem value="custom">Custom</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {dateRange === 'custom' && (
+              <>
+                <div className="space-y-1">
+                  <label className="text-sm text-muted-foreground">From</label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className={cn("w-[140px] justify-start text-left font-normal")}>
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {format(dateFrom, 'dd MMM')}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <Calendar mode="single" selected={dateFrom} onSelect={(d) => d && setDateFrom(d)} />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-sm text-muted-foreground">To</label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className={cn("w-[140px] justify-start text-left font-normal")}>
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {format(dateTo, 'dd MMM')}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <Calendar mode="single" selected={dateTo} onSelect={(d) => d && setDateTo(d)} />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </>
+            )}
+
+            {/* Payment Details Toggle */}
+            <div className="space-y-1">
+              <label className="text-sm text-muted-foreground">Payment Rows</label>
+              <Button
+                variant={showPaymentDetails ? "default" : "outline"}
+                size="sm"
+                onClick={() => setShowPaymentDetails(!showPaymentDetails)}
+                className="gap-2"
+              >
+                {showPaymentDetails ? (
+                  <>
+                    <Eye className="w-4 h-4" />
+                    Showing
+                  </>
+                ) : (
+                  <>
+                    <EyeOff className="w-4 h-4" />
+                    Hidden
+                  </>
                 )}
-                <div>
-                  <h1 className="company-name text-2xl font-bold text-primary">{company?.name || 'Company Name'}</h1>
-                  <div className="company-details text-sm text-muted-foreground space-y-0.5">
-                    {company?.address && <p>{company.address}</p>}
-                    <p>
-                      {company?.phone && <span>📞 {company.phone}</span>}
-                      {company?.phone && company?.email && <span className="mx-2">|</span>}
-                      {company?.email && <span>✉️ {company.email}</span>}
-                    </p>
-                    {company?.gst_number && <p className="font-medium">GSTIN: {company.gst_number}</p>}
+              </Button>
+            </div>
+
+            {/* Payment Summary Toggle */}
+            <div className="space-y-1">
+              <label className="text-sm text-muted-foreground">Payment Total</label>
+              <Button
+                variant={showPaymentSummary ? "default" : "outline"}
+                size="sm"
+                onClick={() => setShowPaymentSummary(!showPaymentSummary)}
+                className="gap-2"
+              >
+                {showPaymentSummary ? (
+                  <>
+                    <Eye className="w-4 h-4" />
+                    Showing
+                  </>
+                ) : (
+                  <>
+                    <EyeOff className="w-4 h-4" />
+                    Hidden
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+
+          {!selectedCustomer ? (
+            <div className="text-center py-12 text-muted-foreground">
+              Please select a customer to generate invoice
+            </div>
+          ) : isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : (
+            <div ref={printRef} className="invoice-container">
+              {/* Header */}
+              <div className="header flex justify-between items-start pb-5 border-b-2 border-primary mb-5">
+                <div className="company-info flex items-start gap-4">
+                  {/* Company Logo */}
+                  {company?.show_logo_on_invoice && company?.logo_url && (
+                    <img
+                      src={company.logo_url}
+                      alt={company.name}
+                      className="company-logo w-16 h-16 object-contain rounded-lg"
+                    />
+                  )}
+                  <div>
+                    <h1 className="company-name text-2xl font-bold text-primary">{company?.name || 'Company Name'}</h1>
+                    <div className="company-details text-sm text-muted-foreground space-y-0.5">
+                      {company?.address && <p>{company.address}</p>}
+                      <p>
+                        {company?.phone && <span>📞 {company.phone}</span>}
+                        {company?.phone && company?.email && <span className="mx-2">|</span>}
+                        {company?.email && <span>✉️ {company.email}</span>}
+                      </p>
+                      {company?.gst_number && <p className="font-medium">GSTIN: {company.gst_number}</p>}
+                    </div>
                   </div>
                 </div>
+                <div className="invoice-title text-right">
+                  <h1 className="text-3xl font-light text-primary tracking-wider">STATEMENT</h1>
+                  <p className="invoice-number text-sm font-semibold mt-1">Weekly Invoice</p>
+                </div>
               </div>
-              <div className="invoice-title text-right">
-                <h1 className="text-3xl font-light text-primary tracking-wider">STATEMENT</h1>
-                <p className="invoice-number text-sm font-semibold mt-1">Weekly Invoice</p>
+
+              {/* Meta Info */}
+              <div className="meta-section flex justify-between mb-6">
+                <div className="bill-to">
+                  <p className="bill-to-label text-xs uppercase text-muted-foreground font-semibold mb-1">Bill To</p>
+                  <p className="bill-to-name text-lg font-semibold">{selectedCustomerData?.name}</p>
+                  {selectedCustomerData?.address && (
+                    <p className="text-sm text-muted-foreground">{selectedCustomerData.address}</p>
+                  )}
+                  {selectedCustomerData?.phone && (
+                    <p className="text-sm text-muted-foreground">📞 {selectedCustomerData.phone}</p>
+                  )}
+                </div>
+                <div className="invoice-details text-right space-y-1">
+                  <p><span className="label text-muted-foreground">Period: </span><span className="value font-semibold">{format(dateFrom, 'dd MMM yyyy')} - {format(dateTo, 'dd MMM yyyy')}</span></p>
+                  <p><span className="label text-muted-foreground">Generated: </span><span className="value font-semibold">{format(new Date(), 'dd MMM yyyy')}</span></p>
+                  <Badge
+                    variant="secondary"
+                    className={cn(
+                      "status-badge mt-2",
+                      closingBalance <= 0 ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"
+                    )}
+                  >
+                    {closingBalance <= 0 ? 'PAID' : 'PENDING'}
+                  </Badge>
+                </div>
               </div>
-            </div>
 
-            {/* Meta Info */}
-            <div className="meta-section flex justify-between mb-6">
-              <div className="bill-to">
-                <p className="bill-to-label text-xs uppercase text-muted-foreground font-semibold mb-1">Bill To</p>
-                <p className="bill-to-name text-lg font-semibold">{selectedCustomerData?.name}</p>
-                {selectedCustomerData?.address && (
-                  <p className="text-sm text-muted-foreground">{selectedCustomerData.address}</p>
-                )}
-                {selectedCustomerData?.phone && (
-                  <p className="text-sm text-muted-foreground">📞 {selectedCustomerData.phone}</p>
-                )}
+              {/* Previous Balance Box - Always show */}
+              <div className="opening-balance-box bg-amber-100 p-3 rounded-lg mb-5 flex justify-between items-center">
+                <span className="opening-balance-label text-sm font-semibold text-amber-800">📋 Previous Balance</span>
+                <span className="opening-balance-value text-lg font-bold text-amber-800 font-mono">{formatCurrency(previousBalance)}</span>
               </div>
-              <div className="invoice-details text-right space-y-1">
-                <p><span className="label text-muted-foreground">Period: </span><span className="value font-semibold">{format(dateFrom, 'dd MMM yyyy')} - {format(dateTo, 'dd MMM yyyy')}</span></p>
-                <p><span className="label text-muted-foreground">Generated: </span><span className="value font-semibold">{format(new Date(), 'dd MMM yyyy')}</span></p>
-                <Badge 
-                  variant="secondary" 
-                  className={cn(
-                    "status-badge mt-2",
-                    closingBalance <= 0 ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"
-                  )}
-                >
-                  {closingBalance <= 0 ? 'PAID' : 'PENDING'}
-                </Badge>
-              </div>
-            </div>
 
-            {/* Previous Balance Box - Always show */}
-            <div className="opening-balance-box bg-amber-100 p-3 rounded-lg mb-5 flex justify-between items-center">
-              <span className="opening-balance-label text-sm font-semibold text-amber-800">📋 Previous Balance</span>
-              <span className="opening-balance-value text-lg font-bold text-amber-800 font-mono">{formatCurrency(previousBalance)}</span>
-            </div>
-
-            {/* Items Table - Grouped by Date with Payments */}
-            <div className="overflow-x-auto mb-5">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className="bg-muted/50">
-                    <th className="border-b-2 border-border p-3 text-left text-xs font-semibold uppercase text-muted-foreground">#</th>
-                    <th className="border-b-2 border-border p-3 text-left text-xs font-semibold uppercase text-muted-foreground">Description</th>
-                    <th className="border-b-2 border-border p-3 text-right text-xs font-semibold uppercase text-muted-foreground">Qty</th>
-                    <th className="border-b-2 border-border p-3 text-right text-xs font-semibold uppercase text-muted-foreground">Gross (kg)</th>
-                    <th className="border-b-2 border-border p-3 text-right text-xs font-semibold uppercase text-muted-foreground">Net (kg)</th>
-                    <th className="border-b-2 border-border p-3 text-right text-xs font-semibold uppercase text-muted-foreground">Rate (₹)</th>
-                    <th className="border-b-2 border-border p-3 text-right text-xs font-semibold uppercase text-muted-foreground">Debit (₹)</th>
-                    <th className="border-b-2 border-border p-3 text-right text-xs font-semibold uppercase text-muted-foreground">Credit (₹)</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(() => {
-                    // Combine items and payments, sort by date
-                    // Add items grouped by date
-                    const itemsByDate = (data?.items || []).reduce((acc: Record<string, any[]>, item) => {
-                      const dateKey = item.date;
-                      if (!acc[dateKey]) acc[dateKey] = [];
-                      acc[dateKey].push({ ...item, type: 'item' });
-                      return acc;
-                    }, {});
-                    
-                    // Add payments only if showPaymentDetails is true
-                    if (showPaymentDetails) {
-                      (data?.payments || []).forEach(payment => {
-                        const dateKey = payment.payment_date;
-                        if (!itemsByDate[dateKey]) itemsByDate[dateKey] = [];
-                        itemsByDate[dateKey].push({ 
-                          ...payment, 
-                          type: 'payment',
-                          product: `Payment - ${payment.payment_method || 'Cash'}`,
-                          credit: payment.amount
-                        });
-                      });
-                    }
-                    
-                    const sortedDates = Object.keys(itemsByDate).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
-                    let itemIndex = 0;
-                    
-                    return sortedDates.map((dateKey) => (
-                      <React.Fragment key={`date-group-${dateKey}`}>
-                        {/* Date Header Row */}
-                        <tr className="bg-primary/10">
-                          <td colSpan={8} className="p-2 text-sm font-semibold text-primary">
-                            📅 {format(new Date(dateKey), 'EEEE, dd MMM yyyy')}
-                          </td>
-                        </tr>
-                        {/* Items and Payments under this date */}
-                        {itemsByDate[dateKey].map((item, idx) => {
-                          itemIndex++;
-                          const isPayment = item.type === 'payment';
-                          
-                          return (
-                            <tr key={`item-${dateKey}-${idx}`} className={cn("hover:bg-muted/30", isPayment && "payment-row bg-green-50")}>
-                              <td className="border-b border-border/50 p-3 text-sm">{itemIndex}</td>
-                              <td className="border-b border-border/50 p-3 text-sm font-medium">
-                                {isPayment ? (
-                                  <span className="text-green-700">💰 {item.product} {item.notes ? `(${item.notes})` : ''}</span>
-                                ) : (
-                                  item.product
-                                )}
-                              </td>
-                              <td className="border-b border-border/50 p-3 text-sm text-right font-mono">{isPayment ? '-' : item.quantity}</td>
-                              <td className="border-b border-border/50 p-3 text-sm text-right font-mono">{isPayment ? '-' : item.gross_weight?.toFixed(2)}</td>
-                              <td className="border-b border-border/50 p-3 text-sm text-right font-mono font-semibold">{isPayment ? '-' : item.net_weight?.toFixed(2)}</td>
-                              <td className="border-b border-border/50 p-3 text-sm text-right font-mono">{isPayment ? '-' : item.rate?.toFixed(2)}</td>
-                              <td className="border-b border-border/50 p-3 text-sm text-right font-mono font-semibold">
-                                {isPayment ? '-' : formatCurrency(item.total)}
-                              </td>
-                              <td className="border-b border-border/50 p-3 text-sm text-right font-mono font-semibold text-green-700">
-                                {isPayment ? formatCurrency(item.credit) : '-'}
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </React.Fragment>
-                    ));
-                  })()}
-                  {(!data?.items || data.items.length === 0) && (!data?.payments || data.payments.length === 0) && (
-                    <tr>
-                      <td colSpan={8} className="text-center text-muted-foreground py-8">
-                        No transactions found for selected period
-                      </td>
-                    </tr>
-                  )}
-                  {/* Summary Row */}
-                  {data?.items && data.items.length > 0 && (
-                    <tr className="bg-muted/30 font-semibold">
-                      <td colSpan={4} className="p-3 text-sm text-right">Items Total Weight:</td>
-                      <td className="p-3 text-sm text-right font-mono">{data.totalNetWeight.toFixed(2)} kg</td>
-                      <td className="p-3"></td>
-                      <td className="p-3 text-sm text-right font-mono">{formatCurrency(data.items.reduce((sum, item) => sum + item.total, 0))}</td>
-                      <td className="p-3 text-sm text-right font-mono text-green-700">{showPaymentDetails && showPaymentSummary && data.totalPayments > 0 ? formatCurrency(data.totalPayments) : '-'}</td>
-                    </tr>
-                  )}
-                  {/* Payment Summary Row when payments are hidden */}
-                  {!showPaymentDetails && showPaymentSummary && totalPaymentsReceived > 0 && (
-                    <tr className="bg-green-50 font-semibold">
-                      <td colSpan={6} className="p-3 text-sm text-right text-green-700">
-                        💰 Total Payments Received ({data?.payments?.length || 0} payments):
-                      </td>
-                      <td className="p-3"></td>
-                      <td className="p-3 text-sm text-right font-mono text-green-700">{formatCurrency(totalPaymentsReceived)}</td>
-                    </tr>
-                  )}
-                  {/* Outstanding Balance Row when payments are hidden */}
-                  {!showPaymentDetails && (
-                    <tr className={cn("font-bold", closingBalance > 0 ? "bg-yellow-50" : "bg-green-50")}>
-                      <td colSpan={6} className={cn("p-3 text-sm text-right", closingBalance > 0 ? "text-yellow-800" : "text-green-700")}>
-                        📊 Outstanding Balance:
-                      </td>
-                      <td className="p-3"></td>
-                      <td className={cn("p-3 text-sm text-right font-mono", closingBalance > 0 ? "text-yellow-800" : "text-green-700")}>
-                        {formatCurrency(Math.max(0, closingBalance))}
-                        {closingBalance <= 0 && <span className="ml-1">✓</span>}
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Loose Items Table - Grouped by Date */}
-            {data?.looseItems && data.looseItems.length > 0 && (
+              {/* Items Table - Grouped by Date with Payments */}
               <div className="overflow-x-auto mb-5">
-                <p className="text-xs uppercase text-muted-foreground font-semibold mb-2">Loose Items</p>
                 <table className="w-full border-collapse">
                   <thead>
                     <tr className="bg-muted/50">
                       <th className="border-b-2 border-border p-3 text-left text-xs font-semibold uppercase text-muted-foreground">#</th>
-                      <th className="border-b-2 border-border p-3 text-left text-xs font-semibold uppercase text-muted-foreground">Item</th>
-                      <th className="border-b-2 border-border p-3 text-right text-xs font-semibold uppercase text-muted-foreground">Weight</th>
+                      <th className="border-b-2 border-border p-3 text-left text-xs font-semibold uppercase text-muted-foreground">Description</th>
+                      <th className="border-b-2 border-border p-3 text-right text-xs font-semibold uppercase text-muted-foreground">Qty</th>
+                      <th className="border-b-2 border-border p-3 text-right text-xs font-semibold uppercase text-muted-foreground">Gross (kg)</th>
+                      <th className="border-b-2 border-border p-3 text-right text-xs font-semibold uppercase text-muted-foreground">Net (kg)</th>
                       <th className="border-b-2 border-border p-3 text-right text-xs font-semibold uppercase text-muted-foreground">Rate (₹)</th>
-                      <th className="border-b-2 border-border p-3 text-right text-xs font-semibold uppercase text-muted-foreground">Amount (₹)</th>
+                      <th className="border-b-2 border-border p-3 text-right text-xs font-semibold uppercase text-muted-foreground">Debit (₹)</th>
+                      <th className="border-b-2 border-border p-3 text-right text-xs font-semibold uppercase text-muted-foreground">Credit (₹)</th>
                     </tr>
                   </thead>
                   <tbody>
                     {(() => {
-                      // Group loose items by date
-                      const looseItemsByDate = data.looseItems.reduce((acc: Record<string, any[]>, item) => {
+                      // Combine items and payments, sort by date
+                      // Add items grouped by date
+                      const itemsByDate = (data?.items || []).reduce((acc: Record<string, any[]>, item) => {
                         const dateKey = item.date;
                         if (!acc[dateKey]) acc[dateKey] = [];
-                        acc[dateKey].push(item);
+                        acc[dateKey].push({ ...item, type: 'item' });
                         return acc;
                       }, {});
-                      
-                      const sortedDates = Object.keys(looseItemsByDate).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
-                      let looseItemIndex = 0;
-                      
+
+                      // Add payments only if showPaymentDetails is true
+                      if (showPaymentDetails) {
+                        (data?.payments || []).forEach(payment => {
+                          const dateKey = payment.payment_date;
+                          if (!itemsByDate[dateKey]) itemsByDate[dateKey] = [];
+                          itemsByDate[dateKey].push({
+                            ...payment,
+                            type: 'payment',
+                            product: `Payment - ${payment.payment_method || 'Cash'}`,
+                            credit: payment.amount
+                          });
+                        });
+                      }
+
+                      const sortedDates = Object.keys(itemsByDate).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
+                      let itemIndex = 0;
+
                       return sortedDates.map((dateKey) => (
-                        <React.Fragment key={`loose-date-group-${dateKey}`}>
+                        <React.Fragment key={`date-group-${dateKey}`}>
                           {/* Date Header Row */}
                           <tr className="bg-primary/10">
-                            <td colSpan={5} className="p-2 text-sm font-semibold text-primary">
+                            <td colSpan={8} className="p-2 text-sm font-semibold text-primary">
                               📅 {format(new Date(dateKey), 'EEEE, dd MMM yyyy')}
                             </td>
                           </tr>
-                          {/* Items under this date */}
-                          {looseItemsByDate[dateKey].map((item, idx) => {
-                            looseItemIndex++;
+                          {/* Items and Payments under this date */}
+                          {itemsByDate[dateKey].map((item, idx) => {
+                            itemIndex++;
+                            const isPayment = item.type === 'payment';
+
                             return (
-                              <tr key={`loose-item-${dateKey}-${idx}`} className="hover:bg-muted/30">
-                                <td className="border-b border-border/50 p-3 text-sm">{looseItemIndex}</td>
-                                <td className="border-b border-border/50 p-3 text-sm font-medium">{item.product}</td>
-                                <td className="border-b border-border/50 p-3 text-sm text-right font-mono">
-                                  {item.net_weight.toFixed(2)} {item.weight_unit}
+                              <tr key={`item-${dateKey}-${idx}`} className={cn("hover:bg-muted/30", isPayment && "payment-row bg-green-50")}>
+                                <td className="border-b border-border/50 p-3 text-sm">{itemIndex}</td>
+                                <td className="border-b border-border/50 p-3 text-sm font-medium">
+                                  {isPayment ? (
+                                    <span className="text-green-700">💰 {item.product} {item.notes ? `(${item.notes})` : ''}</span>
+                                  ) : (
+                                    item.product
+                                  )}
                                 </td>
-                                <td className="border-b border-border/50 p-3 text-sm text-right font-mono">{item.rate.toFixed(2)}</td>
-                                <td className="border-b border-border/50 p-3 text-sm text-right font-mono font-semibold">{formatCurrency(item.total)}</td>
+                                <td className="border-b border-border/50 p-3 text-sm text-right font-mono">{isPayment ? '-' : item.quantity}</td>
+                                <td className="border-b border-border/50 p-3 text-sm text-right font-mono">{isPayment ? '-' : item.gross_weight?.toFixed(2)}</td>
+                                <td className="border-b border-border/50 p-3 text-sm text-right font-mono font-semibold">{isPayment ? '-' : item.net_weight?.toFixed(2)}</td>
+                                <td className="border-b border-border/50 p-3 text-sm text-right font-mono">{isPayment ? '-' : item.rate?.toFixed(2)}</td>
+                                <td className="border-b border-border/50 p-3 text-sm text-right font-mono font-semibold">
+                                  {isPayment ? '-' : formatCurrency(item.total)}
+                                </td>
+                                <td className="border-b border-border/50 p-3 text-sm text-right font-mono font-semibold text-green-700">
+                                  {isPayment ? formatCurrency(item.credit) : '-'}
+                                </td>
                               </tr>
                             );
                           })}
                         </React.Fragment>
                       ));
                     })()}
-                    {/* Summary Row for loose items */}
-                    <tr className="bg-muted/30 font-semibold">
-                      <td colSpan={2} className="p-3 text-sm text-right">Loose Items Total:</td>
-                      <td className="p-3 text-sm text-right font-mono">{data.totalLooseWeight.toFixed(3)} kg</td>
-                      <td className="p-3"></td>
-                      <td className="p-3 text-sm text-right font-mono">{formatCurrency(data.looseItems.reduce((sum, item) => sum + item.total, 0))}</td>
-                    </tr>
+                    {(!data?.items || data.items.length === 0) && (!data?.payments || data.payments.length === 0) && (
+                      <tr>
+                        <td colSpan={8} className="text-center text-muted-foreground py-8">
+                          No transactions found for selected period
+                        </td>
+                      </tr>
+                    )}
+                    {/* Summary Row */}
+                    {data?.items && data.items.length > 0 && (
+                      <tr className="bg-muted/30 font-semibold">
+                        <td colSpan={4} className="p-3 text-sm text-right">Items Total Weight:</td>
+                        <td className="p-3 text-sm text-right font-mono">{data.totalNetWeight.toFixed(2)} kg</td>
+                        <td className="p-3"></td>
+                        <td className="p-3 text-sm text-right font-mono">{formatCurrency(data.items.reduce((sum, item) => sum + item.total, 0))}</td>
+                        <td className="p-3 text-sm text-right font-mono text-green-700">{showPaymentDetails && showPaymentSummary && data.totalPayments > 0 ? formatCurrency(data.totalPayments) : '-'}</td>
+                      </tr>
+                    )}
+                    {/* Payment Summary Row when payments are hidden */}
+                    {!showPaymentDetails && showPaymentSummary && totalPaymentsReceived > 0 && (
+                      <tr className="bg-green-50 font-semibold">
+                        <td colSpan={6} className="p-3 text-sm text-right text-green-700">
+                          💰 Total Payments Received ({data?.payments?.length || 0} payments):
+                        </td>
+                        <td className="p-3"></td>
+                        <td className="p-3 text-sm text-right font-mono text-green-700">{formatCurrency(totalPaymentsReceived)}</td>
+                      </tr>
+                    )}
+                    {/* Outstanding Balance Row when payments are hidden */}
+                    {!showPaymentDetails && (
+                      <tr className={cn("font-bold", closingBalance > 0 ? "bg-yellow-50" : "bg-green-50")}>
+                        <td colSpan={6} className={cn("p-3 text-sm text-right", closingBalance > 0 ? "text-yellow-800" : "text-green-700")}>
+                          📊 Outstanding Balance:
+                        </td>
+                        <td className="p-3"></td>
+                        <td className={cn("p-3 text-sm text-right font-mono", closingBalance > 0 ? "text-yellow-800" : "text-green-700")}>
+                          {formatCurrency(Math.max(0, closingBalance))}
+                          {closingBalance <= 0 && <span className="ml-1">✓</span>}
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
-            )}
 
-            {hasData && (
-              <>
-                {/* Totals */}
-                <div className="flex justify-between items-start gap-6 mb-6">
-                  <div className="text-sm text-muted-foreground">
-                    Total Invoices: {data?.invoiceCount || 0} | Items: {(data?.items?.length || 0) + (data?.looseItems?.length || 0)} | Payments: {data?.payments?.length || 0}
-                  </div>
-                  
-                  <div className="totals-box ml-auto w-80 bg-muted/30 p-4 rounded-lg">
-                    {/* Previous Balance - Always show */}
-                    <div className="totals-row flex justify-between py-1.5 text-amber-700">
-                      <span>Previous Balance</span>
-                      <span className="font-mono">{formatCurrency(previousBalance)}</span>
-                    </div>
-                    
-                    {/* Period Sales */}
-                    <div className="totals-row flex justify-between py-1.5">
-                      <span className="text-muted-foreground">Period Sales</span>
-                      <span className="font-mono">{formatCurrency(subtotal)}</span>
-                    </div>
-                    
-                    {/* Invoice-level adjustments from individual invoices */}
-                    {(data?.totalInvoiceDiscount || 0) > 0 && (
-                      <div className="totals-row flex justify-between py-1.5 text-sm text-muted-foreground">
-                        <span>└ Invoice Discounts</span>
-                        <span className="font-mono text-green-600">Included</span>
-                      </div>
-                    )}
-                    
-                    {/* Additional Discount */}
-                    {discount > 0 && (
-                      <div className="totals-row flex justify-between py-1.5 text-green-600">
-                        <span>Additional Discount</span>
-                        <span className="font-mono">-{formatCurrency(discount)}</span>
-                      </div>
-                    )}
-                    
-                    {/* Other Charges */}
-                    {otherCharges > 0 && (
-                      <div className="totals-row flex justify-between py-1.5 text-orange-600">
-                        <span>Other Charges</span>
-                        <span className="font-mono">+{formatCurrency(otherCharges)}</span>
-                      </div>
-                    )}
-                    
-                    <Separator className="my-2" />
-                    
-                    {/* Total Amount */}
-                    <div className="totals-row flex justify-between py-1.5 font-semibold">
-                      <span>Total Amount</span>
-                      <span className="font-mono">{formatCurrency(previousBalance + finalTotal)}</span>
-                    </div>
-                    
-                    {/* Payments */}
-                    {showPaymentSummary && totalPaymentsReceived > 0 && (
-                      <div className="totals-row payment flex justify-between py-1.5 text-green-600">
-                        <span>Payments Received</span>
-                        <span className="font-mono">-{formatCurrency(totalPaymentsReceived)}</span>
-                      </div>
-                    )}
-                    
-                    <Separator className="my-2" />
-                    
-                    {/* Outstanding Balance */}
-                    <div className="totals-row total flex justify-between py-2 text-lg font-bold text-primary">
-                      <span>Outstanding Balance</span>
-                      <span className={cn("font-mono", closingBalance <= 0 ? "text-green-600" : "text-destructive")}>
-                        {formatCurrency(closingBalance)}
-                      </span>
-                    </div>
-                  </div>
-                </div>
+              {/* Loose Items Table - Grouped by Date */}
+              {data?.looseItems && data.looseItems.length > 0 && (
+                <div className="overflow-x-auto mb-5">
+                  <p className="text-xs uppercase text-muted-foreground font-semibold mb-2">Loose Items</p>
+                  <table className="w-full border-collapse">
+                    <thead>
+                      <tr className="bg-muted/50">
+                        <th className="border-b-2 border-border p-3 text-left text-xs font-semibold uppercase text-muted-foreground">#</th>
+                        <th className="border-b-2 border-border p-3 text-left text-xs font-semibold uppercase text-muted-foreground">Item</th>
+                        <th className="border-b-2 border-border p-3 text-right text-xs font-semibold uppercase text-muted-foreground">Weight</th>
+                        <th className="border-b-2 border-border p-3 text-right text-xs font-semibold uppercase text-muted-foreground">Rate (₹)</th>
+                        <th className="border-b-2 border-border p-3 text-right text-xs font-semibold uppercase text-muted-foreground">Amount (₹)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(() => {
+                        // Group loose items by date
+                        const looseItemsByDate = data.looseItems.reduce((acc: Record<string, any[]>, item) => {
+                          const dateKey = item.date;
+                          if (!acc[dateKey]) acc[dateKey] = [];
+                          acc[dateKey].push(item);
+                          return acc;
+                        }, {});
 
-                {/* Notes Section (from saved data, shown in print) */}
-                {notes && (
-                  <div className="notes-section mb-5 p-4 bg-muted/20 rounded-lg">
-                    <p className="footer-title text-xs uppercase text-muted-foreground font-semibold mb-2">Notes</p>
-                    <p className="text-sm text-muted-foreground whitespace-pre-line">{notes}</p>
-                  </div>
-                )}
+                        const sortedDates = Object.keys(looseItemsByDate).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
+                        let looseItemIndex = 0;
 
-                {/* Footer Section */}
-                <div className="footer-section flex gap-8 pt-5 border-t mt-5">
-                  {/* Bank Details */}
-                  {company?.bank_details && (
-                    <div className="bank-details flex-1">
-                      <p className="footer-title text-xs uppercase text-muted-foreground font-semibold mb-2">Bank Details</p>
-                      <p className="footer-content text-sm text-muted-foreground whitespace-pre-line">{company.bank_details}</p>
-                    </div>
-                  )}
-
-                  {/* QR Code */}
-                  {qrCodeUrl && company?.upi_id && closingBalance > 0 && (
-                    <div className="qr-section text-center p-4 bg-muted/30 rounded-lg">
-                      <img src={qrCodeUrl} alt="UPI QR Code" className="mx-auto mb-2" />
-                      <p className="qr-label text-xs text-muted-foreground">Scan to Pay</p>
-                      <p className="upi-id text-sm font-semibold text-primary">{company.upi_id}</p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Footer Notes */}
-                {company?.footer_notes && (
-                  <div className="terms mt-5 pt-4 border-t">
-                    <p className="text-xs text-muted-foreground italic">{company.footer_notes}</p>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-        )}
-
-        {/* Bottom Actions Section - Discount, Other Charges, Notes, and Payment */}
-        {selectedCustomer && hasData && (
-          <div className="mt-6 space-y-4 border-t pt-4">
-            {/* Adjustments Section */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-1">
-                <Label htmlFor="weekly-discount" className="text-sm">Discount (₹)</Label>
-                <Input
-                  id="weekly-discount"
-                  type="number"
-                  value={discount || ''}
-                  onChange={(e) => setDiscount(parseFloat(e.target.value) || 0)}
-                  className="font-mono"
-                  placeholder="0"
-                />
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="weekly-charges" className="text-sm">Other Charges (₹)</Label>
-                <Input
-                  id="weekly-charges"
-                  type="number"
-                  value={otherCharges || ''}
-                  onChange={(e) => setOtherCharges(parseFloat(e.target.value) || 0)}
-                  className="font-mono"
-                  placeholder="0"
-                />
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="weekly-notes" className="text-sm">Notes</Label>
-                <Textarea
-                  id="weekly-notes"
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Add notes for this statement..."
-                  className="h-10 min-h-[40px] resize-none"
-                />
-              </div>
-            </div>
-
-            {/* Receive Payment Section */}
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2 text-green-800">
-                  <CreditCard className="w-5 h-5" />
-                  <span className="font-semibold">Receive Payment</span>
-                </div>
-                {!showPaymentForm && (
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => {
-                      setShowPaymentForm(true);
-                      setPaymentAmount(closingBalance > 0 ? closingBalance : 0);
-                    }}
-                    className="gap-2 bg-green-600 text-white hover:bg-green-700 border-0"
-                  >
-                    <Plus className="w-4 h-4" />
-                    Add Payment
-                  </Button>
-                )}
-              </div>
-
-              {showPaymentForm && (
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <div className="space-y-1">
-                    <Label className="text-sm text-green-800">Amount (₹)</Label>
-                    <Input
-                      type="number"
-                      value={paymentAmount || ''}
-                      onChange={(e) => setPaymentAmount(parseFloat(e.target.value) || 0)}
-                      className="font-mono bg-white"
-                      placeholder="0"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-sm text-green-800">Payment Method</Label>
-                    <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-                      <SelectTrigger className="bg-white">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Cash">Cash</SelectItem>
-                        <SelectItem value="UPI">UPI</SelectItem>
-                        <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
-                        <SelectItem value="Cheque">Cheque</SelectItem>
-                        <SelectItem value="Card">Card</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-sm text-green-800">Date</Label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button variant="outline" className="w-full justify-start bg-white">
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {format(paymentDate, 'dd MMM yyyy')}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
-                        <Calendar mode="single" selected={paymentDate} onSelect={(d) => d && setPaymentDate(d)} />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-sm text-green-800">Notes</Label>
-                    <Input
-                      value={paymentNotes}
-                      onChange={(e) => setPaymentNotes(e.target.value)}
-                      className="bg-white"
-                      placeholder="Optional notes..."
-                    />
-                  </div>
-                  <div className="md:col-span-4 flex gap-2 justify-end">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={() => setShowPaymentForm(false)}
-                    >
-                      Cancel
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      onClick={handleReceivePayment}
-                      disabled={isSubmittingPayment || paymentAmount <= 0}
-                      className="bg-green-600 hover:bg-green-700"
-                    >
-                      {isSubmittingPayment ? (
-                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                      ) : (
-                        <CreditCard className="w-4 h-4 mr-2" />
-                      )}
-                      Record Payment
-                    </Button>
-                  </div>
+                        return sortedDates.map((dateKey) => (
+                          <React.Fragment key={`loose-date-group-${dateKey}`}>
+                            {/* Date Header Row */}
+                            <tr className="bg-primary/10">
+                              <td colSpan={5} className="p-2 text-sm font-semibold text-primary">
+                                📅 {format(new Date(dateKey), 'EEEE, dd MMM yyyy')}
+                              </td>
+                            </tr>
+                            {/* Items under this date */}
+                            {looseItemsByDate[dateKey].map((item, idx) => {
+                              looseItemIndex++;
+                              return (
+                                <tr key={`loose-item-${dateKey}-${idx}`} className="hover:bg-muted/30">
+                                  <td className="border-b border-border/50 p-3 text-sm">{looseItemIndex}</td>
+                                  <td className="border-b border-border/50 p-3 text-sm font-medium">{item.product}</td>
+                                  <td className="border-b border-border/50 p-3 text-sm text-right font-mono">
+                                    {item.net_weight.toFixed(2)} {item.weight_unit}
+                                  </td>
+                                  <td className="border-b border-border/50 p-3 text-sm text-right font-mono">{item.rate.toFixed(2)}</td>
+                                  <td className="border-b border-border/50 p-3 text-sm text-right font-mono font-semibold">{formatCurrency(item.total)}</td>
+                                </tr>
+                              );
+                            })}
+                          </React.Fragment>
+                        ));
+                      })()}
+                      {/* Summary Row for loose items */}
+                      <tr className="bg-muted/30 font-semibold">
+                        <td colSpan={2} className="p-3 text-sm text-right">Loose Items Total:</td>
+                        <td className="p-3 text-sm text-right font-mono">{data.totalLooseWeight.toFixed(3)} kg</td>
+                        <td className="p-3"></td>
+                        <td className="p-3 text-sm text-right font-mono">{formatCurrency(data.looseItems.reduce((sum, item) => sum + item.total, 0))}</td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
               )}
-            </div>
 
-            {/* Action Buttons */}
-            <div className="pt-4 border-t flex flex-wrap gap-2">
-              <Button 
-                onClick={handleSave} 
-                className="gap-2 flex-1" 
-                disabled={!selectedCustomer || !hasData || isSaving}
-              >
-                {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                {editingInvoiceId ? 'Update' : 'Save'}
-              </Button>
-              <Button variant="outline" onClick={handlePrint} className="gap-2 flex-1" disabled={!selectedCustomer || !hasData}>
-                <Printer className="w-4 h-4" />
-                Print
-              </Button>
-              <Button variant="outline" onClick={handlePrint} className="gap-2 flex-1" disabled={!selectedCustomer || !hasData}>
-                <Download className="w-4 h-4" />
-                PDF
-              </Button>
+              {hasData && (
+                <>
+                  {/* Totals */}
+                  <div className="flex justify-between items-start gap-6 mb-6">
+                    <div className="text-sm text-muted-foreground">
+                      Total Invoices: {data?.invoiceCount || 0} | Items: {(data?.items?.length || 0) + (data?.looseItems?.length || 0)} | Payments: {data?.payments?.length || 0}
+                    </div>
+
+                    <div className="totals-box ml-auto w-80 bg-muted/30 p-4 rounded-lg">
+                      {/* Previous Balance - Always show */}
+                      <div className="totals-row flex justify-between py-1.5 text-amber-700">
+                        <span>Previous Balance</span>
+                        <span className="font-mono">{formatCurrency(previousBalance)}</span>
+                      </div>
+
+                      {/* Period Sales */}
+                      <div className="totals-row flex justify-between py-1.5">
+                        <span className="text-muted-foreground">Period Sales</span>
+                        <span className="font-mono">{formatCurrency(subtotal)}</span>
+                      </div>
+
+                      {/* Invoice-level adjustments from individual invoices */}
+                      {(data?.totalInvoiceDiscount || 0) > 0 && (
+                        <div className="totals-row flex justify-between py-1.5 text-sm text-muted-foreground">
+                          <span>└ Invoice Discounts</span>
+                          <span className="font-mono text-green-600">Included</span>
+                        </div>
+                      )}
+
+                      {/* Additional Discount */}
+                      {discount > 0 && (
+                        <div className="totals-row flex justify-between py-1.5 text-green-600">
+                          <span>Additional Discount</span>
+                          <span className="font-mono">-{formatCurrency(discount)}</span>
+                        </div>
+                      )}
+
+                      {/* Other Charges */}
+                      {otherCharges > 0 && (
+                        <div className="totals-row flex justify-between py-1.5 text-orange-600">
+                          <span>Other Charges</span>
+                          <span className="font-mono">+{formatCurrency(otherCharges)}</span>
+                        </div>
+                      )}
+
+                      <Separator className="my-2" />
+
+                      {/* Total Amount */}
+                      <div className="totals-row flex justify-between py-1.5 font-semibold">
+                        <span>Total Amount</span>
+                        <span className="font-mono">{formatCurrency(previousBalance + finalTotal)}</span>
+                      </div>
+
+                      {/* Payments */}
+                      {showPaymentSummary && totalPaymentsReceived > 0 && (
+                        <div className="totals-row payment flex justify-between py-1.5 text-green-600">
+                          <span>Payments Received</span>
+                          <span className="font-mono">-{formatCurrency(totalPaymentsReceived)}</span>
+                        </div>
+                      )}
+
+                      <Separator className="my-2" />
+
+                      {/* Outstanding Balance */}
+                      <div className="totals-row total flex justify-between py-2 text-lg font-bold text-primary">
+                        <span>Outstanding Balance</span>
+                        <span className={cn("font-mono", closingBalance <= 0 ? "text-green-600" : "text-destructive")}>
+                          {formatCurrency(closingBalance)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Notes Section (from saved data, shown in print) */}
+                  {notes && (
+                    <div className="notes-section mb-5 p-4 bg-muted/20 rounded-lg">
+                      <p className="footer-title text-xs uppercase text-muted-foreground font-semibold mb-2">Notes</p>
+                      <p className="text-sm text-muted-foreground whitespace-pre-line">{notes}</p>
+                    </div>
+                  )}
+
+                  {/* Footer Section */}
+                  <div className="footer-section flex gap-8 pt-5 border-t mt-5">
+                    {/* Bank Details */}
+                    {company?.bank_details && (
+                      <div className="bank-details flex-1">
+                        <p className="footer-title text-xs uppercase text-muted-foreground font-semibold mb-2">Bank Details</p>
+                        <p className="footer-content text-sm text-muted-foreground whitespace-pre-line">{company.bank_details}</p>
+                      </div>
+                    )}
+
+                    {/* QR Code */}
+                    {qrCodeUrl && company?.upi_id && closingBalance > 0 && (
+                      <div className="qr-section text-center p-4 bg-muted/30 rounded-lg">
+                        <img src={qrCodeUrl} alt="UPI QR Code" className="mx-auto mb-2" />
+                        <p className="qr-label text-xs text-muted-foreground">Scan to Pay</p>
+                        <p className="upi-id text-sm font-semibold text-primary">{company.upi_id}</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Footer Notes */}
+                  {company?.footer_notes && (
+                    <div className="terms mt-5 pt-4 border-t">
+                      <p className="text-xs text-muted-foreground italic">{company.footer_notes}</p>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
-          </div>
-        )}
-      </DialogContent>
-    </Dialog>
-    
-    {/* Saved Weekly Invoices Dialog */}
-    <SavedWeeklyInvoicesDialog 
-      open={showSavedInvoices} 
-      onOpenChange={setShowSavedInvoices}
-      onViewInvoice={(invoice) => {
-        // Load the saved invoice data for viewing
-        setSelectedCustomer(invoice.customer_id);
-        setDateFrom(new Date(invoice.date_from));
-        setDateTo(new Date(invoice.date_to));
-        setDiscount(Number(invoice.discount));
-        setOtherCharges(Number(invoice.other_charges));
-        setNotes(invoice.notes || '');
-        setDateRange('custom');
-        setEditingInvoiceId(null); // View mode - not editing
-        setShowSavedInvoices(false);
-      }}
-      onEditInvoice={(invoice) => {
-        // Load the saved invoice data for editing
-        setSelectedCustomer(invoice.customer_id);
-        setDateFrom(new Date(invoice.date_from));
-        setDateTo(new Date(invoice.date_to));
-        setDiscount(Number(invoice.discount));
-        setOtherCharges(Number(invoice.other_charges));
-        setNotes(invoice.notes || '');
-        setDateRange('custom');
-        setEditingInvoiceId(invoice.id); // Edit mode
-        setShowSavedInvoices(false);
-      }}
-    />
+          )}
+
+          {/* Bottom Actions Section - Discount, Other Charges, Notes, and Payment */}
+          {selectedCustomer && hasData && (
+            <div className="mt-6 space-y-4 border-t pt-4">
+              {/* Adjustments Section */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-1">
+                  <Label htmlFor="weekly-discount" className="text-sm">Discount (₹)</Label>
+                  <Input
+                    id="weekly-discount"
+                    type="number"
+                    value={discount || ''}
+                    onChange={(e) => setDiscount(parseFloat(e.target.value) || 0)}
+                    className="font-mono"
+                    placeholder="0"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="weekly-charges" className="text-sm">Other Charges (₹)</Label>
+                  <Input
+                    id="weekly-charges"
+                    type="number"
+                    value={otherCharges || ''}
+                    onChange={(e) => setOtherCharges(parseFloat(e.target.value) || 0)}
+                    className="font-mono"
+                    placeholder="0"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="weekly-notes" className="text-sm">Notes</Label>
+                  <Textarea
+                    id="weekly-notes"
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    placeholder="Add notes for this statement..."
+                    className="h-10 min-h-[40px] resize-none"
+                  />
+                </div>
+              </div>
+
+              {/* Receive Payment Section */}
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2 text-green-800">
+                    <CreditCard className="w-5 h-5" />
+                    <span className="font-semibold">Receive Payment</span>
+                  </div>
+                  {!showPaymentForm && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setShowPaymentForm(true);
+                        setPaymentAmount(closingBalance > 0 ? closingBalance : 0);
+                      }}
+                      className="gap-2 bg-green-600 text-white hover:bg-green-700 border-0"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Add Payment
+                    </Button>
+                  )}
+                </div>
+
+                {showPaymentForm && (
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div className="space-y-1">
+                      <Label className="text-sm text-green-800">Amount (₹)</Label>
+                      <Input
+                        type="number"
+                        value={paymentAmount || ''}
+                        onChange={(e) => setPaymentAmount(parseFloat(e.target.value) || 0)}
+                        className="font-mono bg-white"
+                        placeholder="0"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-sm text-green-800">Payment Method</Label>
+                      <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                        <SelectTrigger className="bg-white">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Cash">Cash</SelectItem>
+                          <SelectItem value="UPI">UPI</SelectItem>
+                          <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
+                          <SelectItem value="Cheque">Cheque</SelectItem>
+                          <SelectItem value="Card">Card</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-sm text-green-800">Date</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button variant="outline" className="w-full justify-start bg-white">
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {format(paymentDate, 'dd MMM yyyy')}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                          <Calendar mode="single" selected={paymentDate} onSelect={(d) => d && setPaymentDate(d)} />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-sm text-green-800">Notes</Label>
+                      <Input
+                        value={paymentNotes}
+                        onChange={(e) => setPaymentNotes(e.target.value)}
+                        className="bg-white"
+                        placeholder="Optional notes..."
+                      />
+                    </div>
+                    <div className="md:col-span-4 flex gap-2 justify-end">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowPaymentForm(false)}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={handleReceivePayment}
+                        disabled={isSubmittingPayment || paymentAmount <= 0}
+                        className="bg-green-600 hover:bg-green-700"
+                      >
+                        {isSubmittingPayment ? (
+                          <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                        ) : (
+                          <CreditCard className="w-4 h-4 mr-2" />
+                        )}
+                        Record Payment
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Action Buttons */}
+              <div className="pt-4 border-t flex flex-wrap gap-2">
+                <Button
+                  onClick={handleSave}
+                  className="gap-2 flex-1"
+                  disabled={!selectedCustomer || !hasData || isSaving}
+                >
+                  {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                  {editingInvoiceId ? 'Update' : 'Save'}
+                </Button>
+                <Button variant="outline" onClick={handlePrint} className="gap-2 flex-1" disabled={!selectedCustomer || !hasData}>
+                  <Printer className="w-4 h-4" />
+                  Print
+                </Button>
+                <Button variant="outline" onClick={handlePrint} className="gap-2 flex-1" disabled={!selectedCustomer || !hasData}>
+                  <Download className="w-4 h-4" />
+                  PDF
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Saved Weekly Invoices Dialog */}
+      <SavedWeeklyInvoicesDialog
+        open={showSavedInvoices}
+        onOpenChange={setShowSavedInvoices}
+        onViewInvoice={(invoice) => {
+          // Load the saved invoice data for viewing
+          setSelectedCustomer(invoice.customer_id);
+          setDateFrom(new Date(invoice.date_from));
+          setDateTo(new Date(invoice.date_to));
+          setDiscount(Number(invoice.discount));
+          setOtherCharges(Number(invoice.other_charges));
+          setNotes(invoice.notes || '');
+          setDateRange('custom');
+          setEditingInvoiceId(null); // View mode - not editing
+          setShowSavedInvoices(false);
+        }}
+        onEditInvoice={(invoice) => {
+          // Load the saved invoice data for editing
+          setSelectedCustomer(invoice.customer_id);
+          setDateFrom(new Date(invoice.date_from));
+          setDateTo(new Date(invoice.date_to));
+          setDiscount(Number(invoice.discount));
+          setOtherCharges(Number(invoice.other_charges));
+          setNotes(invoice.notes || '');
+          setDateRange('custom');
+          setEditingInvoiceId(invoice.id); // Edit mode
+          setShowSavedInvoices(false);
+        }}
+      />
     </>
   );
 }
