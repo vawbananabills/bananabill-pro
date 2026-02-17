@@ -100,9 +100,9 @@ export default function Landing() {
             Billing & Accounting{' '}
             <span className="text-primary">Made Simple</span> for Banana Trading
           </h1>
-          <p className="text-base md:text-xl text-muted-foreground mb-6 md:mb-8 max-w-2xl mx-auto text-balance">
-            The only software with weight-based billing, automatic Net Weight calculations,
-            and Sales-First workflow designed specifically for banana supply businesses.
+          <p className="text-base md:text-xl text-muted-foreground mb-6 md:mb-8 max-w-2xl mx-auto text-balance">The only software with weight-based billing, automatic Net Weight calculations, and Sales-First workflow designed specifically for banana supply businesses
+
+
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 md:gap-4">
             <Link to="/auth?signup=true" className="w-full sm:w-auto">
