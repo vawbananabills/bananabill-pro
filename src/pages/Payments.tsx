@@ -43,6 +43,8 @@ import { Plus, Search, Trash2, CreditCard, Banknote, Wallet, Pencil } from 'luci
 import { usePayments } from '@/hooks/usePayments';
 import { useCustomers } from '@/hooks/useCustomers';
 import { useInvoices } from '@/hooks/useInvoices';
+import { Checkbox } from '@/components/ui/checkbox';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 export default function Payments() {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -50,7 +52,7 @@ export default function Payments() {
   const [paymentToDelete, setPaymentToDelete] = useState<string | null>(null);
   const [editingPayment, setEditingPayment] = useState<string | null>(null);
   const [search, setSearch] = useState('');
-  
+
   const [formData, setFormData] = useState({
     amount: '',
     discount: '',
@@ -61,36 +63,79 @@ export default function Payments() {
     notes: '',
   });
 
-  const { payments, isLoading, createPayment, updatePayment, deletePayment } = usePayments();
+  const [selectedInvoiceIds, setSelectedInvoiceIds] = useState<string[]>([]);
+  const [allocations, setAllocations] = useState<Record<string, number>>({});
+
+  const { payments, isLoading, createPayment, createMultiplePayments, updatePayment, deletePayment } = usePayments();
   const { customers } = useCustomers();
   const { invoices } = useInvoices();
 
   // Filter unpaid/partial invoices for the selected customer
   const filteredInvoices = invoices?.filter(
-    (inv) => 
+    (inv) =>
       (!formData.customer_id || inv.customer_id === formData.customer_id) &&
-      inv.status !== 'paid'
+      (inv.status !== 'paid' || inv.id === formData.invoice_id || selectedInvoiceIds.includes(inv.id))
   ) || [];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    const paymentData = {
-      amount: parseFloat(formData.amount) || 0,
-      discount: parseFloat(formData.discount) || 0,
-      payment_date: formData.payment_date,
-      payment_method: formData.payment_method,
-      customer_id: formData.customer_id || null,
-      invoice_id: formData.invoice_id || null,
-      notes: formData.notes || null,
-    };
 
     if (editingPayment) {
+      const paymentData = {
+        amount: parseFloat(formData.amount) || 0,
+        discount: parseFloat(formData.discount) || 0,
+        payment_date: formData.payment_date,
+        payment_method: formData.payment_method,
+        customer_id: formData.customer_id || null,
+        invoice_id: formData.invoice_id || null,
+        notes: formData.notes || null,
+      };
       await updatePayment.mutateAsync({ id: editingPayment, ...paymentData });
+    } else if (selectedInvoiceIds.length > 0) {
+      // Multiple Invoices
+      const paymentsToCreate = selectedInvoiceIds.filter(id => (allocations[id] || 0) > 0).map((invId) => ({
+        amount: Number(allocations[invId]) || 0,
+        discount: 0,
+        payment_date: formData.payment_date,
+        payment_method: formData.payment_method,
+        customer_id: formData.customer_id || null,
+        invoice_id: invId,
+        notes: formData.notes || null,
+      }));
+
+      // If there's extra amount not allocated, add it as a separate payment (advance)
+      const totalAllocated = Object.values(allocations).reduce((sum: number, val: number) => sum + val, 0);
+      const remainingAmount = (parseFloat(formData.amount) || 0) - totalAllocated;
+
+      if (remainingAmount > 0) {
+        paymentsToCreate.push({
+          amount: parseFloat(remainingAmount.toFixed(2)),
+          discount: parseFloat(formData.discount) || 0,
+          payment_date: formData.payment_date,
+          payment_method: formData.payment_method,
+          customer_id: formData.customer_id || null,
+          invoice_id: null,
+          notes: (formData.notes ? formData.notes + ' ' : '') + '(Advance payment)',
+        });
+      }
+
+      if (paymentsToCreate.length > 0) {
+        await createMultiplePayments.mutateAsync(paymentsToCreate);
+      }
     } else {
+      // Single Payment / No Invoice
+      const paymentData = {
+        amount: parseFloat(formData.amount) || 0,
+        discount: parseFloat(formData.discount) || 0,
+        payment_date: formData.payment_date,
+        payment_method: formData.payment_method,
+        customer_id: formData.customer_id || null,
+        invoice_id: formData.invoice_id || null,
+        notes: formData.notes || null,
+      };
       await createPayment.mutateAsync(paymentData);
     }
-    
+
     resetForm();
   };
 
@@ -104,6 +149,8 @@ export default function Payments() {
       invoice_id: '',
       notes: '',
     });
+    setSelectedInvoiceIds([]);
+    setAllocations({});
     setEditingPayment(null);
     setDialogOpen(false);
   };
@@ -118,6 +165,13 @@ export default function Payments() {
       invoice_id: payment.invoice_id || '',
       notes: payment.notes || '',
     });
+    if (payment.invoice_id) {
+      setSelectedInvoiceIds([payment.invoice_id]);
+      setAllocations({ [payment.invoice_id]: payment.amount });
+    } else {
+      setSelectedInvoiceIds([]);
+      setAllocations({});
+    }
     setEditingPayment(payment.id);
     setDialogOpen(true);
   };
@@ -173,7 +227,11 @@ export default function Payments() {
                   <Label htmlFor="customer">Customer (Optional)</Label>
                   <Select
                     value={formData.customer_id || "none"}
-                    onValueChange={(value) => setFormData({ ...formData, customer_id: value === "none" ? "" : value, invoice_id: '' })}
+                    onValueChange={(value) => {
+                      setFormData({ ...formData, customer_id: value === "none" ? "" : value, invoice_id: '' });
+                      setSelectedInvoiceIds([]);
+                      setAllocations({});
+                    }}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select customer" />
@@ -189,48 +247,70 @@ export default function Payments() {
                   </Select>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="invoice">Invoice (Optional)</Label>
-                  <Select
-                    value={formData.invoice_id || "none"}
-                    onValueChange={(value) => setFormData({ ...formData, invoice_id: value === "none" ? "" : value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select invoice" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">No invoice</SelectItem>
-                      {filteredInvoices.map((invoice) => (
-                        <SelectItem key={invoice.id} value={invoice.id}>
-                          {invoice.invoice_number} - ₹{invoice.total?.toLocaleString()} ({invoice.status})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {formData.invoice_id && formData.invoice_id !== "none" && (() => {
-                    const selectedInvoice = filteredInvoices.find(inv => inv.id === formData.invoice_id);
-                    if (selectedInvoice) {
-                      const paidAmount = selectedInvoice.received_amount || 0;
-                      const balance = (selectedInvoice.total || 0) - paidAmount;
-                      return (
-                        <div className="text-sm p-3 bg-muted rounded-lg space-y-1">
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Total:</span>
-                            <span className="font-medium">₹{selectedInvoice.total?.toLocaleString()}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Paid:</span>
-                            <span className="font-medium text-green-600">₹{paidAmount.toLocaleString()}</span>
-                          </div>
-                          <div className="flex justify-between border-t pt-1">
-                            <span className="text-muted-foreground font-medium">Balance:</span>
-                            <span className="font-bold text-primary">₹{balance.toLocaleString()}</span>
-                          </div>
-                        </div>
-                      );
-                    }
-                    return null;
-                  })()}
+                <div className="space-y-3">
+                  <Label>Link Invoices (Optional)</Label>
+                  <ScrollArea className="h-[180px] border rounded-md p-2">
+                    <div className="space-y-4">
+                      {filteredInvoices.length === 0 ? (
+                        <p className="text-sm text-muted-foreground text-center py-4">No pending invoices for this customer</p>
+                      ) : (
+                        filteredInvoices.map((invoice) => {
+                          const balance = (invoice.total || 0) - (invoice.received_amount || 0);
+                          const isSelected = selectedInvoiceIds.includes(invoice.id);
+
+                          return (
+                            <div key={invoice.id} className="flex items-start gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors">
+                              <Checkbox
+                                id={`inv-${invoice.id}`}
+                                checked={isSelected}
+                                onCheckedChange={(checked) => {
+                                  if (checked) {
+                                    setSelectedInvoiceIds([...selectedInvoiceIds, invoice.id]);
+                                    // Auto-calculate remaining amount to apply
+                                    const totalToDistribute = Number(parseFloat(formData.amount) || 0) + Number(parseFloat(formData.discount) || 0);
+                                    const alreadyAllocated = Object.entries(allocations)
+                                      .filter(([id]) => id !== invoice.id)
+                                      .reduce((sum: number, [_, val]) => sum + Number(val), 0);
+                                    const remaining = Math.max(0, Math.min(balance, totalToDistribute - alreadyAllocated));
+                                    setAllocations({ ...allocations, [invoice.id]: remaining });
+                                  } else {
+                                    setSelectedInvoiceIds(selectedInvoiceIds.filter(id => id !== invoice.id));
+                                    const newAllocations = { ...allocations };
+                                    delete newAllocations[invoice.id];
+                                    setAllocations(newAllocations);
+                                  }
+                                }}
+                              />
+                              <div className="flex-1 min-w-0">
+                                <Label
+                                  htmlFor={`inv-${invoice.id}`}
+                                  className="flex justify-between cursor-pointer"
+                                >
+                                  <span className="font-medium truncate">{invoice.invoice_number}</span>
+                                  <span className="text-muted-foreground ml-2">Bal: ₹{balance.toLocaleString()}</span>
+                                </Label>
+                                {isSelected && (
+                                  <div className="mt-2 flex items-center gap-2">
+                                    <span className="text-xs text-muted-foreground">Apply:</span>
+                                    <Input
+                                      type="number"
+                                      step="0.01"
+                                      className="h-8 text-xs"
+                                      value={allocations[invoice.id] || ''}
+                                      onChange={(e) => {
+                                        const val = parseFloat(e.target.value) || 0;
+                                        setAllocations({ ...allocations, [invoice.id]: Math.min(val, balance) });
+                                      }}
+                                    />
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  </ScrollArea>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -304,8 +384,8 @@ export default function Payments() {
                   <Button type="button" variant="outline" onClick={resetForm}>
                     Cancel
                   </Button>
-                  <Button type="submit" disabled={createPayment.isPending || updatePayment.isPending}>
-                    {(createPayment.isPending || updatePayment.isPending) ? 'Saving...' : (editingPayment ? 'Update Payment' : 'Save Payment')}
+                  <Button type="submit" disabled={createPayment.isPending || updatePayment.isPending || createMultiplePayments.isPending}>
+                    {(createPayment.isPending || updatePayment.isPending || createMultiplePayments.isPending) ? 'Saving...' : (editingPayment ? 'Update Payment' : 'Save Payment')}
                   </Button>
                 </div>
               </form>

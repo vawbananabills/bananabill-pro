@@ -30,7 +30,7 @@ export function usePayments() {
     queryKey: ['payments', company?.id],
     queryFn: async () => {
       if (!company?.id) return [];
-      
+
       const { data, error } = await supabase
         .from('payments' as any)
         .select(`
@@ -40,9 +40,9 @@ export function usePayments() {
         `)
         .eq('company_id', company.id)
         .order('payment_date', { ascending: false });
-      
+
       if (error) throw error;
-      
+
       return (data || []).map((payment: any) => ({
         ...payment,
         customer_name: payment.customers?.name,
@@ -55,7 +55,7 @@ export function usePayments() {
   const createPayment = useMutation({
     mutationFn: async (payment: Omit<Payment, 'id' | 'company_id' | 'created_at' | 'created_by'>) => {
       if (!company?.id) throw new Error('No company found');
-      
+
       const { data, error } = await supabase
         .from('payments' as any)
         .insert({
@@ -65,9 +65,9 @@ export function usePayments() {
         } as any)
         .select()
         .single();
-      
+
       if (error) throw error;
-      
+
       // If payment is linked to an invoice, update the invoice's received_amount
       if (payment.invoice_id) {
         const { data: invoice } = await supabase
@@ -75,23 +75,23 @@ export function usePayments() {
           .select('received_amount, total')
           .eq('id', payment.invoice_id)
           .single() as any;
-        
+
         if (invoice) {
-          const totalApplied = payment.amount + (payment.discount || 0);
+          const totalApplied = (payment.amount || 0) + (payment.discount || 0);
           const newReceivedAmount = (invoice.received_amount || 0) + totalApplied;
-          const newStatus = newReceivedAmount >= (invoice.total || 0) ? 'paid' : 
-                           newReceivedAmount > 0 ? 'partial' : 'pending';
-          
+          const newStatus = newReceivedAmount >= (invoice.total || 0) ? 'paid' :
+            newReceivedAmount > 0 ? 'partial' : 'pending';
+
           await supabase
             .from('invoices')
-            .update({ 
+            .update({
               received_amount: newReceivedAmount,
-              status: newStatus 
+              status: newStatus
             } as any)
             .eq('id', payment.invoice_id);
         }
       }
-      
+
       return data;
     },
     onSuccess: () => {
@@ -112,6 +112,70 @@ export function usePayments() {
     },
   });
 
+  const createMultiplePayments = useMutation({
+    mutationFn: async (payments: Omit<Payment, 'id' | 'company_id' | 'created_at' | 'created_by'>[]) => {
+      if (!company?.id) throw new Error('No company found');
+
+      const results = [];
+      for (const payment of payments) {
+        const { data, error } = await supabase
+          .from('payments' as any)
+          .insert({
+            ...payment,
+            company_id: company.id,
+            created_by: user?.id,
+          } as any)
+          .select()
+          .single();
+
+        if (error) throw error;
+        results.push(data);
+
+        // Update invoice's received_amount
+        if (payment.invoice_id) {
+          const { data: invoice } = await supabase
+            .from('invoices')
+            .select('received_amount, total')
+            .eq('id', payment.invoice_id)
+            .single() as any;
+
+          if (invoice) {
+            const totalApplied = (payment.amount || 0) + (payment.discount || 0);
+            const newReceivedAmount = (invoice.received_amount || 0) + totalApplied;
+            const newStatus = newReceivedAmount >= (invoice.total || 0) ? 'paid' :
+              newReceivedAmount > 0 ? 'partial' : 'pending';
+
+            await supabase
+              .from('invoices')
+              .update({
+                received_amount: newReceivedAmount,
+                status: newStatus
+              } as any)
+              .eq('id', payment.invoice_id);
+          }
+        }
+      }
+
+      return results;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['payments'] });
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      queryClient.invalidateQueries({ queryKey: ['party-statement'] });
+      queryClient.invalidateQueries({ queryKey: ['party-adjustments'] });
+      queryClient.invalidateQueries({ queryKey: ['cash-ledger'] });
+      queryClient.invalidateQueries({ queryKey: ['day-book'] });
+      queryClient.invalidateQueries({ queryKey: ['balance-sheet'] });
+      queryClient.invalidateQueries({ queryKey: ['weekly-invoices'] });
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
+      queryClient.invalidateQueries({ queryKey: ['vendor-statement'] });
+      toast.success('Payments recorded successfully');
+    },
+    onError: (error) => {
+      toast.error('Failed to record payments: ' + error.message);
+    },
+  });
+
   const updatePayment = useMutation({
     mutationFn: async ({ id, ...payment }: Partial<Payment> & { id: string }) => {
       const { data, error } = await supabase
@@ -120,7 +184,7 @@ export function usePayments() {
         .eq('id', id)
         .select()
         .single();
-      
+
       if (error) throw error;
       return data;
     },
@@ -150,14 +214,14 @@ export function usePayments() {
         .select('invoice_id, amount')
         .eq('id', id)
         .single() as any;
-      
+
       const { error } = await supabase
         .from('payments' as any)
         .delete()
         .eq('id', id);
-      
+
       if (error) throw error;
-      
+
       // Restore invoice received_amount
       if (payment?.invoice_id) {
         const { data: invoice } = await supabase
@@ -165,17 +229,17 @@ export function usePayments() {
           .select('received_amount, total')
           .eq('id', payment.invoice_id)
           .single() as any;
-        
+
         if (invoice) {
           const newReceivedAmount = Math.max(0, (invoice.received_amount || 0) - payment.amount);
-          const newStatus = newReceivedAmount >= (invoice.total || 0) ? 'paid' : 
-                           newReceivedAmount > 0 ? 'partial' : 'pending';
-          
+          const newStatus = newReceivedAmount >= (invoice.total || 0) ? 'paid' :
+            newReceivedAmount > 0 ? 'partial' : 'pending';
+
           await supabase
             .from('invoices')
-            .update({ 
+            .update({
               received_amount: newReceivedAmount,
-              status: newStatus 
+              status: newStatus
             } as any)
             .eq('id', payment.invoice_id);
         }
@@ -203,6 +267,7 @@ export function usePayments() {
     payments,
     isLoading,
     createPayment,
+    createMultiplePayments,
     updatePayment,
     deletePayment,
   };
