@@ -10,9 +10,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/useAuth';
 import { useVendors } from '@/hooks/useVendors';
+import { useProducts } from '@/hooks/useProducts';
 import { useVendorReceipts, VendorReceiptWithItems } from '@/hooks/useVendorReceipts';
 import { format } from 'date-fns';
-import { Printer, Plus, Trash2, Save, FileText, Loader2, Search, Eye, Edit, FolderOpen } from 'lucide-react';
+import { Printer, Plus, Trash2, Save, FileText, Loader2, Search, Eye, Edit, FolderOpen, Package, IndianRupee } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface VendorReceiptDialogProps {
@@ -22,6 +23,7 @@ interface VendorReceiptDialogProps {
 
 interface ReceiptItem {
     id: string;
+    productId: string;
     itemName: string;
     qty: number;
     grossWeight: number;
@@ -33,6 +35,7 @@ interface ReceiptItem {
 export function VendorReceiptDialog({ open, onOpenChange }: VendorReceiptDialogProps) {
     const { company } = useAuth();
     const { vendors } = useVendors();
+    const { products } = useProducts();
     const { receipts, isLoading: isLoadingSaved, createReceipt, updateReceipt, deleteReceipt, getReceiptWithItems } = useVendorReceipts();
 
     const [activeTab, setActiveTab] = useState<string>('create');
@@ -48,7 +51,7 @@ export function VendorReceiptDialog({ open, onOpenChange }: VendorReceiptDialogP
 
     // Items table
     const [items, setItems] = useState<ReceiptItem[]>([
-        { id: '1', itemName: '', qty: 0, grossWeight: 0, netWeight: 0, rate: 0, amount: 0 }
+        { id: '1', productId: '', itemName: '', qty: 0, grossWeight: 0, netWeight: 0, rate: 0, amount: 0 }
     ]);
 
     // Adjustments
@@ -73,7 +76,7 @@ export function VendorReceiptDialog({ open, onOpenChange }: VendorReceiptDialogP
         setNotes('');
         setPaymentMode('Cash');
         setAmountReceived(0);
-        setItems([{ id: '1', itemName: '', qty: 0, grossWeight: 0, netWeight: 0, rate: 0, amount: 0 }]);
+        setItems([{ id: '1', productId: '', itemName: '', qty: 0, grossWeight: 0, netWeight: 0, rate: 0, amount: 0 }]);
         setCooli(0);
         setRent(0);
         setPadi(0);
@@ -99,6 +102,7 @@ export function VendorReceiptDialog({ open, onOpenChange }: VendorReceiptDialogP
             setCommissionPercent(data.commission_percent);
             setItems(data.items.map(it => ({
                 id: it.id || Math.random().toString(),
+                productId: it.product_id || '',
                 itemName: it.item_name,
                 qty: it.qty,
                 grossWeight: it.gross_weight,
@@ -113,7 +117,7 @@ export function VendorReceiptDialog({ open, onOpenChange }: VendorReceiptDialogP
     const selectedVendorData = vendors.find(v => v.id === selectedVendor);
 
     const addItem = () => {
-        setItems([...items, { id: Date.now().toString(), itemName: '', qty: 0, grossWeight: 0, netWeight: 0, rate: 0, amount: 0 }]);
+        setItems([...items, { id: Date.now().toString(), productId: '', itemName: '', qty: 0, grossWeight: 0, netWeight: 0, rate: 0, amount: 0 }]);
     };
 
     const removeItem = (id: string) => {
@@ -125,8 +129,18 @@ export function VendorReceiptDialog({ open, onOpenChange }: VendorReceiptDialogP
     const updateItem = (id: string, field: keyof ReceiptItem, value: any) => {
         setItems(items.map(item => {
             if (item.id === id) {
-                const updatedItem = { ...item, [field]: value };
-                if (field === 'rate' || field === 'netWeight') {
+                let updatedItem = { ...item, [field]: value };
+
+                // If product changed, update name and rate
+                if (field === 'productId') {
+                    const product = products.find(p => p.id === value);
+                    if (product) {
+                        updatedItem.itemName = product.name;
+                        updatedItem.rate = product.default_rate || 0;
+                    }
+                }
+
+                if (field === 'rate' || field === 'netWeight' || field === 'productId') {
                     updatedItem.amount = (updatedItem.netWeight || 0) * (updatedItem.rate || 0);
                 }
                 return updatedItem;
@@ -274,6 +288,7 @@ export function VendorReceiptDialog({ open, onOpenChange }: VendorReceiptDialogP
         };
 
         const itemsData = items.map(it => ({
+            product_id: it.productId || null,
             item_name: it.itemName,
             qty: it.qty,
             gross_weight: it.grossWeight,
@@ -326,35 +341,35 @@ export function VendorReceiptDialog({ open, onOpenChange }: VendorReceiptDialogP
                     <TabsContent value="saved">
                         {isLoadingSaved ? (
                             <div className="flex items-center justify-center py-12">
-                                <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+                                <Loader2 className="w-8 h-8 animate-spin text-primary/50" />
                             </div>
                         ) : receipts.length > 0 ? (
-                            <div className="border rounded-lg overflow-hidden">
+                            <div className="border rounded-xl overflow-hidden bg-background shadow-md border-primary/10">
                                 <Table>
                                     <TableHeader>
-                                        <TableRow>
-                                            <TableHead>Date</TableHead>
-                                            <TableHead>Receipt #</TableHead>
-                                            <TableHead>Vendor</TableHead>
-                                            <TableHead>Vehicle</TableHead>
-                                            <TableHead className="text-right">Final Total</TableHead>
-                                            <TableHead className="text-right">Actions</TableHead>
+                                        <TableRow className="bg-slate-50 border-b border-primary/10">
+                                            <TableHead className="font-bold text-slate-700">Date</TableHead>
+                                            <TableHead className="font-bold text-slate-700">Receipt #</TableHead>
+                                            <TableHead className="font-bold text-slate-700">Vendor</TableHead>
+                                            <TableHead className="font-bold text-slate-700">Vehicle</TableHead>
+                                            <TableHead className="text-right font-bold text-slate-700">Final Payable</TableHead>
+                                            <TableHead className="text-right font-bold text-slate-700">Actions</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
                                         {receipts.map((r) => (
-                                            <TableRow key={r.id}>
-                                                <TableCell>{format(new Date(r.date), 'dd MMM yyyy')}</TableCell>
-                                                <TableCell className="font-medium">{r.receipt_number}</TableCell>
-                                                <TableCell>{r.vendors?.name || '-'}</TableCell>
-                                                <TableCell>{r.vehicle_number || '-'}</TableCell>
-                                                <TableCell className="text-right font-semibold text-primary">₹{r.final_total.toLocaleString()}</TableCell>
+                                            <TableRow key={r.id} className="hover:bg-primary/5 transition-colors border-b last:border-0 border-slate-100">
+                                                <TableCell className="text-sm">{format(new Date(r.date), 'dd MMM yyyy')}</TableCell>
+                                                <TableCell className="font-bold text-primary text-sm">{r.receipt_number}</TableCell>
+                                                <TableCell className="font-medium text-sm">{r.vendors?.name || '-'}</TableCell>
+                                                <TableCell className="text-xs text-muted-foreground">{r.vehicle_number || '-'}</TableCell>
+                                                <TableCell className="text-right font-black text-primary text-sm tabular-nums">₹{r.final_total.toLocaleString()}</TableCell>
                                                 <TableCell className="text-right">
                                                     <div className="flex gap-1 justify-end">
-                                                        <Button variant="ghost" size="icon" onClick={() => handleEdit(r.id)} title="Edit">
+                                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-600 hover:text-primary hover:bg-primary/10" onClick={() => handleEdit(r.id)} title="Edit">
                                                             <Edit className="h-4 w-4" />
                                                         </Button>
-                                                        <Button variant="ghost" size="icon"
+                                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-600 hover:text-emerald-600 hover:bg-emerald-50"
                                                             onClick={async () => {
                                                                 const full = await getReceiptWithItems(r.id);
                                                                 if (full) handlePrint(full);
@@ -363,7 +378,7 @@ export function VendorReceiptDialog({ open, onOpenChange }: VendorReceiptDialogP
                                                         >
                                                             <Printer className="h-4 w-4" />
                                                         </Button>
-                                                        <Button variant="ghost" size="icon" className="text-destructive"
+                                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                                                             onClick={() => {
                                                                 if (confirm('Delete this receipt?')) deleteReceipt.mutate(r.id);
                                                             }}
@@ -379,8 +394,17 @@ export function VendorReceiptDialog({ open, onOpenChange }: VendorReceiptDialogP
                                 </Table>
                             </div>
                         ) : (
-                            <div className="text-center py-12 text-muted-foreground">
-                                <p>No saved receipts found.</p>
+                            <div className="text-center py-20 border-2 border-dashed rounded-xl border-slate-200 bg-slate-50/50">
+                                <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
+                                    <FolderOpen className="w-8 h-8 text-slate-400" />
+                                </div>
+                                <h3 className="text-lg font-semibold text-slate-900">No Receipts Yet</h3>
+                                <p className="text-slate-500 max-w-xs mx-auto mt-2">
+                                    Start by creating a new vendor receipt from the create tab.
+                                </p>
+                                <Button variant="outline" className="mt-6 gap-2" onClick={() => setActiveTab('create')}>
+                                    <Plus className="w-4 h-4" /> Create First Receipt
+                                </Button>
                             </div>
                         )}
                     </TabsContent>
@@ -409,34 +433,43 @@ export function VendorReceiptDialog({ open, onOpenChange }: VendorReceiptDialogP
                         </div>
 
                         {/* Items Table */}
-                        <div className="border rounded-lg overflow-hidden bg-background">
+                        <div className="border rounded-xl overflow-hidden bg-background shadow-sm border-primary/10">
                             <Table>
                                 <TableHeader>
-                                    <TableRow className="bg-muted/50">
-                                        <TableHead className="w-[200px]">Item Name</TableHead>
-                                        <TableHead className="text-right">Qty</TableHead>
-                                        <TableHead className="text-right">Gross Wt</TableHead>
-                                        <TableHead className="text-right">Net Wt</TableHead>
-                                        <TableHead className="text-right">Rate</TableHead>
-                                        <TableHead className="text-right">Amount</TableHead>
+                                    <TableRow className="bg-slate-50 border-b border-primary/10">
+                                        <TableHead className="w-[280px] font-bold text-slate-700">Item / Product</TableHead>
+                                        <TableHead className="text-right font-bold text-slate-700">Qty</TableHead>
+                                        <TableHead className="text-right font-bold text-slate-700">Gross Wt</TableHead>
+                                        <TableHead className="text-right font-bold text-slate-700">Net Wt</TableHead>
+                                        <TableHead className="text-right font-bold text-slate-700">Rate</TableHead>
+                                        <TableHead className="text-right font-bold text-slate-700">Amount</TableHead>
                                         <TableHead className="w-[50px]"></TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
                                     {items.map((item) => (
-                                        <TableRow key={item.id}>
+                                        <TableRow key={item.id} className="hover:bg-primary/5 transition-colors border-b border-slate-100 last:border-0">
                                             <TableCell>
-                                                <Input
-                                                    value={item.itemName}
-                                                    onChange={(e) => updateItem(item.id, 'itemName', e.target.value)}
-                                                    placeholder="Item name..."
-                                                    className="border-none bg-transparent focus-visible:ring-0 px-0 h-8"
-                                                />
+                                                <div className="space-y-1">
+                                                    <SearchableSelect
+                                                        value={item.productId}
+                                                        onValueChange={(val) => updateItem(item.id, 'productId', val)}
+                                                        options={products.map(p => ({ value: p.id, label: p.name }))}
+                                                        placeholder="Search product..."
+                                                        className="h-8 text-xs border-slate-200"
+                                                    />
+                                                    <Input
+                                                        value={item.itemName}
+                                                        onChange={(e) => updateItem(item.id, 'itemName', e.target.value)}
+                                                        placeholder="Custom name if needed"
+                                                        className="h-7 text-[10px] bg-transparent border-dashed border-slate-200 focus:border-primary text-muted-foreground"
+                                                    />
+                                                </div>
                                             </TableCell>
                                             <TableCell>
                                                 <Input
                                                     type="number"
-                                                    className="text-right border-none bg-transparent focus-visible:ring-0 px-0 h-8"
+                                                    className="text-right border-slate-200 focus:border-primary h-8"
                                                     value={item.qty || ''}
                                                     onChange={(e) => updateItem(item.id, 'qty', parseFloat(e.target.value) || 0)}
                                                 />
@@ -444,7 +477,7 @@ export function VendorReceiptDialog({ open, onOpenChange }: VendorReceiptDialogP
                                             <TableCell>
                                                 <Input
                                                     type="number"
-                                                    className="text-right border-none bg-transparent focus-visible:ring-0 px-0 h-8 font-mono text-xs"
+                                                    className="text-right border-slate-200 focus:border-primary h-8 font-mono text-xs"
                                                     value={item.grossWeight || ''}
                                                     onChange={(e) => updateItem(item.id, 'grossWeight', parseFloat(e.target.value) || 0)}
                                                 />
@@ -452,7 +485,7 @@ export function VendorReceiptDialog({ open, onOpenChange }: VendorReceiptDialogP
                                             <TableCell>
                                                 <Input
                                                     type="number"
-                                                    className="text-right border-none bg-transparent focus-visible:ring-0 px-0 h-8 font-mono text-xs"
+                                                    className="text-right border-slate-200 focus:border-primary h-8 font-mono text-xs"
                                                     value={item.netWeight || ''}
                                                     onChange={(e) => updateItem(item.id, 'netWeight', parseFloat(e.target.value) || 0)}
                                                 />
@@ -460,26 +493,26 @@ export function VendorReceiptDialog({ open, onOpenChange }: VendorReceiptDialogP
                                             <TableCell>
                                                 <Input
                                                     type="number"
-                                                    className="text-right border-none bg-transparent focus-visible:ring-0 px-0 h-8"
+                                                    className="text-right border-slate-200 focus:border-primary h-8"
                                                     value={item.rate || ''}
                                                     onChange={(e) => updateItem(item.id, 'rate', parseFloat(e.target.value) || 0)}
                                                 />
                                             </TableCell>
-                                            <TableCell className="text-right font-medium text-xs">
+                                            <TableCell className="text-right font-bold text-slate-800 tabular-nums">
                                                 ₹{item.amount.toLocaleString()}
                                             </TableCell>
                                             <TableCell>
-                                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => removeItem(item.id)} disabled={items.length === 1}>
-                                                    <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                                                <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-destructive/10 hover:text-destructive" onClick={() => removeItem(item.id)} disabled={items.length === 1}>
+                                                    <Trash2 className="w-4 h-4" />
                                                 </Button>
                                             </TableCell>
                                         </TableRow>
                                     ))}
                                 </TableBody>
                             </Table>
-                            <div className="p-2 border-t flex justify-start bg-muted/20">
-                                <Button variant="outline" size="sm" onClick={addItem} className="gap-1 h-7 text-xs">
-                                    <Plus className="w-3 h-3" /> Add Item
+                            <div className="p-3 border-t flex justify-start bg-slate-50/50">
+                                <Button variant="outline" size="sm" onClick={addItem} className="gap-2 h-8 text-xs border-primary/20 hover:bg-primary/10 hover:text-primary transition-all shadow-sm">
+                                    <Plus className="w-4 h-4" /> Add Line Item
                                 </Button>
                             </div>
                         </div>
@@ -507,8 +540,11 @@ export function VendorReceiptDialog({ open, onOpenChange }: VendorReceiptDialogP
                                     </div>
                                 </div>
                                 <div className="space-y-2">
-                                    <Label className="text-xs">Amount Received (Recvided)</Label>
-                                    <Input type="number" value={amountReceived || ''} onChange={(e) => setAmountReceived(parseFloat(e.target.value) || 0)} placeholder="0.00" className="h-8" />
+                                    <Label className="text-xs">Amount Received</Label>
+                                    <div className="relative">
+                                        <IndianRupee className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                                        <Input type="number" value={amountReceived || ''} onChange={(e) => setAmountReceived(parseFloat(e.target.value) || 0)} placeholder="0.00" className="h-8 pl-8" />
+                                    </div>
                                 </div>
                                 <div className="space-y-2">
                                     <Label className="text-xs">Notes</Label>
@@ -549,9 +585,9 @@ export function VendorReceiptDialog({ open, onOpenChange }: VendorReceiptDialogP
                                 </div>
 
                                 <div className="pt-3 mt-1 border-t-2 border-primary/20">
-                                    <div className="flex justify-between items-center text-lg font-black text-primary">
-                                        <span>Final Total</span>
-                                        <span>₹{finalTotal.toLocaleString()}</span>
+                                    <div className="flex justify-between items-center text-xl font-black text-primary drop-shadow-sm">
+                                        <span>Final Payable</span>
+                                        <span className="font-mono tabular-nums">₹{finalTotal.toLocaleString()}</span>
                                     </div>
                                 </div>
 

@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 export interface VendorReceiptItem {
     id?: string;
     receipt_id?: string;
+    product_id?: string | null;
     item_name: string;
     qty: number;
     gross_weight: number;
