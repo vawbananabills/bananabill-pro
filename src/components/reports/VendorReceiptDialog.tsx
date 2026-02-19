@@ -12,6 +12,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useVendors } from '@/hooks/useVendors';
 import { useProducts } from '@/hooks/useProducts';
 import { useVendorReceipts, VendorReceiptWithItems } from '@/hooks/useVendorReceipts';
+import { OPEN_VENDOR_RECEIPT_DIALOG_EVENT } from '@/components/GlobalKeyboardShortcuts';
 import { format } from 'date-fns';
 import { Printer, Plus, Trash2, Save, FileText, Loader2, Search, Eye, Edit, FolderOpen, Package, IndianRupee } from 'lucide-react';
 import { toast } from 'sonner';
@@ -37,6 +38,13 @@ export function VendorReceiptDialog({ open, onOpenChange }: VendorReceiptDialogP
     const { vendors } = useVendors();
     const { products } = useProducts();
     const { receipts, isLoading: isLoadingSaved, createReceipt, updateReceipt, deleteReceipt, getReceiptWithItems } = useVendorReceipts();
+
+    // Listen for global event to open this dialog
+    useEffect(() => {
+        const handleOpen = () => onOpenChange(true);
+        window.addEventListener(OPEN_VENDOR_RECEIPT_DIALOG_EVENT, handleOpen);
+        return () => window.removeEventListener(OPEN_VENDOR_RECEIPT_DIALOG_EVENT, handleOpen);
+    }, [onOpenChange]);
 
     const [activeTab, setActiveTab] = useState<string>('create');
     const [isEditing, setIsEditing] = useState<string | null>(null);

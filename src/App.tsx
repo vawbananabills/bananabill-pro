@@ -7,6 +7,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { GlobalKeyboardShortcuts } from "@/components/GlobalKeyboardShortcuts";
 import { GlobalPaymentDialog } from "@/components/payments/GlobalPaymentDialog";
+import { GlobalVendorReceiptDialog } from "@/components/reports/GlobalVendorReceiptDialog";
 import Landing from "./pages/Landing";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
@@ -36,6 +37,7 @@ const App = () => (
         <BrowserRouter>
           <GlobalKeyboardShortcuts />
           <GlobalPaymentDialog />
+          <GlobalVendorReceiptDialog />
           <Routes>
             <Route path="/" element={<Landing />} />
             <Route path="/auth" element={<Auth />} />

@@ -16,11 +16,13 @@ import {
 } from '@/components/ui/select';
 import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Separator } from '@/components/ui/separator';
-import { Save, Printer, Download, Check, Loader2, ArrowLeft, Package, Leaf } from 'lucide-react';
+import { Save, Printer, Download, Check, Loader2, ArrowLeft, Package, Leaf, Keyboard } from 'lucide-react';
 import { toast } from 'sonner';
 import { useCustomers } from '@/hooks/useCustomers';
 import { useInvoices, InvoiceItem, LooseInvoiceItem as DBLooseInvoiceItem } from '@/hooks/useInvoices';
 import { useAuth } from '@/hooks/useAuth';
+import { useKeyboardShortcuts, INVOICE_SHORTCUTS } from '@/hooks/useKeyboardShortcuts';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface LocalInvoiceItem {
   id: string;
@@ -72,7 +74,7 @@ export default function EditInvoice() {
   useEffect(() => {
     const loadInvoice = async () => {
       if (!id) return;
-      
+
       const invoiceData = await getInvoiceWithItems(id);
       if (!invoiceData) {
         toast.error('Invoice not found');
@@ -118,7 +120,7 @@ export default function EditInvoice() {
           total: Number(item.total) || 0,
         })));
       }
-      
+
       setLoading(false);
     };
 
@@ -138,17 +140,25 @@ export default function EditInvoice() {
     }).format(value);
   };
 
+  const handlePrint = () => {
+    toast.info('Print functionality coming soon!');
+  };
+
+  const handleDownload = () => {
+    toast.info('Download PDF functionality coming soon!');
+  };
+
   const handleSave = async () => {
     if (!id) return;
-    
+
     if (!customerId) {
       toast.error('Please select a customer');
       return;
     }
-    
+
     const validItems = items.filter(i => i.total > 0 && i.vendorId && i.productId);
     const validLooseItems = looseItems.filter(i => i.total > 0 && i.productName);
-    
+
     if (validItems.length === 0 && validLooseItems.length === 0) {
       toast.error('Please add at least one valid item');
       return;
@@ -216,6 +226,13 @@ export default function EditInvoice() {
     }
   };
 
+  // Keyboard shortcuts
+  useKeyboardShortcuts([
+    { key: 's', altKey: true, action: handleSave, description: 'Save Invoice (Alt+S)' },
+    { key: 'p', altKey: true, shiftKey: true, action: handlePrint, description: 'Print Invoice (Alt+Shift+P)' },
+    { key: 'd', altKey: true, action: handleDownload, description: 'Download PDF (Alt+D)' },
+  ]);
+
   if (loading) {
     return (
       <DashboardLayout title="Edit Invoice" subtitle="Loading...">
@@ -260,17 +277,17 @@ export default function EditInvoice() {
                   className="w-full"
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="date">Date</Label>
-                <Input 
-                  id="date" 
-                  type="date" 
-                  value={date} 
+                <Input
+                  id="date"
+                  type="date"
+                  value={date}
                   onChange={(e) => setDate(e.target.value)}
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="payment">Payment Type</Label>
                 <Select value={paymentType} onValueChange={setPaymentType}>
@@ -300,9 +317,9 @@ export default function EditInvoice() {
               </div>
 
               <div className="flex items-end">
-                <Button 
-                  variant="outline" 
-                  className="w-full" 
+                <Button
+                  variant="outline"
+                  className="w-full"
                   onClick={() => navigate('/customers')}
                 >
                   + New Customer
@@ -348,7 +365,7 @@ export default function EditInvoice() {
               <CardTitle className="text-sm font-medium text-muted-foreground">Notes</CardTitle>
             </CardHeader>
             <CardContent>
-              <textarea 
+              <textarea
                 className="w-full h-24 p-3 text-sm border border-input rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-ring/20"
                 placeholder="Add any notes or terms..."
                 value={notes}
@@ -364,10 +381,10 @@ export default function EditInvoice() {
                 <div className="flex-1 grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="discount">Discount (₹)</Label>
-                    <Input 
+                    <Input
                       id="discount"
-                      type="number" 
-                      value={discount || ''} 
+                      type="number"
+                      value={discount || ''}
                       onChange={(e) => setDiscount(parseFloat(e.target.value) || 0)}
                       className="font-mono"
                       placeholder="0"
@@ -375,10 +392,10 @@ export default function EditInvoice() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="charges">Other Charges (₹)</Label>
-                    <Input 
+                    <Input
                       id="charges"
-                      type="number" 
-                      value={otherCharges || ''} 
+                      type="number"
+                      value={otherCharges || ''}
                       onChange={(e) => setOtherCharges(parseFloat(e.target.value) || 0)}
                       className="font-mono"
                       placeholder="0"
@@ -386,10 +403,10 @@ export default function EditInvoice() {
                   </div>
                   <div className="space-y-2 col-span-2">
                     <Label htmlFor="received" className="text-primary font-medium">Received Amount (₹)</Label>
-                    <Input 
+                    <Input
                       id="received"
-                      type="number" 
-                      value={receivedAmount || ''} 
+                      type="number"
+                      value={receivedAmount || ''}
                       onChange={(e) => setReceivedAmount(parseFloat(e.target.value) || 0)}
                       className="font-mono border-primary/50"
                       placeholder="0"
@@ -401,10 +418,10 @@ export default function EditInvoice() {
                     )}
                   </div>
                 </div>
-                
+
                 <Separator orientation="vertical" className="hidden md:block" />
                 <Separator className="md:hidden" />
-                
+
                 <div className="min-w-[200px] space-y-3">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Regular Items</span>

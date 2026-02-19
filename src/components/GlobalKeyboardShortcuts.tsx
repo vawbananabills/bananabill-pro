@@ -4,18 +4,18 @@ import { toast } from 'sonner';
 
 // Event for opening payment dialog
 export const OPEN_PAYMENT_DIALOG_EVENT = 'open-payment-dialog';
+export const OPEN_VENDOR_RECEIPT_DIALOG_EVENT = 'open-vendor-receipt-dialog';
 
 export function GlobalKeyboardShortcuts() {
   const navigate = useNavigate();
   const location = useLocation();
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    // Skip if user is typing in an input or textarea
+    // Skip if user is typing in an input or textarea, unless it's an Alt shortcut or Ctrl+K
     const target = e.target as HTMLElement;
     const tagName = target.tagName.toLowerCase();
     if (tagName === 'input' || tagName === 'textarea' || target.isContentEditable) {
-      // Allow Ctrl+K for command palette even in inputs
-      if (!(e.key === 'k' && (e.ctrlKey || e.metaKey))) {
+      if (!e.altKey && !((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k')) {
         return;
       }
     }
@@ -78,8 +78,14 @@ export function GlobalKeyboardShortcuts() {
     // Alt + P: Open Add Payment form (global)
     if (e.altKey && e.key.toLowerCase() === 'p') {
       e.preventDefault();
-      // Dispatch event to open global payment dialog
-      window.dispatchEvent(new CustomEvent(OPEN_PAYMENT_DIALOG_EVENT));
+      // Contextual check: if on vendor related pages, open vendor receipt
+      if (location.pathname.includes('vendor') || location.pathname.includes('reports')) {
+        window.dispatchEvent(new CustomEvent(OPEN_VENDOR_RECEIPT_DIALOG_EVENT));
+        toast.info('Vendor Receipt (Alt+P)');
+      } else {
+        window.dispatchEvent(new CustomEvent(OPEN_PAYMENT_DIALOG_EVENT));
+        toast.info('Add Payment (Alt+P)');
+      }
       return;
     }
   }, [navigate, location.pathname]);

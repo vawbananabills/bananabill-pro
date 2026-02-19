@@ -14,13 +14,13 @@ export function useKeyboardShortcuts(shortcuts: ShortcutConfig[]) {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       for (const shortcut of shortcuts) {
-        const isMatch = 
+        const isMatch =
           e.key.toLowerCase() === shortcut.key.toLowerCase() &&
           (!shortcut.ctrlKey || e.ctrlKey) &&
           (!shortcut.metaKey || e.metaKey) &&
           (!shortcut.shiftKey || e.shiftKey) &&
           (!shortcut.altKey || e.altKey);
-        
+
         if (isMatch) {
           e.preventDefault();
           shortcut.action();
@@ -42,13 +42,13 @@ export function useEnterAsTab(containerRef: React.RefObject<HTMLElement>) {
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key !== 'Enter') return;
-      
+
       const target = e.target as HTMLElement;
       const tagName = target.tagName.toLowerCase();
-      
+
       // Don't interfere with buttons, textareas, or elements with role="button"
       if (
-        tagName === 'button' || 
+        tagName === 'button' ||
         tagName === 'textarea' ||
         target.getAttribute('role') === 'button' ||
         target.getAttribute('role') === 'option' ||
@@ -60,9 +60,9 @@ export function useEnterAsTab(containerRef: React.RefObject<HTMLElement>) {
 
       // Only handle Enter on input fields
       if (tagName !== 'input') return;
-      
+
       e.preventDefault();
-      
+
       // Find all focusable elements
       const focusableSelectors = [
         'input:not([disabled]):not([type="hidden"])',
@@ -71,17 +71,17 @@ export function useEnterAsTab(containerRef: React.RefObject<HTMLElement>) {
         '[tabindex]:not([tabindex="-1"]):not([disabled])',
         '[role="combobox"]:not([disabled])',
       ].join(', ');
-      
+
       const focusableElements = Array.from(
         container.querySelectorAll(focusableSelectors)
       ) as HTMLElement[];
-      
+
       const currentIndex = focusableElements.indexOf(target);
-      
+
       if (currentIndex !== -1 && currentIndex < focusableElements.length - 1) {
         const nextElement = focusableElements[currentIndex + 1];
         nextElement.focus();
-        
+
         // If it's an input, select all text
         if (nextElement.tagName.toLowerCase() === 'input') {
           (nextElement as HTMLInputElement).select();
@@ -103,7 +103,7 @@ export interface ShortcutInfo {
 export const INVOICE_SHORTCUTS: ShortcutInfo[] = [
   { keys: 'Alt + S', description: 'Save Invoice' },
   { keys: 'Alt + N', description: 'New Invoice' },
-  { keys: 'Alt + P', description: 'Print Invoice' },
+  { keys: 'Alt + Shift + P', description: 'Print Invoice' },
   { keys: 'Alt + D', description: 'Download PDF' },
   { keys: 'Alt + I', description: 'Add Regular Item' },
   { keys: 'Alt + L', description: 'Add Loose Item' },

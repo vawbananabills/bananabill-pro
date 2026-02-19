@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/select';
 import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Separator } from '@/components/ui/separator';
-import { 
+import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
@@ -115,12 +115,12 @@ export default function NewInvoice() {
         .eq('customer_id', customerId);
 
       // Calculate totals
-      const invoiceTotal = (invoices || []).reduce((sum, inv) => 
+      const invoiceTotal = (invoices || []).reduce((sum, inv) =>
         sum + (Number(inv.total) || 0), 0);
-      
-      const paymentTotal = (payments || []).reduce((sum, pay) => 
+
+      const paymentTotal = (payments || []).reduce((sum, pay) =>
         sum + (Number(pay.amount) || 0) + (Number(pay.discount) || 0), 0);
-      
+
       const adjustmentTotal = (adjustments || []).reduce((sum, adj) => {
         const amount = Number(adj.amount) || 0;
         // discount reduces balance, additional increases balance
@@ -204,10 +204,10 @@ export default function NewInvoice() {
       toast.error('Please select a customer');
       return;
     }
-    
+
     const validItems = items.filter(i => i.total > 0 && i.vendorId && i.productId);
     const validLooseItems = looseItems.filter(i => i.total > 0 && i.productName);
-    
+
     if (validItems.length === 0 && validLooseItems.length === 0) {
       toast.error('Please add at least one valid item');
       return;
@@ -276,12 +276,12 @@ export default function NewInvoice() {
 
   // Keyboard shortcuts - must be after handleSave is defined
   useKeyboardShortcuts([
-    { key: 's', altKey: true, action: handleSave, description: 'Save Invoice' },
-    { key: 'n', altKey: true, action: () => navigate('/invoices/new'), description: 'New Invoice' },
-    { key: 'p', altKey: true, action: handlePrint, description: 'Print Invoice' },
-    { key: 'd', altKey: true, action: handleDownload, description: 'Download PDF' },
-    { key: 'i', altKey: true, action: handleAddRegularItem, description: 'Add Regular Item' },
-    { key: 'l', altKey: true, action: handleAddLooseItem, description: 'Add Loose Item' },
+    { key: 's', altKey: true, action: handleSave, description: 'Save Invoice (Alt+S)' },
+    { key: 'n', altKey: true, action: () => navigate('/invoices/new'), description: 'New Invoice (Alt+N)' },
+    { key: 'p', altKey: true, shiftKey: true, action: handlePrint, description: 'Print Invoice (Alt+Shift+P)' },
+    { key: 'd', altKey: true, action: handleDownload, description: 'Download PDF (Alt+D)' },
+    { key: 'i', altKey: true, action: handleAddRegularItem, description: 'Add Regular Item (Alt+I)' },
+    { key: 'l', altKey: true, action: handleAddLooseItem, description: 'Add Loose Item (Alt+L)' },
   ]);
 
   return (
@@ -321,13 +321,13 @@ export default function NewInvoice() {
                   <div className={`flex items-center gap-1.5 text-xs ${customerBalance > 0 ? 'text-destructive' : 'text-success'}`}>
                     <AlertCircle className="w-3.5 h-3.5" />
                     <span>
-                      Previous Balance: {formatCurrency(Math.abs(customerBalance))} 
+                      Previous Balance: {formatCurrency(Math.abs(customerBalance))}
                       {customerBalance > 0 ? ' (Due)' : ' (Advance)'}
                     </span>
                   </div>
                 )}
               </div>
-              
+
               {/* Quick Create Customer Dialog */}
               <QuickCreateCustomerDialog
                 open={quickCreateOpen}
@@ -338,17 +338,17 @@ export default function NewInvoice() {
                   setNewCustomerName('');
                 }}
               />
-              
+
               <div className="space-y-2">
                 <Label htmlFor="date">Date</Label>
-                <Input 
-                  id="date" 
-                  type="date" 
-                  value={date} 
+                <Input
+                  id="date"
+                  type="date"
+                  value={date}
                   onChange={(e) => setDate(e.target.value)}
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="payment">Payment Type</Label>
                 <Select value={paymentType} onValueChange={setPaymentType}>
@@ -364,9 +364,9 @@ export default function NewInvoice() {
               </div>
 
               <div className="flex items-end">
-                <Button 
-                  variant="outline" 
-                  className="w-full" 
+                <Button
+                  variant="outline"
+                  className="w-full"
                   onClick={() => navigate('/customers')}
                 >
                   + New Customer
@@ -412,7 +412,7 @@ export default function NewInvoice() {
               <CardTitle className="text-sm font-medium text-muted-foreground">Notes</CardTitle>
             </CardHeader>
             <CardContent>
-              <textarea 
+              <textarea
                 className="w-full h-24 p-3 text-sm border border-input rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-ring/20"
                 placeholder="Add any notes or terms..."
                 value={notes}
@@ -428,10 +428,10 @@ export default function NewInvoice() {
                 <div className="flex-1 grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="discount">Discount (₹)</Label>
-                    <Input 
+                    <Input
                       id="discount"
-                      type="number" 
-                      value={discount || ''} 
+                      type="number"
+                      value={discount || ''}
                       onChange={(e) => setDiscount(parseFloat(e.target.value) || 0)}
                       className="font-mono"
                       placeholder="0"
@@ -439,10 +439,10 @@ export default function NewInvoice() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="charges">Other Charges (₹)</Label>
-                    <Input 
+                    <Input
                       id="charges"
-                      type="number" 
-                      value={otherCharges || ''} 
+                      type="number"
+                      value={otherCharges || ''}
                       onChange={(e) => setOtherCharges(parseFloat(e.target.value) || 0)}
                       className="font-mono"
                       placeholder="0"
@@ -450,10 +450,10 @@ export default function NewInvoice() {
                   </div>
                   <div className="space-y-2 col-span-2">
                     <Label htmlFor="received" className="text-primary font-medium">Received Amount (₹)</Label>
-                    <Input 
+                    <Input
                       id="received"
-                      type="number" 
-                      value={receivedAmount || ''} 
+                      type="number"
+                      value={receivedAmount || ''}
                       onChange={(e) => setReceivedAmount(parseFloat(e.target.value) || 0)}
                       className="font-mono border-primary/50"
                       placeholder="0"
@@ -465,10 +465,10 @@ export default function NewInvoice() {
                     )}
                   </div>
                 </div>
-                
+
                 <Separator orientation="vertical" className="hidden md:block" />
                 <Separator className="md:hidden" />
-                
+
                 <div className="min-w-[200px] space-y-3">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Regular Items</span>
@@ -535,7 +535,7 @@ export default function NewInvoice() {
               <Printer className="w-4 h-4" />
               <span className="hidden sm:inline">Print</span>
               <kbd className="hidden md:inline-flex h-5 items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground">
-                Alt+P
+                Alt+Shift+P
               </kbd>
             </Button>
             <Button variant="outline" className="gap-2" onClick={handleDownload}>
