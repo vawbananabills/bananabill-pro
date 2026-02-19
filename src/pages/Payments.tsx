@@ -46,6 +46,7 @@ import { useCustomers } from '@/hooks/useCustomers';
 import { useInvoices } from '@/hooks/useInvoices';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 
 export default function Payments() {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -70,6 +71,11 @@ export default function Payments() {
   const { payments, isLoading, createPayment, createMultiplePayments, updatePayment, deletePayment } = usePayments();
   const { customers } = useCustomers();
   const { invoices } = useInvoices();
+
+  const customerOptions = [
+    { value: "none", label: "No customer (Walk-in)" },
+    ...(customers?.map(c => ({ value: c.id, label: c.name })) || [])
+  ];
 
   // Filter unpaid/partial invoices for the selected customer
   const filteredInvoices = invoices?.filter(
@@ -245,26 +251,18 @@ export default function Payments() {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="customer">Customer (Optional)</Label>
-                  <Select
+                  <SearchableSelect
                     value={formData.customer_id || "none"}
                     onValueChange={(value) => {
                       setFormData({ ...formData, customer_id: value === "none" ? "" : value, invoice_id: '' });
                       setSelectedInvoiceIds([]);
                       setAllocations({});
                     }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select customer" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">No customer</SelectItem>
-                      {customers?.map((customer) => (
-                        <SelectItem key={customer.id} value={customer.id}>
-                          {customer.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    options={customerOptions}
+                    placeholder="Select customer"
+                    searchPlaceholder="Search customers..."
+                    className="w-full"
+                  />
                 </div>
 
                 <div className="space-y-3">

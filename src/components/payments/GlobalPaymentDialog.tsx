@@ -16,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Textarea } from '@/components/ui/textarea';
 import { usePayments } from '@/hooks/usePayments';
 import { useCustomers } from '@/hooks/useCustomers';
@@ -38,6 +39,11 @@ export function GlobalPaymentDialog() {
   const { customers } = useCustomers();
   const { invoices } = useInvoices();
 
+  const customerOptions = [
+    { value: "none", label: "No customer (Walk-in)" },
+    ...(customers?.map(c => ({ value: c.id, label: c.name })) || [])
+  ];
+
   // Listen for keyboard shortcut event to open dialog
   useEffect(() => {
     const handleOpenDialog = () => setDialogOpen(true);
@@ -47,17 +53,17 @@ export function GlobalPaymentDialog() {
 
   // Filter unpaid/partial invoices for the selected customer
   const filteredInvoices = invoices?.filter(
-    (inv) => 
+    (inv) =>
       (!formData.customer_id || inv.customer_id === formData.customer_id) &&
       inv.status !== 'paid'
   ) || [];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const discountAmount = parseFloat(formData.discount) || 0;
     const paymentAmount = parseFloat(formData.amount) || 0;
-    
+
     const paymentData = {
       amount: paymentAmount,
       discount: discountAmount,
@@ -97,22 +103,14 @@ export function GlobalPaymentDialog() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="global-customer">Customer (Optional)</Label>
-            <Select
+            <SearchableSelect
               value={formData.customer_id || "none"}
               onValueChange={(value) => setFormData({ ...formData, customer_id: value === "none" ? "" : value, invoice_id: '' })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select customer" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">No customer</SelectItem>
-                {customers?.map((customer) => (
-                  <SelectItem key={customer.id} value={customer.id}>
-                    {customer.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              options={customerOptions}
+              placeholder="Select customer"
+              searchPlaceholder="Search customers..."
+              className="w-full"
+            />
           </div>
 
           <div className="space-y-2">
