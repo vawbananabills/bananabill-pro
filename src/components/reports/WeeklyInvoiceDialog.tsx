@@ -48,6 +48,7 @@ export function WeeklyInvoiceDialog({ open, onOpenChange }: WeeklyInvoiceDialogP
   const [editingInvoiceId, setEditingInvoiceId] = useState<string | null>(null);
   const [showPaymentDetails, setShowPaymentDetails] = useState(true);
   const [showPaymentSummary, setShowPaymentSummary] = useState(true);
+  const [showPreviousBalance, setShowPreviousBalance] = useState(true);
 
   const [dateRange, setDateRange] = useState<'thisWeek' | 'lastWeek' | 'thisMonth' | 'custom'>('thisWeek');
   const [dateFrom, setDateFrom] = useState<Date>(startOfWeek(new Date(), { weekStartsOn: 1 }));
@@ -272,11 +273,12 @@ export function WeeklyInvoiceDialog({ open, onOpenChange }: WeeklyInvoiceDialogP
   const subtotal = data?.grandTotal || 0;
   const finalTotal = subtotal - discount + otherCharges;
   const previousBalance = data?.previousBalance || 0;
+  const previousBalanceValue = showPreviousBalance ? previousBalance : 0;
   const totalPaymentsReceived = data?.totalPayments || 0;
   const paymentDeduction = showPaymentSummary ? totalPaymentsReceived : 0;
-  const closingBalance = previousBalance + finalTotal - paymentDeduction;
+  const closingBalance = previousBalanceValue + finalTotal - paymentDeduction;
   // Alias for backward compatibility in the UI
-  const openingBalance = previousBalance;
+  const openingBalance = previousBalanceValue;
 
   // Generate QR code for UPI payment
   useEffect(() => {
@@ -584,6 +586,20 @@ export function WeeklyInvoiceDialog({ open, onOpenChange }: WeeklyInvoiceDialogP
               </Select>
             </div>
 
+            {/* Previous Balance Toggle */}
+            <div className="space-y-1">
+              <label className="text-sm text-muted-foreground">Previous Balance</label>
+              <Button
+                variant={showPreviousBalance ? "default" : "outline"}
+                size="sm"
+                onClick={() => setShowPreviousBalance(!showPreviousBalance)}
+                className="gap-2"
+              >
+                {showPreviousBalance ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                Showing
+              </Button>
+            </div>
+
             {dateRange === 'custom' && (
               <>
                 <div className="space-y-1">
@@ -732,11 +748,13 @@ export function WeeklyInvoiceDialog({ open, onOpenChange }: WeeklyInvoiceDialogP
                 </div>
               </div>
 
-              {/* Previous Balance Box - Always show */}
-              <div className="opening-balance-box bg-amber-100 p-3 rounded-lg mb-5 flex justify-between items-center">
-                <span className="opening-balance-label text-sm font-semibold text-amber-800">📋 Previous Balance</span>
-                <span className="opening-balance-value text-lg font-bold text-amber-800 font-mono">{formatCurrency(previousBalance)}</span>
-              </div>
+              {/* Previous Balance Box - Optional */}
+              {showPreviousBalance && (
+                <div className="opening-balance-box bg-amber-100 p-3 rounded-lg mb-5 flex justify-between items-center">
+                  <span className="opening-balance-label text-sm font-semibold text-amber-800">📋 Previous Balance</span>
+                  <span className="opening-balance-value text-lg font-bold text-amber-800 font-mono">{formatCurrency(previousBalance)}</span>
+                </div>
+              )}
 
               {/* Items Table - Grouped by Date with Payments */}
               <div className="overflow-x-auto mb-5">
@@ -938,11 +956,13 @@ export function WeeklyInvoiceDialog({ open, onOpenChange }: WeeklyInvoiceDialogP
                     </div>
 
                     <div className="totals-box ml-auto w-80 bg-muted/30 p-4 rounded-lg">
-                      {/* Previous Balance - Always show */}
-                      <div className="totals-row flex justify-between py-1.5 text-amber-700">
-                        <span>Previous Balance</span>
-                        <span className="font-mono">{formatCurrency(previousBalance)}</span>
-                      </div>
+                      {/* Previous Balance - Optional */}
+                      {showPreviousBalance && (
+                        <div className="totals-row flex justify-between py-1.5 text-amber-700">
+                          <span>Previous Balance</span>
+                          <span className="font-mono">{formatCurrency(previousBalance)}</span>
+                        </div>
+                      )}
 
                       {/* Period Sales */}
                       <div className="totals-row flex justify-between py-1.5">
@@ -978,8 +998,8 @@ export function WeeklyInvoiceDialog({ open, onOpenChange }: WeeklyInvoiceDialogP
 
                       {/* Total Amount */}
                       <div className="totals-row flex justify-between py-1.5 font-semibold">
-                        <span>Total Amount</span>
-                        <span className="font-mono">{formatCurrency(previousBalance + finalTotal)}</span>
+                        <span>{showPreviousBalance ? "Total Amount" : "Statement Total"}</span>
+                        <span className="font-mono">{formatCurrency(previousBalanceValue + finalTotal)}</span>
                       </div>
 
                       {/* Payments */}
