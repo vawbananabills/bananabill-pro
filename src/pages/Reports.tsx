@@ -13,7 +13,8 @@ import {
   PieChart,
   Calendar,
   Download,
-  Loader2
+  Loader2,
+  ClipboardList
 } from 'lucide-react';
 import { useReportsData } from '@/hooks/useReportsData';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -33,8 +34,9 @@ import { useInvoices } from '@/hooks/useInvoices';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import { useNavigate } from 'react-router-dom';
 
-type ReportType = 'sales' | 'party' | 'vendor' | 'weekly' | 'daybook' | 'pnl' | 'balance' | 'cash' | 'vendor_receipt';
+type ReportType = 'sales' | 'party' | 'vendor' | 'weekly' | 'daybook' | 'pnl' | 'balance' | 'cash' | 'vendor_receipt' | 'cash_daybook';
 
 const reports: { title: string; description: string; icon: any; type: ReportType }[] = [
   { title: 'Sales Report', description: 'Detailed sales analysis by date, customer, or product', icon: TrendingUp, type: 'sales' },
@@ -42,6 +44,7 @@ const reports: { title: string; description: string; icon: any; type: ReportType
   { title: 'Vendor Statement', description: 'Vendor-wise purchase summary and balance', icon: Truck, type: 'vendor' },
   { title: 'Vendor Receipt', description: 'Create and manage vendor receipts with detailed charges', icon: FileText, type: 'vendor_receipt' },
   { title: 'Weekly Invoice', description: 'Generate invoice-style report for date range', icon: Calendar, type: 'weekly' },
+  { title: 'Cash Daybook', description: 'Manual cash payment records with vehicle numbers', icon: ClipboardList, type: 'cash_daybook' },
   { title: 'Day Book', description: 'Daily transaction register', icon: BookOpen, type: 'daybook' },
   { title: 'Profit & Loss', description: 'Income vs expense summary', icon: BarChart3, type: 'pnl' },
   { title: 'Balance Sheet', description: 'Assets, liabilities & equity overview', icon: PieChart, type: 'balance' },
@@ -58,6 +61,7 @@ function formatCurrency(amount: number) {
 }
 
 export default function Reports() {
+  const navigate = useNavigate();
   const { stats, isLoading } = useReportsData();
   const { company } = useAuth();
   const { customers } = useCustomers();
@@ -219,7 +223,13 @@ export default function Reports() {
         {/* Reports Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {reports.map((report) => (
-            <Card key={report.title} className="shadow-card hover:shadow-md transition-all cursor-pointer group" onClick={() => setOpenDialog(report.type)}>
+            <Card key={report.title} className="shadow-card hover:shadow-md transition-all cursor-pointer group" onClick={() => {
+              if (report.type === 'cash_daybook') {
+                navigate('/cash-daybook');
+              } else {
+                setOpenDialog(report.type);
+              }
+            }}>
               <CardHeader className="pb-3">
                 <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-2 group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
                   <report.icon className="w-6 h-6 text-primary group-hover:text-primary-foreground" />

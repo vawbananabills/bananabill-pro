@@ -22,6 +22,7 @@ import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import SuperAdmin from "./pages/SuperAdmin";
 import Payments from "./pages/Payments";
+import CashDaybook from "./pages/CashDaybook";
 import Subscription from "./pages/Subscription";
 import Install from "./pages/Install";
 import NotFound from "./pages/NotFound";
@@ -70,6 +71,9 @@ const App = () => (
             } />
             <Route path="/payments" element={
               <ProtectedRoute><Payments /></ProtectedRoute>
+            } />
+            <Route path="/cash-daybook" element={
+              <ProtectedRoute><CashDaybook /></ProtectedRoute>
             } />
             <Route path="/settings" element={
               <ProtectedRoute><Settings /></ProtectedRoute>

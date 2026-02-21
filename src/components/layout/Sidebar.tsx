@@ -15,7 +15,8 @@ import {
   Building2,
   Scale,
   Shield,
-  Wallet
+  Wallet,
+  ClipboardList
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -29,6 +30,7 @@ const navigation = [
   { name: 'New Invoice', href: '/invoice/new', icon: FileText },
   { name: 'Invoices', href: '/invoices', icon: BookOpen },
   { name: 'Payments', href: '/payments', icon: Wallet },
+  { name: 'Cash Daybook', href: '/cash-daybook', icon: ClipboardList },
   { name: 'Customers', href: '/customers', icon: Users },
   { name: 'Vendors', href: '/vendors', icon: Truck },
   { name: 'Products', href: '/products', icon: Package },
