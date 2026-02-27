@@ -312,14 +312,23 @@ export default function Payments() {
                                   }}
                                 />
                                 <div className="flex-1 min-w-0">
-                                  <div className="flex justify-between items-start mb-1">
-                                    <Label
-                                      htmlFor={`inv-${invoice.id}`}
-                                      className="font-bold text-sm cursor-pointer truncate mr-2"
+                                  <div className="flex justify-between items-start mb-1 gap-2">
+                                    <div className="min-w-0">
+                                      <Label
+                                        htmlFor={`inv-${invoice.id}`}
+                                        className="font-bold text-sm cursor-pointer truncate block"
+                                      >
+                                        {invoice.invoice_number}
+                                      </Label>
+                                      <span className="text-[11px] text-muted-foreground">
+                                        {format(new Date(invoice.date), 'dd MMM yyyy')}
+                                      </span>
+                                    </div>
+                                    <Badge
+                                      variant={invoice.status === 'partial' ? 'outline' : 'secondary'}
+                                      className="text-[10px] h-4 shrink-0"
+                                      {...({ children: invoice.status } as any)}
                                     >
-                                      {invoice.invoice_number}
-                                    </Label>
-                                    <Badge variant={invoice.status === 'partial' ? 'outline' : 'secondary'} className="text-[10px] h-4" {...{ children: invoice.status } as any}>
                                       {invoice.status}
                                     </Badge>
                                   </div>
