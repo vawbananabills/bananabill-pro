@@ -13,6 +13,7 @@ export interface Vendor {
   balance: number;
   opening_balance: number;
   created_at: string;
+  vendor_r_opening_balance?: number | null;
 }
 
 export function useVendors() {

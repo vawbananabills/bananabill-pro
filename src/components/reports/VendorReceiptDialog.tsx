@@ -133,7 +133,10 @@ export function VendorReceiptDialog({ open, onOpenChange }: VendorReceiptDialogP
         return acc;
     }, {});
 
-    const selectedVendorReceiptBalance = selectedVendor ? receiptBalancesByVendor[selectedVendor] || 0 : 0;
+    const selectedVendorReceiptBalance = selectedVendor
+        ? (receiptBalancesByVendor[selectedVendor] || 0) +
+          Number((selectedVendorData as any)?.vendor_r_opening_balance || 0)
+        : 0;
 
     const addItem = () => {
         setItems([...items, { id: Date.now().toString(), productId: '', itemName: '', qty: 0, grossWeight: 0, netWeight: 0, rate: 0, amount: 0 }]);
@@ -337,7 +340,7 @@ export function VendorReceiptDialog({ open, onOpenChange }: VendorReceiptDialogP
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-5xl max-h-[95vh] overflow-y-auto">
+            <DialogContent className="max-w-5xl sm:max-h-[95vh] sm:overflow-y-auto w-full p-4 sm:p-6">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
                         <FileText className="w-5 h-5 text-primary" />
@@ -345,8 +348,8 @@ export function VendorReceiptDialog({ open, onOpenChange }: VendorReceiptDialogP
                     </DialogTitle>
                 </DialogHeader>
 
-                <Tabs value={activeTab} onValueChange={setActiveTab}>
-                    <TabsList className="grid w-full grid-cols-2 mb-6">
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-2">
+                    <TabsList className="grid w-full grid-cols-2 mb-4 sm:mb-6">
                         <TabsTrigger value="create" className="gap-2">
                             {isEditing ? <Edit className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
                             {isEditing ? 'Edit Receipt' : 'New Receipt'}
@@ -480,6 +483,7 @@ export function VendorReceiptDialog({ open, onOpenChange }: VendorReceiptDialogP
 
                         {/* Items Table */}
                         <div className="border rounded-xl overflow-hidden bg-background shadow-sm border-primary/10">
+                            <div className="overflow-x-auto">
                             <Table>
                                 <TableHeader>
                                     <TableRow className="bg-slate-50 border-b border-primary/10">
@@ -556,6 +560,7 @@ export function VendorReceiptDialog({ open, onOpenChange }: VendorReceiptDialogP
                                     ))}
                                 </TableBody>
                             </Table>
+                            </div>
                             <div className="p-3 border-t flex justify-start bg-slate-50/50">
                                 <Button variant="outline" size="sm" onClick={addItem} className="gap-2 h-8 text-xs border-primary/20 hover:bg-primary/10 hover:text-primary transition-all shadow-sm">
                                     <Plus className="w-4 h-4" /> Add Line Item
@@ -563,9 +568,9 @@ export function VendorReceiptDialog({ open, onOpenChange }: VendorReceiptDialogP
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4 border-t">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 pt-4 border-t">
                             <div className="space-y-4">
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div className="space-y-2">
                                         <Label className="text-xs">Vehicle Number</Label>
                                         <Input value={vehicleNumber} onChange={(e) => setVehicleNumber(e.target.value)} placeholder="ABC-1234" className="h-8" />
@@ -598,7 +603,7 @@ export function VendorReceiptDialog({ open, onOpenChange }: VendorReceiptDialogP
                                 </div>
                             </div>
 
-                            <div className="bg-primary/5 p-4 rounded-lg space-y-3">
+                            <div className="bg-primary/5 p-4 rounded-lg space-y-3 md:sticky md:top-20">
                                 <div className="flex justify-between items-center pb-2 border-b border-primary/10">
                                     <span className="text-sm font-medium">Subtotal</span>
                                     <span className="font-bold">₹{firstTotal.toLocaleString()}</span>

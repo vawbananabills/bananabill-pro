@@ -13,6 +13,7 @@ export interface CashDaybookEntry {
     vehicle_number: string | null;
     amount: number;
     type: CashDaybookType;
+    payment_mode?: string | null;
     notes: string | null;
     created_at: string | null;
     updated_at: string | null;

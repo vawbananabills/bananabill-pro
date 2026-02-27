@@ -56,6 +56,7 @@ export default function CashDaybook() {
         vehicle_number: '',
         amount: '',
         type: 'cash_in' as CashDaybookType,
+        payment_mode: 'Cash' as 'Cash' | 'UPI' | 'Bank',
         notes: '',
     });
 
@@ -70,6 +71,7 @@ export default function CashDaybook() {
             vehicle_number: formData.vehicle_number || null,
             amount: parseFloat(formData.amount) || 0,
             type: formData.type,
+            payment_mode: formData.payment_mode,
             notes: formData.notes || null,
         };
 
@@ -89,6 +91,7 @@ export default function CashDaybook() {
             vehicle_number: '',
             amount: '',
             type: 'cash_in',
+            payment_mode: 'Cash',
             notes: '',
         });
         setEditingEntry(null);
@@ -102,6 +105,7 @@ export default function CashDaybook() {
             vehicle_number: entry.vehicle_number || '',
             amount: entry.amount?.toString() || '',
             type: entry.type,
+            payment_mode: entry.payment_mode || 'Cash',
             notes: entry.notes || '',
         });
         setEditingEntry(entry.id);
@@ -191,7 +195,7 @@ export default function CashDaybook() {
                                     />
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div className="space-y-2">
                                         <Label htmlFor="vehicle_number">Vehicle Number</Label>
                                         <div className="relative">
@@ -217,6 +221,24 @@ export default function CashDaybook() {
                                             required
                                             className="font-bold text-primary"
                                         />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>Payment Mode</Label>
+                                        <Select
+                                            value={formData.payment_mode}
+                                            onValueChange={(value: 'Cash' | 'UPI' | 'Bank') =>
+                                                setFormData({ ...formData, payment_mode: value })
+                                            }
+                                        >
+                                            <SelectTrigger>
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="Cash">Cash</SelectItem>
+                                                <SelectItem value="UPI">UPI</SelectItem>
+                                                <SelectItem value="Bank">Bank</SelectItem>
+                                            </SelectContent>
+                                        </Select>
                                     </div>
                                 </div>
 
@@ -304,6 +326,7 @@ export default function CashDaybook() {
                                     <TableHead>Date</TableHead>
                                     <TableHead>Type</TableHead>
                                     <TableHead>Person Name</TableHead>
+                                    <TableHead>Mode</TableHead>
                                     <TableHead>Vehicle #</TableHead>
                                     <TableHead className="text-right">Amount</TableHead>
                                     <TableHead>Notes</TableHead>
@@ -337,6 +360,9 @@ export default function CashDaybook() {
                                                 )}
                                             </TableCell>
                                             <TableCell className="font-semibold">{entry.person_name}</TableCell>
+                                            <TableCell className="text-xs text-muted-foreground">
+                                                {entry.payment_mode || 'Cash'}
+                                            </TableCell>
                                             <TableCell>
                                                 {entry.vehicle_number ? (
                                                     <div className="flex items-center gap-2 text-sm text-muted-foreground">

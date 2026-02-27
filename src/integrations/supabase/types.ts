@@ -901,6 +901,7 @@ export type Database = {
           opening_balance: number | null
           phone: string | null
           updated_at: string | null
+          vendor_r_opening_balance: number | null
         }
         Insert: {
           address?: string | null
@@ -913,6 +914,7 @@ export type Database = {
           opening_balance?: number | null
           phone?: string | null
           updated_at?: string | null
+          vendor_r_opening_balance?: number | null
         }
         Update: {
           address?: string | null
@@ -925,6 +927,7 @@ export type Database = {
           opening_balance?: number | null
           phone?: string | null
           updated_at?: string | null
+          vendor_r_opening_balance?: number | null
         }
         Relationships: [
           {
