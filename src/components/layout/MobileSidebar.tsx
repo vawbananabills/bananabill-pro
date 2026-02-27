@@ -1,3 +1,4 @@
+import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -15,7 +16,8 @@ import {
   Menu,
   X,
   Wallet,
-  ClipboardList
+  ClipboardList,
+  Receipt
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -25,7 +27,14 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useState } from 'react';
 
-const navigation = [
+type MobileNavItem = {
+  name: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+  requiresVendorR?: boolean;
+};
+
+const navigation: MobileNavItem[] = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'New Invoice', href: '/invoice/new', icon: FileText },
   { name: 'Invoices', href: '/invoices', icon: BookOpen },
@@ -33,6 +42,7 @@ const navigation = [
   { name: 'Cash Daybook', href: '/cash-daybook', icon: ClipboardList },
   { name: 'Customers', href: '/customers', icon: Users },
   { name: 'Vendors', href: '/vendors', icon: Truck },
+  { name: 'Vendor R', href: '/vendor-r', icon: Receipt, requiresVendorR: true },
   { name: 'Products', href: '/products', icon: Package },
   { name: 'Units', href: '/units', icon: Scale },
   { name: 'Reports', href: '/reports', icon: BarChart3 },
@@ -118,7 +128,7 @@ export function MobileSidebar() {
 
           {/* Navigation */}
           <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto scrollbar-thin">
-            {navigation.map((item) => {
+            {navigation.filter((item) => !item.requiresVendorR || (company as any)?.enable_vendor_r).map((item) => {
               const isActive = location.pathname === item.href ||
                 (item.href !== '/dashboard' && location.pathname.startsWith(item.href));
               return (
