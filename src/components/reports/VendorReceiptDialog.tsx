@@ -340,7 +340,7 @@ export function VendorReceiptDialog({ open, onOpenChange }: VendorReceiptDialogP
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-5xl sm:max-h-[95vh] sm:overflow-y-auto w-full p-4 sm:p-6">
+            <DialogContent className="max-w-5xl max-h-[95vh] overflow-y-auto w-full p-4 sm:p-6">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
                         <FileText className="w-5 h-5 text-primary" />
@@ -563,7 +563,7 @@ export function VendorReceiptDialog({ open, onOpenChange }: VendorReceiptDialogP
                             </div>
                             <div className="p-3 border-t flex justify-start bg-slate-50/50">
                                 <Button variant="outline" size="sm" onClick={addItem} className="gap-2 h-8 text-xs border-primary/20 hover:bg-primary/10 hover:text-primary transition-all shadow-sm">
-                                    <Plus className="w-4 h-4" /> Add Line Item
+                                    <Plus className="w-4 h-4" /> Add Product
                                 </Button>
                             </div>
                         </div>
@@ -573,7 +573,7 @@ export function VendorReceiptDialog({ open, onOpenChange }: VendorReceiptDialogP
                             <div className="flex items-center justify-between mb-1">
                                 <Label className="text-xs font-semibold text-muted-foreground">Items</Label>
                                 <Button variant="outline" size="sm" onClick={addItem} className="gap-1 h-7 text-[11px]">
-                                    <Plus className="w-3 h-3" /> Line
+                                    <Plus className="w-3 h-3" /> Add Product
                                 </Button>
                             </div>
                             {items.map((item, index) => (
