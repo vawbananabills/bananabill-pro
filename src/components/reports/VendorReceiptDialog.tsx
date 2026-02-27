@@ -481,91 +481,184 @@ export function VendorReceiptDialog({ open, onOpenChange }: VendorReceiptDialogP
                             </div>
                         </div>
 
-                        {/* Items Table */}
-                        <div className="border rounded-xl overflow-hidden bg-background shadow-sm border-primary/10">
+                        {/* Items - desktop table */}
+                        <div className="border rounded-xl overflow-hidden bg-background shadow-sm border-primary/10 hidden md:block">
                             <div className="overflow-x-auto">
-                            <Table>
-                                <TableHeader>
-                                    <TableRow className="bg-slate-50 border-b border-primary/10">
-                                        <TableHead className="w-[280px] font-bold text-slate-700">Item / Product</TableHead>
-                                        <TableHead className="text-right font-bold text-slate-700">Qty</TableHead>
-                                        <TableHead className="text-right font-bold text-slate-700">Gross Wt</TableHead>
-                                        <TableHead className="text-right font-bold text-slate-700">Net Wt</TableHead>
-                                        <TableHead className="text-right font-bold text-slate-700">Rate</TableHead>
-                                        <TableHead className="text-right font-bold text-slate-700">Amount</TableHead>
-                                        <TableHead className="w-[50px]"></TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {items.map((item) => (
-                                        <TableRow key={item.id} className="hover:bg-primary/5 transition-colors border-b border-slate-100 last:border-0">
-                                            <TableCell>
-                                                <div className="space-y-1">
-                                                    <SearchableSelect
-                                                        value={item.productId}
-                                                        onValueChange={(val) => updateItem(item.id, 'productId', val)}
-                                                        options={products.map(p => ({ value: p.id, label: p.name }))}
-                                                        placeholder="Search product..."
-                                                        className="h-8 text-xs border-slate-200"
-                                                    />
-                                                    <Input
-                                                        value={item.itemName}
-                                                        onChange={(e) => updateItem(item.id, 'itemName', e.target.value)}
-                                                        placeholder="Custom name if needed"
-                                                        className="h-7 text-[10px] bg-transparent border-dashed border-slate-200 focus:border-primary text-muted-foreground"
-                                                    />
-                                                </div>
-                                            </TableCell>
-                                            <TableCell>
-                                                <Input
-                                                    type="number"
-                                                    className="text-right border-slate-200 focus:border-primary h-8"
-                                                    value={item.qty || ''}
-                                                    onChange={(e) => updateItem(item.id, 'qty', parseFloat(e.target.value) || 0)}
-                                                />
-                                            </TableCell>
-                                            <TableCell>
-                                                <Input
-                                                    type="number"
-                                                    className="text-right border-slate-200 focus:border-primary h-8 font-mono text-xs"
-                                                    value={item.grossWeight || ''}
-                                                    onChange={(e) => updateItem(item.id, 'grossWeight', parseFloat(e.target.value) || 0)}
-                                                />
-                                            </TableCell>
-                                            <TableCell>
-                                                <Input
-                                                    type="number"
-                                                    className="text-right border-slate-200 focus:border-primary h-8 font-mono text-xs"
-                                                    value={item.netWeight || ''}
-                                                    onChange={(e) => updateItem(item.id, 'netWeight', parseFloat(e.target.value) || 0)}
-                                                />
-                                            </TableCell>
-                                            <TableCell>
-                                                <Input
-                                                    type="number"
-                                                    className="text-right border-slate-200 focus:border-primary h-8"
-                                                    value={item.rate || ''}
-                                                    onChange={(e) => updateItem(item.id, 'rate', parseFloat(e.target.value) || 0)}
-                                                />
-                                            </TableCell>
-                                            <TableCell className="text-right font-bold text-slate-800 tabular-nums">
-                                                ₹{item.amount.toLocaleString()}
-                                            </TableCell>
-                                            <TableCell>
-                                                <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-destructive/10 hover:text-destructive" onClick={() => removeItem(item.id)} disabled={items.length === 1}>
-                                                    <Trash2 className="w-4 h-4" />
-                                                </Button>
-                                            </TableCell>
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow className="bg-slate-50 border-b border-primary/10">
+                                            <TableHead className="w-[280px] font-bold text-slate-700">Item / Product</TableHead>
+                                            <TableHead className="text-right font-bold text-slate-700">Qty</TableHead>
+                                            <TableHead className="text-right font-bold text-slate-700">Gross Wt</TableHead>
+                                            <TableHead className="text-right font-bold text-slate-700">Net Wt</TableHead>
+                                            <TableHead className="text-right font-bold text-slate-700">Rate</TableHead>
+                                            <TableHead className="text-right font-bold text-slate-700">Amount</TableHead>
+                                            <TableHead className="w-[50px]"></TableHead>
                                         </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {items.map((item) => (
+                                            <TableRow key={item.id} className="hover:bg-primary/5 transition-colors border-b border-slate-100 last:border-0">
+                                                <TableCell>
+                                                    <div className="space-y-1">
+                                                        <SearchableSelect
+                                                            value={item.productId}
+                                                            onValueChange={(val) => updateItem(item.id, 'productId', val)}
+                                                            options={products.map(p => ({ value: p.id, label: p.name }))}
+                                                            placeholder="Search product..."
+                                                            className="h-8 text-xs border-slate-200"
+                                                        />
+                                                        <Input
+                                                            value={item.itemName}
+                                                            onChange={(e) => updateItem(item.id, 'itemName', e.target.value)}
+                                                            placeholder="Custom name if needed"
+                                                            className="h-7 text-[10px] bg-transparent border-dashed border-slate-200 focus:border-primary text-muted-foreground"
+                                                        />
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Input
+                                                        type="number"
+                                                        className="text-right border-slate-200 focus:border-primary h-8"
+                                                        value={item.qty || ''}
+                                                        onChange={(e) => updateItem(item.id, 'qty', parseFloat(e.target.value) || 0)}
+                                                    />
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Input
+                                                        type="number"
+                                                        className="text-right border-slate-200 focus:border-primary h-8 font-mono text-xs"
+                                                        value={item.grossWeight || ''}
+                                                        onChange={(e) => updateItem(item.id, 'grossWeight', parseFloat(e.target.value) || 0)}
+                                                    />
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Input
+                                                        type="number"
+                                                        className="text-right border-slate-200 focus:border-primary h-8 font-mono text-xs"
+                                                        value={item.netWeight || ''}
+                                                        onChange={(e) => updateItem(item.id, 'netWeight', parseFloat(e.target.value) || 0)}
+                                                    />
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Input
+                                                        type="number"
+                                                        className="text-right border-slate-200 focus:border-primary h-8"
+                                                        value={item.rate || ''}
+                                                        onChange={(e) => updateItem(item.id, 'rate', parseFloat(e.target.value) || 0)}
+                                                    />
+                                                </TableCell>
+                                                <TableCell className="text-right font-bold text-slate-800 tabular-nums">
+                                                    ₹{item.amount.toLocaleString()}
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-destructive/10 hover:text-destructive" onClick={() => removeItem(item.id)} disabled={items.length === 1}>
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </Button>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
                             </div>
                             <div className="p-3 border-t flex justify-start bg-slate-50/50">
                                 <Button variant="outline" size="sm" onClick={addItem} className="gap-2 h-8 text-xs border-primary/20 hover:bg-primary/10 hover:text-primary transition-all shadow-sm">
                                     <Plus className="w-4 h-4" /> Add Line Item
                                 </Button>
                             </div>
+                        </div>
+
+                        {/* Items - mobile friendly cards */}
+                        <div className="border rounded-xl bg-background shadow-sm border-primary/10 space-y-3 p-3 md:hidden">
+                            <div className="flex items-center justify-between mb-1">
+                                <Label className="text-xs font-semibold text-muted-foreground">Items</Label>
+                                <Button variant="outline" size="sm" onClick={addItem} className="gap-1 h-7 text-[11px]">
+                                    <Plus className="w-3 h-3" /> Line
+                                </Button>
+                            </div>
+                            {items.map((item, index) => (
+                                <div
+                                    key={item.id}
+                                    className="rounded-lg border border-primary/10 bg-slate-50/70 p-3 space-y-2"
+                                >
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-xs font-semibold text-muted-foreground">
+                                            Item #{index + 1}
+                                        </span>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                                            onClick={() => removeItem(item.id)}
+                                            disabled={items.length === 1}
+                                        >
+                                            <Trash2 className="w-3 h-3" />
+                                        </Button>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <SearchableSelect
+                                            value={item.productId}
+                                            onValueChange={(val) => updateItem(item.id, 'productId', val)}
+                                            options={products.map(p => ({ value: p.id, label: p.name }))}
+                                            placeholder="Search product..."
+                                            className="h-8 text-xs border-slate-200"
+                                        />
+                                        <Input
+                                            value={item.itemName}
+                                            onChange={(e) => updateItem(item.id, 'itemName', e.target.value)}
+                                            placeholder="Custom name if needed"
+                                            className="h-7 text-[11px] bg-transparent border-dashed border-slate-200 focus:border-primary text-muted-foreground"
+                                        />
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <div className="space-y-1">
+                                            <Label className="text-[10px] text-muted-foreground">Qty</Label>
+                                            <Input
+                                                type="number"
+                                                className="h-8 text-right text-xs"
+                                                value={item.qty || ''}
+                                                onChange={(e) => updateItem(item.id, 'qty', parseFloat(e.target.value) || 0)}
+                                            />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <Label className="text-[10px] text-muted-foreground">Rate</Label>
+                                            <Input
+                                                type="number"
+                                                className="h-8 text-right text-xs"
+                                                value={item.rate || ''}
+                                                onChange={(e) => updateItem(item.id, 'rate', parseFloat(e.target.value) || 0)}
+                                            />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <Label className="text-[10px] text-muted-foreground">Gross Wt</Label>
+                                            <Input
+                                                type="number"
+                                                className="h-8 text-right text-xs"
+                                                value={item.grossWeight || ''}
+                                                onChange={(e) => updateItem(item.id, 'grossWeight', parseFloat(e.target.value) || 0)}
+                                            />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <Label className="text-[10px] text-muted-foreground">Net Wt</Label>
+                                            <Input
+                                                type="number"
+                                                className="h-8 text-right text-xs"
+                                                value={item.netWeight || ''}
+                                                onChange={(e) => updateItem(item.id, 'netWeight', parseFloat(e.target.value) || 0)}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center justify-between pt-1 border-t border-primary/10 mt-1">
+                                        <span className="text-[11px] text-muted-foreground">Line Total</span>
+                                        <span className="text-sm font-semibold text-primary">
+                                            ₹{item.amount.toLocaleString()}
+                                        </span>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 pt-4 border-t">
