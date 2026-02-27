@@ -36,6 +36,7 @@ export default function Settings() {
     logo_url: '',
     show_logo_on_invoice: false,
     date_format: 'dd/MM/yyyy',
+    enable_vendor_r: false,
   });
 
   // Load company data into form
@@ -55,6 +56,7 @@ export default function Settings() {
         logo_url: company.logo_url || '',
         show_logo_on_invoice: company.show_logo_on_invoice || false,
         date_format: company.date_format || 'dd/MM/yyyy',
+        enable_vendor_r: company.enable_vendor_r ?? false,
       });
     }
     loadBiometrics();
@@ -138,6 +140,7 @@ export default function Settings() {
       logo_url: settings.logo_url || null,
       show_logo_on_invoice: settings.show_logo_on_invoice,
       date_format: settings.date_format || 'dd/MM/yyyy',
+      enable_vendor_r: settings.enable_vendor_r,
     });
   };
 
@@ -281,6 +284,31 @@ export default function Settings() {
                 />
               </div>
             )}
+          </CardContent>
+        </Card>
+
+        {/* Vendor R Feature */}
+        <Card className="shadow-card">
+          <CardHeader>
+            <CardTitle className="text-lg">Vendor R (Receipt Vendors)</CardTitle>
+            <CardDescription>
+              Enable a separate vendor list for vendor receipts with its own running balance.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between rounded-lg border p-4">
+              <div className="space-y-1">
+                <Label htmlFor="enable-vendor-r">Enable Vendor R</Label>
+                <p className="text-sm text-muted-foreground">
+                  When enabled, you&apos;ll see a dedicated Vendor R page and party balance inside Vendor Receipts.
+                </p>
+              </div>
+              <Switch
+                id="enable-vendor-r"
+                checked={settings.enable_vendor_r}
+                onCheckedChange={(checked) => setSettings({ ...settings, enable_vendor_r: checked })}
+              />
+            </div>
           </CardContent>
         </Card>
 

@@ -6,7 +6,7 @@ import {
   Users,
   Truck,
   Package,
-  Settings,
+  Settings as SettingsIcon,
   BarChart3,
   BookOpen,
   ChevronLeft,
@@ -25,19 +25,12 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { SubscriptionBox } from '@/components/subscription/SubscriptionBox';
 
-const navigation = [
-  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'New Invoice', href: '/invoice/new', icon: FileText },
-  { name: 'Invoices', href: '/invoices', icon: BookOpen },
-  { name: 'Payments', href: '/payments', icon: Wallet },
-  { name: 'Cash Daybook', href: '/cash-daybook', icon: ClipboardList },
-  { name: 'Customers', href: '/customers', icon: Users },
-  { name: 'Vendors', href: '/vendors', icon: Truck },
-  { name: 'Products', href: '/products', icon: Package },
-  { name: 'Units', href: '/units', icon: Scale },
-  { name: 'Reports', href: '/reports', icon: BarChart3 },
-  { name: 'Settings', href: '/settings', icon: Settings },
-];
+type NavigationItem = {
+  name: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+  requiresVendorR?: boolean;
+};
 
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
@@ -121,7 +114,22 @@ export function Sidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto scrollbar-thin">
-        {navigation.map((item) => {
+        {([
+          { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+          { name: 'New Invoice', href: '/invoice/new', icon: FileText },
+          { name: 'Invoices', href: '/invoices', icon: BookOpen },
+          { name: 'Payments', href: '/payments', icon: Wallet },
+          { name: 'Cash Daybook', href: '/cash-daybook', icon: ClipboardList },
+          { name: 'Customers', href: '/customers', icon: Users },
+          { name: 'Vendors', href: '/vendors', icon: Truck },
+          { name: 'Vendor R', href: '/vendor-r', icon: Truck, requiresVendorR: true },
+          { name: 'Products', href: '/products', icon: Package },
+          { name: 'Units', href: '/units', icon: Scale },
+          { name: 'Reports', href: '/reports', icon: BarChart3 },
+          { name: 'Settings', href: '/settings', icon: SettingsIcon },
+        ] as NavigationItem[])
+          .filter((item) => !item.requiresVendorR || company?.enable_vendor_r)
+          .map((item) => {
           const isActive = location.pathname === item.href ||
             (item.href !== '/dashboard' && location.pathname.startsWith(item.href));
           return (

@@ -16,6 +16,7 @@ import EditInvoice from "./pages/EditInvoice";
 import Invoices from "./pages/Invoices";
 import Customers from "./pages/Customers";
 import Vendors from "./pages/Vendors";
+import VendorR from "./pages/VendorR";
 import Products from "./pages/Products";
 import Units from "./pages/Units";
 import Reports from "./pages/Reports";
@@ -59,6 +60,9 @@ const App = () => (
             } />
             <Route path="/vendors" element={
               <ProtectedRoute><Vendors /></ProtectedRoute>
+            } />
+            <Route path="/vendor-r" element={
+              <ProtectedRoute><VendorR /></ProtectedRoute>
             } />
             <Route path="/products" element={
               <ProtectedRoute><Products /></ProtectedRoute>

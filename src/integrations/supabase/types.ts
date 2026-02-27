@@ -20,6 +20,7 @@ export type Database = {
           bank_details: string | null
           created_at: string | null
           date_format: string | null
+          enable_vendor_r: boolean | null
           email: string | null
           footer_notes: string | null
           gst_number: string | null
@@ -43,6 +44,7 @@ export type Database = {
           bank_details?: string | null
           created_at?: string | null
           date_format?: string | null
+          enable_vendor_r?: boolean | null
           email?: string | null
           footer_notes?: string | null
           gst_number?: string | null
@@ -66,6 +68,7 @@ export type Database = {
           bank_details?: string | null
           created_at?: string | null
           date_format?: string | null
+          enable_vendor_r?: boolean | null
           email?: string | null
           footer_notes?: string | null
           gst_number?: string | null

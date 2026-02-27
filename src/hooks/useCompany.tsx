@@ -18,6 +18,7 @@ export interface CompanySettings {
   upi_id: string | null;
   show_logo_on_invoice: boolean | null;
   date_format: string | null;
+  enable_vendor_r?: boolean | null;
 }
 
 export function useCompany() {

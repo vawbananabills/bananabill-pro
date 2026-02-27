@@ -124,6 +124,17 @@ export function VendorReceiptDialog({ open, onOpenChange }: VendorReceiptDialogP
 
     const selectedVendorData = vendors.find(v => v.id === selectedVendor);
 
+    const receiptBalancesByVendor = receipts.reduce<Record<string, number>>((acc, r) => {
+        const key = r.vendor_id;
+        const prev = acc[key] || 0;
+        const finalTotal = Number(r.final_total || 0);
+        const received = Number(r.amount_received || 0);
+        acc[key] = prev + (finalTotal - received);
+        return acc;
+    }, {});
+
+    const selectedVendorReceiptBalance = selectedVendor ? receiptBalancesByVendor[selectedVendor] || 0 : 0;
+
     const addItem = () => {
         setItems([...items, { id: Date.now().toString(), productId: '', itemName: '', qty: 0, grossWeight: 0, netWeight: 0, rate: 0, amount: 0 }]);
     };
@@ -430,6 +441,29 @@ export function VendorReceiptDialog({ open, onOpenChange }: VendorReceiptDialogP
                                     emptyMessage="No vendors found."
                                 />
                             </div>
+                            {company?.enable_vendor_r && (
+                                <div className="space-y-1 text-sm">
+                                    <Label className="text-xs">Vendor Receipt Balance</Label>
+                                    <div className="px-3 py-2 rounded-md border text-sm flex items-center justify-between">
+                                        <span className="text-muted-foreground">
+                                            {selectedVendorData?.name || 'Select a vendor'}
+                                        </span>
+                                        <span className={selectedVendorReceiptBalance > 0
+                                            ? 'font-semibold text-amber-600'
+                                            : selectedVendorReceiptBalance < 0
+                                                ? 'font-semibold text-emerald-600'
+                                                : 'text-xs text-muted-foreground'}>
+                                            {selectedVendor
+                                                ? `₹${Math.abs(selectedVendorReceiptBalance).toLocaleString()} ${selectedVendorReceiptBalance > 0
+                                                    ? 'Payable'
+                                                    : selectedVendorReceiptBalance < 0
+                                                        ? 'Advance'
+                                                        : ''}`
+                                                : '-'}
+                                        </span>
+                                    </div>
+                                </div>
+                            )}
                             <div className="space-y-2">
                                 <Label>Receipt Number</Label>
                                 <Input value={receiptNumber} onChange={(e) => setReceiptNumber(e.target.value)} />
