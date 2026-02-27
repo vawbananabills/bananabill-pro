@@ -67,14 +67,14 @@ export default function Landing() {
             </Button>
           </Link>
           {!loading && (
-            user ?
-              <Link to="/dashboard">
+          user ?
+          <Link to="/dashboard">
                 <Button size="sm" className="gap-1 md:gap-2">
                   <span className="hidden sm:inline">Go to</span> Dashboard <ArrowRight className="w-4 h-4" />
                 </Button>
               </Link> :
 
-              <>
+          <>
                 <Link to="/auth" className="hidden sm:block">
                   <Button variant="ghost" size="sm">Sign In</Button>
                 </Link>
