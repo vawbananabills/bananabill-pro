@@ -12,12 +12,17 @@ export default function VendorR() {
   const { receipts, isLoading: receiptsLoading } = useVendorReceipts();
   const [search, setSearch] = useState('');
 
-  const balancesByVendor = receipts.reduce<Record<string, number>>((acc, r) => {
+  const summaryByVendor = receipts.reduce<
+    Record<string, { totalBilled: number; totalPaid: number }>
+  >((acc, r) => {
     const key = r.vendor_id;
-    const prev = acc[key] || 0;
+    const existing = acc[key] || { totalBilled: 0, totalPaid: 0 };
     const finalTotal = Number(r.final_total || 0);
     const received = Number(r.amount_received || 0);
-    acc[key] = prev + (finalTotal - received);
+    acc[key] = {
+      totalBilled: existing.totalBilled + finalTotal,
+      totalPaid: existing.totalPaid + received,
+    };
     return acc;
   }, {});
 
@@ -70,7 +75,9 @@ export default function VendorR() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredVendors.map((vendor) => {
-              const receiptBalance = balancesByVendor[vendor.id] || 0;
+              const summary = summaryByVendor[vendor.id] || { totalBilled: 0, totalPaid: 0 };
+              const balanceToPay = Math.max(0, summary.totalBilled - summary.totalPaid);
+              const advance = Math.max(0, summary.totalPaid - summary.totalBilled);
 
               return (
                 <Card key={vendor.id} className="shadow-card">
@@ -91,19 +98,28 @@ export default function VendorR() {
 
                     <div className="pt-4 border-t border-border flex items-center justify-between">
                       <span className="text-sm text-muted-foreground">Vendor Receipt Balance</span>
-                      <Badge
-                        variant="secondary"
-                        className={
-                          receiptBalance > 0
-                            ? 'badge-credit'
-                            : receiptBalance < 0
+                      <div className="flex items-center gap-2">
+                        <Badge
+                          variant="secondary"
+                          className={
+                            advance > 0
                               ? 'badge-paid'
                               : 'bg-muted text-muted-foreground'
-                        }
-                      >
-                        {receiptBalance > 0 ? 'Payable: ' : receiptBalance < 0 ? 'Advance: ' : ''}
-                        {formatCurrency(receiptBalance)}
-                      </Badge>
+                          }
+                        >
+                          Advance: {formatCurrency(advance)}
+                        </Badge>
+                        <Badge
+                          variant="secondary"
+                          className={
+                            balanceToPay > 0
+                              ? 'badge-credit'
+                              : 'bg-muted text-muted-foreground'
+                          }
+                        >
+                          Balance: {formatCurrency(balanceToPay)}
+                        </Badge>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
