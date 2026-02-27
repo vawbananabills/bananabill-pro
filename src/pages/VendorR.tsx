@@ -76,8 +76,8 @@ export default function VendorR() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredVendors.map((vendor) => {
               const summary = summaryByVendor[vendor.id] || { totalBilled: 0, totalPaid: 0 };
-              const balanceToPay = Math.max(0, summary.totalBilled - summary.totalPaid);
-              const advance = Math.max(0, summary.totalPaid - summary.totalBilled);
+              const advance = summary.totalPaid; // total cash already paid to vendor
+              const balanceToPay = summary.totalBilled; // total bill amount to settle
 
               return (
                 <Card key={vendor.id} className="shadow-card">
@@ -97,27 +97,23 @@ export default function VendorR() {
                     </div>
 
                     <div className="pt-4 border-t border-border flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Vendor Receipt Balance</span>
+                      <span className="text-sm text-muted-foreground">Vendor Receipt Summary</span>
                       <div className="flex items-center gap-2">
                         <Badge
                           variant="secondary"
                           className={
-                            advance > 0
-                              ? 'badge-paid'
-                              : 'bg-muted text-muted-foreground'
+                            advance > 0 ? 'badge-paid' : 'bg-muted text-muted-foreground'
                           }
                         >
-                          Advance: {formatCurrency(advance)}
+                          Paid (Advance): {formatCurrency(advance)}
                         </Badge>
                         <Badge
                           variant="secondary"
                           className={
-                            balanceToPay > 0
-                              ? 'badge-credit'
-                              : 'bg-muted text-muted-foreground'
+                            balanceToPay > 0 ? 'badge-credit' : 'bg-muted text-muted-foreground'
                           }
                         >
-                          Balance: {formatCurrency(balanceToPay)}
+                          Balance to Pay: {formatCurrency(balanceToPay)}
                         </Badge>
                       </div>
                     </div>
