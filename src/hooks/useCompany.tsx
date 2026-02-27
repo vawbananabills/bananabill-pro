@@ -19,6 +19,7 @@ export interface CompanySettings {
   show_logo_on_invoice: boolean | null;
   date_format: string | null;
   enable_vendor_r?: boolean | null;
+  invoice_print_size?: string | null;
 }
 
 export function useCompany() {

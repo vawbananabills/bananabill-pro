@@ -26,6 +26,7 @@ export type Database = {
           gst_number: string | null
           id: string
           invoice_prefix: string | null
+          invoice_print_size: string | null
           is_active: boolean | null
           logo_url: string | null
           name: string
@@ -50,6 +51,7 @@ export type Database = {
           gst_number?: string | null
           id?: string
           invoice_prefix?: string | null
+          invoice_print_size?: string | null
           is_active?: boolean | null
           logo_url?: string | null
           name: string
@@ -74,6 +76,7 @@ export type Database = {
           gst_number?: string | null
           id?: string
           invoice_prefix?: string | null
+          invoice_print_size?: string | null
           is_active?: boolean | null
           logo_url?: string | null
           name?: string

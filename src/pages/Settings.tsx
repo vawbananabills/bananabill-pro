@@ -37,6 +37,7 @@ export default function Settings() {
     show_logo_on_invoice: false,
     date_format: 'dd/MM/yyyy',
     enable_vendor_r: false,
+    invoice_print_size: 'A4',
   });
 
   // Load company data into form
@@ -57,6 +58,7 @@ export default function Settings() {
         show_logo_on_invoice: company.show_logo_on_invoice || false,
         date_format: company.date_format || 'dd/MM/yyyy',
         enable_vendor_r: company.enable_vendor_r ?? false,
+        invoice_print_size: company.invoice_print_size || 'A4',
       });
     }
     loadBiometrics();
@@ -141,6 +143,7 @@ export default function Settings() {
       show_logo_on_invoice: settings.show_logo_on_invoice,
       date_format: settings.date_format || 'dd/MM/yyyy',
       enable_vendor_r: settings.enable_vendor_r,
+      invoice_print_size: settings.invoice_print_size,
     });
   };
 
@@ -400,6 +403,29 @@ export default function Settings() {
                 rows={2}
                 placeholder="Thank you for your business!"
               />
+            </div>
+            <div className="flex items-center justify-between rounded-lg border p-4">
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="print-size">Default Print Size</Label>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Choose your preferred paper size for invoice and receipt printing.
+                </p>
+              </div>
+              <Select
+                value={settings.invoice_print_size}
+                onValueChange={(value) => setSettings({ ...settings, invoice_print_size: value })}
+              >
+                <SelectTrigger className="w-[220px]">
+                  <SelectValue placeholder="Select size" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="A4">A4</SelectItem>
+                  <SelectItem value="A5">A5</SelectItem>
+                  <SelectItem value="RECEIPT">Receipt</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </CardContent>
         </Card>
