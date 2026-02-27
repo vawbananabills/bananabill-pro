@@ -10,6 +10,7 @@ export interface SubscriptionSettings {
   renewal_price: number;
   duration_days: number;
   trial_duration_days: number;
+  upi_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -92,14 +93,14 @@ export function useSubscription() {
 
   // Update company subscription (admin sets renewal for specific company)
   const updateCompanySubscription = useMutation({
-    mutationFn: async ({ 
-      companyId, 
-      expiresAt, 
+    mutationFn: async ({
+      companyId,
+      expiresAt,
       status = 'active',
       amount,
-    }: { 
-      companyId: string; 
-      expiresAt: string; 
+    }: {
+      companyId: string;
+      expiresAt: string;
       status?: string;
       amount?: number;
     }) => {

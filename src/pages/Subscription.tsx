@@ -1,28 +1,39 @@
+import { useState } from 'react';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Crown, Check, Clock, AlertTriangle, Phone, Mail } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Crown, Check, Clock, AlertTriangle, Phone, Mail, QrCode, Smartphone, Copy } from 'lucide-react';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useAuth } from '@/hooks/useAuth';
 import { format, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 export default function Subscription() {
   const { settings, subscription, daysLeft, isActive, isTrial, isExpired } = useSubscription();
   const { company } = useAuth();
+  const [qrOpen, setQrOpen] = useState(false);
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      minimumFractionDigits: 0,
-    }).format(value);
-  };
+  const upiId = settings?.upi_id || 'kevinjeevus@okaxis';
+  const currentPrice = !subscription?.subscription_started_at
+    ? settings?.first_time_price
+    : settings?.renewal_price;
+  const amountParam = currentPrice ? `&am=${currentPrice}` : '';
+  const upiLink = `upi://pay?pa=${upiId}&pn=BananaBills${amountParam}&cu=INR`;
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(upiLink)}`;
+
+  const formatCurrency = (value: number) =>
+    new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(value);
 
   const isFirstTime = !subscription?.subscription_started_at;
-  const currentPrice = isFirstTime ? settings?.first_time_price : settings?.renewal_price;
+
+  const handleCopyUpi = () => {
+    navigator.clipboard.writeText(upiId);
+    toast.success('UPI ID copied!');
+  };
 
   return (
     <div className="min-h-screen bg-background flex w-full">
@@ -55,16 +66,16 @@ export default function Subscription() {
                       variant="outline"
                       className={cn(
                         "text-sm px-3 py-1",
-                        isActive 
-                          ? "bg-success/10 text-success border-success/30" 
-                          : isExpired 
+                        isActive
+                          ? "bg-success/10 text-success border-success/30"
+                          : isExpired
                             ? "bg-destructive/10 text-destructive border-destructive/30"
                             : "bg-warning/10 text-warning border-warning/30"
                       )}
                     >
                       {isActive ? 'Active' : isExpired ? 'Expired' : isTrial ? 'Trial' : 'Pending'}
                     </Badge>
-                    
+
                     {subscription?.subscription_expires_at && (
                       <div className="mt-3">
                         <p className="text-2xl font-bold">
@@ -102,9 +113,7 @@ export default function Subscription() {
                   <Crown className="w-6 h-6 text-primary" />
                 </div>
                 <CardTitle className="text-2xl">Pro Plan</CardTitle>
-                <CardDescription>
-                  Full access to all features
-                </CardDescription>
+                <CardDescription>Full access to all features</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="text-center">
@@ -142,9 +151,42 @@ export default function Subscription() {
                   ))}
                 </div>
 
-                <div className="pt-4 border-t">
-                  <p className="text-center text-sm text-muted-foreground mb-4">
-                    Contact admin to {isFirstTime ? 'purchase' : 'renew'} your subscription
+                {/* UPI Payment Section */}
+                <div className="pt-4 border-t space-y-4">
+                  <div className="p-4 rounded-xl bg-gradient-to-br from-violet-500/10 to-indigo-500/10 border border-violet-500/20">
+                    <p className="text-center text-sm font-semibold text-violet-700 dark:text-violet-300 mb-1">Pay via UPI</p>
+                    <div className="flex items-center justify-center gap-2 mb-3">
+                      <p className="text-center font-mono font-bold text-base tracking-wide">{upiId}</p>
+                      <button onClick={handleCopyUpi} className="text-muted-foreground hover:text-primary transition-colors" title="Copy UPI ID">
+                        <Copy className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <div className="flex flex-col sm:flex-row gap-2 justify-center">
+                      <Button
+                        className="gap-2 bg-violet-600 hover:bg-violet-700 text-white"
+                        asChild
+                      >
+                        <a href={upiLink}>
+                          <Smartphone className="w-4 h-4" />
+                          Pay via UPI App
+                        </a>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="gap-2 border-violet-500/40 hover:bg-violet-50 dark:hover:bg-violet-900/20"
+                        onClick={() => setQrOpen(true)}
+                      >
+                        <QrCode className="w-4 h-4" />
+                        Show QR Code
+                      </Button>
+                    </div>
+                    <p className="text-center text-xs text-muted-foreground mt-2">
+                      After payment, contact admin to activate your subscription.
+                    </p>
+                  </div>
+
+                  <p className="text-center text-sm text-muted-foreground">
+                    Or contact admin directly
                   </p>
                   <div className="flex flex-col sm:flex-row gap-3 justify-center">
                     <Button variant="outline" className="gap-2" asChild>
@@ -173,7 +215,7 @@ export default function Subscription() {
                 <div>
                   <h4 className="font-medium">How do I renew my subscription?</h4>
                   <p className="text-sm text-muted-foreground">
-                    Contact the admin via phone or email. Once payment is confirmed, your subscription will be activated.
+                    Pay via UPI using the button above or contact the admin via phone or email. Once payment is confirmed, your subscription will be activated.
                   </p>
                 </div>
                 <div>
@@ -193,6 +235,42 @@ export default function Subscription() {
           </div>
         </main>
       </div>
+
+      {/* QR Code Dialog */}
+      <Dialog open={qrOpen} onOpenChange={setQrOpen}>
+        <DialogContent className="max-w-xs text-center">
+          <DialogHeader>
+            <DialogTitle className="flex items-center justify-center gap-2">
+              <QrCode className="w-5 h-5 text-primary" />
+              Scan to Pay
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col items-center gap-3 py-2">
+            <div className="p-3 rounded-xl bg-white shadow-md border">
+              <img
+                src={qrUrl}
+                alt="UPI QR Code"
+                width={220}
+                height={220}
+                className="rounded"
+              />
+            </div>
+            <div className="text-center">
+              <p className="font-mono font-bold text-sm">{upiId}</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Scan with any UPI app to pay
+              </p>
+              {currentPrice && (
+                <p className="text-lg font-black text-primary mt-1">{formatCurrency(currentPrice)}</p>
+              )}
+            </div>
+            <Button variant="outline" size="sm" className="gap-2 w-full" onClick={handleCopyUpi}>
+              <Copy className="w-4 h-4" />
+              Copy UPI ID
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

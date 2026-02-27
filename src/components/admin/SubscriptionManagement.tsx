@@ -29,6 +29,7 @@ export function SubscriptionManagement() {
     renewal_price: settings?.renewal_price?.toString() || '499',
     duration_days: settings?.duration_days?.toString() || '30',
     trial_duration_days: settings?.trial_duration_days?.toString() || '14',
+    upi_id: settings?.upi_id || 'kevinjeevus@okaxis',
   });
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
   const [renewDialogOpen, setRenewDialogOpen] = useState(false);
@@ -58,6 +59,7 @@ export function SubscriptionManagement() {
       renewal_price: parseFloat(settingsForm.renewal_price) || 0,
       duration_days: parseInt(settingsForm.duration_days) || 30,
       trial_duration_days: parseInt(settingsForm.trial_duration_days) || 14,
+      upi_id: settingsForm.upi_id || null,
     });
     setSettingsDialogOpen(false);
   };
@@ -92,8 +94,8 @@ export function SubscriptionManagement() {
 
   const openRenewDialog = (company: Company) => {
     setSelectedCompany(company);
-    const baseDate = company.subscription_expires_at 
-      ? parseISO(company.subscription_expires_at) 
+    const baseDate = company.subscription_expires_at
+      ? parseISO(company.subscription_expires_at)
       : new Date();
     setRenewDate(addDays(baseDate, settings?.duration_days || 365));
     setRenewAmount(settings?.renewal_price?.toString() || '5000');
@@ -175,13 +177,23 @@ export function SubscriptionManagement() {
                     onChange={(e) => setSettingsForm({ ...settingsForm, duration_days: e.target.value })}
                   />
                 </div>
-                 <div className="space-y-2">
+                <div className="space-y-2">
                   <Label>Trial Duration (Days) — for new signups</Label>
                   <Input
                     type="number"
                     value={settingsForm.trial_duration_days}
                     onChange={(e) => setSettingsForm({ ...settingsForm, trial_duration_days: e.target.value })}
                   />
+                </div>
+                <div className="space-y-2">
+                  <Label>UPI ID (for payments)</Label>
+                  <Input
+                    type="text"
+                    value={settingsForm.upi_id}
+                    onChange={(e) => setSettingsForm({ ...settingsForm, upi_id: e.target.value })}
+                    placeholder="e.g. yourname@okaxis"
+                  />
+                  <p className="text-xs text-muted-foreground">This UPI ID will be shown to users on the subscription page.</p>
                 </div>
                 <div className="flex justify-end gap-2 pt-4">
                   <Button variant="outline" onClick={() => setSettingsDialogOpen(false)}>
@@ -196,7 +208,7 @@ export function SubscriptionManagement() {
           </Dialog>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <div className="p-4 rounded-lg bg-muted">
               <p className="text-sm text-muted-foreground">First Time Price</p>
               <p className="text-2xl font-bold">₹{settings?.first_time_price?.toLocaleString() || 0}</p>
@@ -212,6 +224,10 @@ export function SubscriptionManagement() {
             <div className="p-4 rounded-lg bg-muted">
               <p className="text-sm text-muted-foreground">Trial Duration</p>
               <p className="text-2xl font-bold">{settings?.trial_duration_days || 14} days</p>
+            </div>
+            <div className="p-4 rounded-lg bg-muted col-span-2 sm:col-span-4">
+              <p className="text-sm text-muted-foreground">UPI ID</p>
+              <p className="text-lg font-mono font-bold">{settings?.upi_id || 'Not configured'}</p>
             </div>
           </div>
         </CardContent>
