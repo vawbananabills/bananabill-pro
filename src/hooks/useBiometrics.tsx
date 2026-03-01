@@ -29,7 +29,7 @@ export function useBiometrics() {
             const result = await registerBiometric(user.id, user.email || '');
 
             const { data: insertedData, error } = await supabase
-                .from('user_biometrics')
+                .from('user_biometrics' as any)
                 .insert({
                     user_id: user.id,
                     credential_id: result.credentialId,
