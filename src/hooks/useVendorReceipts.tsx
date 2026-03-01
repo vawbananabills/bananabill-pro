@@ -55,7 +55,7 @@ export function useVendorReceipts() {
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
-            return data as VendorReceipt[];
+            return (data as any) as VendorReceipt[];
         },
         enabled: !!company?.id,
     });
@@ -87,7 +87,7 @@ export function useVendorReceipts() {
             if (items.length > 0) {
                 const itemsWithReceiptId = items.map(item => ({
                     ...item,
-                    receipt_id: receiptData.id,
+                    receipt_id: (receiptData as any).id,
                 }));
 
                 const { error: itemsError } = await supabase
@@ -194,8 +194,8 @@ export function useVendorReceipts() {
         if (itemsError) return null;
 
         return {
-            ...receipt,
-            items: items as VendorReceiptItem[],
+            ...(receipt as any),
+            items: (items as any) as VendorReceiptItem[],
         } as VendorReceiptWithItems;
     };
 

@@ -11,7 +11,7 @@ export function useBiometrics() {
     const getBiometrics = async () => {
         if (!user) return [];
         const { data, error } = await supabase
-            .from('user_biometrics')
+            .from('user_biometrics' as any)
             .select('*')
             .eq('user_id', user.id);
 
@@ -29,7 +29,7 @@ export function useBiometrics() {
             const result = await registerBiometric(user.id, user.email || '');
 
             const { data: insertedData, error } = await supabase
-                .from('user_biometrics')
+                .from('user_biometrics' as any)
                 .insert({
                     user_id: user.id,
                     credential_id: result.credentialId,
@@ -60,7 +60,7 @@ export function useBiometrics() {
 
     const removeBiometric = async (id: string, credentialId: string) => {
         const { error } = await supabase
-            .from('user_biometrics')
+            .from('user_biometrics' as any)
             .delete()
             .eq('id', id);
 

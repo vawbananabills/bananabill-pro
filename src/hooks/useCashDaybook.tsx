@@ -30,14 +30,14 @@ export function useCashDaybook() {
             if (!company?.id) return [];
 
             const { data, error } = await supabase
-                .from('cash_daybook')
+                .from('cash_daybook' as any)
                 .select('*')
                 .eq('company_id', company.id)
                 .order('date', { ascending: false })
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
-            return data as CashDaybookEntry[];
+            return (data as any) as CashDaybookEntry[];
         },
         enabled: !!company?.id,
     });
@@ -47,7 +47,7 @@ export function useCashDaybook() {
             if (!company?.id) throw new Error('No company found');
 
             const { data, error } = await supabase
-                .from('cash_daybook')
+                .from('cash_daybook' as any)
                 .insert({
                     ...entry,
                     company_id: company.id,
@@ -71,7 +71,7 @@ export function useCashDaybook() {
     const updateEntry = useMutation({
         mutationFn: async ({ id, ...entry }: Partial<CashDaybookEntry> & { id: string }) => {
             const { data, error } = await supabase
-                .from('cash_daybook')
+                .from('cash_daybook' as any)
                 .update(entry)
                 .eq('id', id)
                 .select()
@@ -92,7 +92,7 @@ export function useCashDaybook() {
     const deleteEntry = useMutation({
         mutationFn: async (id: string) => {
             const { error } = await supabase
-                .from('cash_daybook')
+                .from('cash_daybook' as any)
                 .delete()
                 .eq('id', id);
 
