@@ -87,7 +87,7 @@ export function useVendorReceipts() {
             if (items.length > 0) {
                 const itemsWithReceiptId = items.map(item => ({
                     ...item,
-                    receipt_id: receiptData.id,
+                    receipt_id: (receiptData as any).id,
                 }));
 
                 const { error: itemsError } = await supabase
