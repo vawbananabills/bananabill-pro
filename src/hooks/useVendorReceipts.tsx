@@ -55,7 +55,7 @@ export function useVendorReceipts() {
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
-            return data as VendorReceipt[];
+            return (data as any) as VendorReceipt[];
         },
         enabled: !!company?.id,
     });
