@@ -194,8 +194,8 @@ export function useVendorReceipts() {
         if (itemsError) return null;
 
         return {
-            ...receipt,
-            items: items as VendorReceiptItem[],
+            ...(receipt as any),
+            items: (items as any) as VendorReceiptItem[],
         } as VendorReceiptWithItems;
     };
 

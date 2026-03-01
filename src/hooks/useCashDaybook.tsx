@@ -92,7 +92,7 @@ export function useCashDaybook() {
     const deleteEntry = useMutation({
         mutationFn: async (id: string) => {
             const { error } = await supabase
-                .from('cash_daybook')
+                .from('cash_daybook' as any)
                 .delete()
                 .eq('id', id);
 

@@ -60,7 +60,7 @@ export function useBiometrics() {
 
     const removeBiometric = async (id: string, credentialId: string) => {
         const { error } = await supabase
-            .from('user_biometrics')
+            .from('user_biometrics' as any)
             .delete()
             .eq('id', id);
 
