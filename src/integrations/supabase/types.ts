@@ -14,14 +14,67 @@ export type Database = {
   }
   public: {
     Tables: {
+      cash_daybook: {
+        Row: {
+          amount: number
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          date: string
+          id: string
+          notes: string | null
+          payment_mode: string | null
+          person_name: string
+          type: string
+          updated_at: string | null
+          vehicle_number: string | null
+        }
+        Insert: {
+          amount?: number
+          company_id: string
+          created_at?: string | null
+          created_by?: string | null
+          date?: string
+          id?: string
+          notes?: string | null
+          payment_mode?: string | null
+          person_name: string
+          type: string
+          updated_at?: string | null
+          vehicle_number?: string | null
+        }
+        Update: {
+          amount?: number
+          company_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          date?: string
+          id?: string
+          notes?: string | null
+          payment_mode?: string | null
+          person_name?: string
+          type?: string
+          updated_at?: string | null
+          vehicle_number?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cash_daybook_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       companies: {
         Row: {
           address: string | null
           bank_details: string | null
           created_at: string | null
           date_format: string | null
-          enable_vendor_r: boolean | null
           email: string | null
+          enable_vendor_r: boolean | null
           footer_notes: string | null
           gst_number: string | null
           id: string
@@ -45,8 +98,8 @@ export type Database = {
           bank_details?: string | null
           created_at?: string | null
           date_format?: string | null
-          enable_vendor_r?: boolean | null
           email?: string | null
+          enable_vendor_r?: boolean | null
           footer_notes?: string | null
           gst_number?: string | null
           id?: string
@@ -70,8 +123,8 @@ export type Database = {
           bank_details?: string | null
           created_at?: string | null
           date_format?: string | null
-          enable_vendor_r?: boolean | null
           email?: string | null
+          enable_vendor_r?: boolean | null
           footer_notes?: string | null
           gst_number?: string | null
           id?: string
@@ -798,6 +851,131 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      vendor_receipt_items: {
+        Row: {
+          amount: number | null
+          created_at: string | null
+          gross_weight: number | null
+          id: string
+          item_name: string
+          net_weight: number | null
+          qty: number | null
+          rate: number | null
+          receipt_id: string
+        }
+        Insert: {
+          amount?: number | null
+          created_at?: string | null
+          gross_weight?: number | null
+          id?: string
+          item_name: string
+          net_weight?: number | null
+          qty?: number | null
+          rate?: number | null
+          receipt_id: string
+        }
+        Update: {
+          amount?: number | null
+          created_at?: string | null
+          gross_weight?: number | null
+          id?: string
+          item_name?: string
+          net_weight?: number | null
+          qty?: number | null
+          rate?: number | null
+          receipt_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_receipt_items_receipt_id_fkey"
+            columns: ["receipt_id"]
+            isOneToOne: false
+            referencedRelation: "vendor_receipts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vendor_receipts: {
+        Row: {
+          amount_received: number | null
+          commission_percent: number | null
+          company_id: string
+          cooli: number | null
+          created_at: string | null
+          created_by: string | null
+          date: string
+          final_total: number | null
+          first_total: number | null
+          id: string
+          loading_charge: number | null
+          notes: string | null
+          padi: number | null
+          payment_mode: string | null
+          receipt_number: string
+          rent: number | null
+          updated_at: string | null
+          vehicle_number: string | null
+          vendor_id: string
+        }
+        Insert: {
+          amount_received?: number | null
+          commission_percent?: number | null
+          company_id: string
+          cooli?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          date?: string
+          final_total?: number | null
+          first_total?: number | null
+          id?: string
+          loading_charge?: number | null
+          notes?: string | null
+          padi?: number | null
+          payment_mode?: string | null
+          receipt_number: string
+          rent?: number | null
+          updated_at?: string | null
+          vehicle_number?: string | null
+          vendor_id: string
+        }
+        Update: {
+          amount_received?: number | null
+          commission_percent?: number | null
+          company_id?: string
+          cooli?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          date?: string
+          final_total?: number | null
+          first_total?: number | null
+          id?: string
+          loading_charge?: number | null
+          notes?: string | null
+          padi?: number | null
+          payment_mode?: string | null
+          receipt_number?: string
+          rent?: number | null
+          updated_at?: string | null
+          vehicle_number?: string | null
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_receipts_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_receipts_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       vendor_statements: {
         Row: {
