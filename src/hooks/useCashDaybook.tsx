@@ -37,7 +37,7 @@ export function useCashDaybook() {
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
-            return data as CashDaybookEntry[];
+            return (data as any) as CashDaybookEntry[];
         },
         enabled: !!company?.id,
     });
