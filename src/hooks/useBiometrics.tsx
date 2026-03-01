@@ -11,7 +11,7 @@ export function useBiometrics() {
     const getBiometrics = async () => {
         if (!user) return [];
         const { data, error } = await supabase
-            .from('user_biometrics')
+            .from('user_biometrics' as any)
             .select('*')
             .eq('user_id', user.id);
 
