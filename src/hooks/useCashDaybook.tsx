@@ -47,7 +47,7 @@ export function useCashDaybook() {
             if (!company?.id) throw new Error('No company found');
 
             const { data, error } = await supabase
-                .from('cash_daybook')
+                .from('cash_daybook' as any)
                 .insert({
                     ...entry,
                     company_id: company.id,
