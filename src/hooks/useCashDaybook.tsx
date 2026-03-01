@@ -30,7 +30,7 @@ export function useCashDaybook() {
             if (!company?.id) return [];
 
             const { data, error } = await supabase
-                .from('cash_daybook')
+                .from('cash_daybook' as any)
                 .select('*')
                 .eq('company_id', company.id)
                 .order('date', { ascending: false })
