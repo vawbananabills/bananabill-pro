@@ -71,7 +71,7 @@ export function useCashDaybook() {
     const updateEntry = useMutation({
         mutationFn: async ({ id, ...entry }: Partial<CashDaybookEntry> & { id: string }) => {
             const { data, error } = await supabase
-                .from('cash_daybook')
+                .from('cash_daybook' as any)
                 .update(entry)
                 .eq('id', id)
                 .select()
