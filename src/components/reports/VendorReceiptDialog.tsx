@@ -113,7 +113,7 @@ export function VendorReceiptDialog({ open, onOpenChange }: VendorReceiptDialogP
             setCommissionPercent(data.commission_percent);
             setItems(data.items.map(it => ({
                 id: it.id || Math.random().toString(),
-                productId: it.product_id || '',
+                productId: '',
                 itemName: it.item_name,
                 qty: it.qty,
                 grossWeight: it.gross_weight,
