@@ -319,7 +319,7 @@ export function VendorReceiptDialog({ open, onOpenChange }: VendorReceiptDialogP
         };
 
         const itemsData = items.map(it => ({
-            product_id: it.productId || null,
+            item_name: it.itemName,
             item_name: it.itemName,
             qty: it.qty,
             gross_weight: it.grossWeight,
