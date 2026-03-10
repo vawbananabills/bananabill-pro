@@ -320,7 +320,6 @@ export function VendorReceiptDialog({ open, onOpenChange }: VendorReceiptDialogP
 
         const itemsData = items.map(it => ({
             item_name: it.itemName,
-            item_name: it.itemName,
             qty: it.qty,
             gross_weight: it.grossWeight,
             net_weight: it.netWeight,
