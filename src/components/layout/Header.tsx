@@ -1,4 +1,4 @@
-import { Search, Plus } from 'lucide-react';
+import { Search, Plus, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Link } from 'react-router-dom';
@@ -8,6 +8,7 @@ import { SendNotificationDialog } from '@/components/notifications/SendNotificat
 import { SyncStatusIndicator } from '@/components/sync/SyncStatusIndicator';
 import { useSuperAdmin } from '@/hooks/useSuperAdmin';
 import { KeyboardShortcutsHelp } from '@/components/KeyboardShortcutsHelp';
+import { useAppUpdate } from '@/hooks/useAppUpdate';
 
 interface HeaderProps {
   title: string;
@@ -16,6 +17,7 @@ interface HeaderProps {
 
 export function Header({ title, subtitle }: HeaderProps) {
   const { isSuperAdmin } = useSuperAdmin();
+  const { updateAvailable, applyUpdate } = useAppUpdate();
 
   return (
     <header className="h-14 md:h-16 bg-card border-b border-border flex items-center justify-between px-3 md:px-6">
@@ -30,6 +32,18 @@ export function Header({ title, subtitle }: HeaderProps) {
       </div>
       
       <div className="flex items-center gap-2 md:gap-3">
+        {updateAvailable && (
+          <Button
+            size="sm"
+            onClick={applyUpdate}
+            className="gap-2 h-9 bg-emerald-600 hover:bg-emerald-700 text-white animate-pulse"
+          >
+            <RefreshCw className="w-4 h-4" />
+            <span className="hidden sm:inline">Update Available</span>
+            <span className="sm:hidden">Update</span>
+          </Button>
+        )}
+
         <div className="relative hidden lg:block">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input 
