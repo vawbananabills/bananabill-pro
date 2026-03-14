@@ -1,4 +1,4 @@
-import { Search, Plus, RefreshCw } from 'lucide-react';
+import { Search, Plus, RefreshCw, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Link } from 'react-router-dom';
@@ -32,7 +32,7 @@ export function Header({ title, subtitle }: HeaderProps) {
       </div>
       
       <div className="flex items-center gap-2 md:gap-3">
-        {updateAvailable && (
+        {updateAvailable ? (
           <Button
             size="sm"
             onClick={applyUpdate}
@@ -42,6 +42,11 @@ export function Header({ title, subtitle }: HeaderProps) {
             <span className="hidden sm:inline">Update Available</span>
             <span className="sm:hidden">Update</span>
           </Button>
+        ) : (
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground px-2">
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+            <span className="hidden sm:inline">Up to date</span>
+          </div>
         )}
 
         <div className="relative hidden lg:block">
