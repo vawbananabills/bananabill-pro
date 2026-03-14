@@ -306,110 +306,102 @@ export default function CashDaybook() {
                     </Card>
                 </div>
 
-                {/* Search & Filters */}
-                <div className="relative max-w-sm">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                {/* Search Bar - Prominent */}
+                <div className="relative w-full">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary" />
                     <Input
                         placeholder="Search by name, vehicle, or notes..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        className="pl-10"
+                        className="pl-12 h-12 text-base border-2 border-primary/20 focus:border-primary bg-background shadow-sm rounded-xl"
                     />
+                    {search && (
+                        <button
+                            onClick={() => setSearch('')}
+                            className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground text-sm"
+                        >
+                            ✕
+                        </button>
+                    )}
                 </div>
 
-                {/* Entries Table */}
-                <Card>
-                    <CardContent className="p-0">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Date</TableHead>
-                                    <TableHead>Type</TableHead>
-                                    <TableHead>Person Name</TableHead>
-                                    <TableHead>Mode</TableHead>
-                                    <TableHead>Vehicle #</TableHead>
-                                    <TableHead className="text-right">Amount</TableHead>
-                                    <TableHead>Notes</TableHead>
-                                    <TableHead className="w-[100px] text-right">Actions</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {isLoading ? (
-                                    <TableRow>
-                                        <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                                            Loading daybook entries...
-                                        </TableCell>
-                                    </TableRow>
-                                ) : filteredEntries.length === 0 ? (
-                                    <TableRow>
-                                        <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                                            No records found
-                                        </TableCell>
-                                    </TableRow>
-                                ) : (
-                                    filteredEntries.map((entry) => (
-                                        <TableRow key={entry.id}>
-                                            <TableCell className="text-sm font-medium">
-                                                {format(new Date(entry.date), 'dd MMM yyyy')}
-                                            </TableCell>
-                                            <TableCell>
-                                                {entry.type === 'cash_in' ? (
-                                                    <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-100 uppercase text-[10px]">IN</Badge>
-                                                ) : (
-                                                    <Badge className="bg-rose-100 text-rose-700 border-rose-200 hover:bg-rose-100 uppercase text-[10px]">OUT</Badge>
-                                                )}
-                                            </TableCell>
-                                            <TableCell className="font-semibold">{entry.person_name}</TableCell>
-                                            <TableCell className="text-xs text-muted-foreground">
-                                                {entry.payment_mode || 'Cash'}
-                                            </TableCell>
-                                            <TableCell>
-                                                {entry.vehicle_number ? (
-                                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                                        <Truck className="w-3 h-3" />
-                                                        {entry.vehicle_number}
-                                                    </div>
-                                                ) : '-'}
-                                            </TableCell>
-                                            <TableCell className={cn(
-                                                "text-right font-bold tabular-nums",
-                                                entry.type === 'cash_in' ? "text-emerald-600" : "text-rose-600"
-                                            )}>
-                                                {entry.type === 'cash_in' ? '+' : '-'}₹{entry.amount.toLocaleString()}
-                                            </TableCell>
-                                            <TableCell className="max-w-[200px] truncate text-sm text-muted-foreground">
-                                                {entry.notes || '-'}
-                                            </TableCell>
-                                            <TableCell className="text-right">
-                                                <div className="flex items-center justify-end gap-1">
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="h-8 w-8 text-slate-400 hover:text-primary hover:bg-primary/5"
-                                                        onClick={() => handleEdit(entry)}
-                                                    >
-                                                        <Pencil className="w-4 h-4" />
-                                                    </Button>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="h-8 w-8 text-slate-400 hover:text-destructive hover:bg-destructive/5"
-                                                        onClick={() => {
-                                                            setEntryToDelete(entry.id);
-                                                            setDeleteDialogOpen(true);
-                                                        }}
-                                                    >
-                                                        <Trash2 className="w-4 h-4" />
-                                                    </Button>
-                                                </div>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))
-                                )}
-                            </TableBody>
-                        </Table>
-                    </CardContent>
-                </Card>
+                {/* Mobile Grid View */}
+                {isLoading ? (
+                    <div className="text-center py-8 text-muted-foreground">Loading daybook entries...</div>
+                ) : filteredEntries.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">No records found</div>
+                ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {filteredEntries.map((entry) => (
+                            <Card key={entry.id} className={cn(
+                                "overflow-hidden border-l-4",
+                                entry.type === 'cash_in' ? "border-l-emerald-500" : "border-l-rose-500"
+                            )}>
+                                <CardContent className="p-4 space-y-3">
+                                    {/* Top row: Name + Amount */}
+                                    <div className="flex items-start justify-between gap-2">
+                                        <div className="min-w-0 flex-1">
+                                            <p className="font-semibold text-foreground truncate">{entry.person_name}</p>
+                                            <p className="text-xs text-muted-foreground">{format(new Date(entry.date), 'dd MMM yyyy')}</p>
+                                        </div>
+                                        <div className={cn(
+                                            "text-right font-bold text-lg tabular-nums whitespace-nowrap",
+                                            entry.type === 'cash_in' ? "text-emerald-600" : "text-rose-600"
+                                        )}>
+                                            {entry.type === 'cash_in' ? '+' : '-'}₹{entry.amount.toLocaleString()}
+                                        </div>
+                                    </div>
+
+                                    {/* Info row */}
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        {entry.type === 'cash_in' ? (
+                                            <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-100 uppercase text-[10px]">IN</Badge>
+                                        ) : (
+                                            <Badge className="bg-rose-100 text-rose-700 border-rose-200 hover:bg-rose-100 uppercase text-[10px]">OUT</Badge>
+                                        )}
+                                        <Badge variant="outline" className="text-[10px]">{entry.payment_mode || 'Cash'}</Badge>
+                                        {entry.vehicle_number && (
+                                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                                <Truck className="w-3 h-3" />
+                                                {entry.vehicle_number}
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Notes */}
+                                    {entry.notes && (
+                                        <p className="text-xs text-muted-foreground line-clamp-2">{entry.notes}</p>
+                                    )}
+
+                                    {/* Actions */}
+                                    <div className="flex items-center justify-end gap-1 pt-1 border-t border-border">
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="h-8 gap-1 text-muted-foreground hover:text-primary hover:bg-primary/5"
+                                            onClick={() => handleEdit(entry)}
+                                        >
+                                            <Pencil className="w-3.5 h-3.5" />
+                                            <span className="text-xs">Edit</span>
+                                        </Button>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="h-8 gap-1 text-muted-foreground hover:text-destructive hover:bg-destructive/5"
+                                            onClick={() => {
+                                                setEntryToDelete(entry.id);
+                                                setDeleteDialogOpen(true);
+                                            }}
+                                        >
+                                            <Trash2 className="w-3.5 h-3.5" />
+                                            <span className="text-xs">Delete</span>
+                                        </Button>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        ))}
+                    </div>
+                )}
 
                 {/* Delete Confirmation */}
                 <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
