@@ -570,7 +570,7 @@ export function CompanyDetailsDialog({ open, onOpenChange, companyId }: CompanyD
                 </TabsContent>
               </Tabs>
             </div>
-          </ScrollArea>
+          </div>
         ) : (
           <div className="text-center py-8 text-muted-foreground">
             Failed to load company details
