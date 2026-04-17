@@ -479,6 +479,131 @@ export function CompanyDetailsDialog({ open, onOpenChange, companyId }: CompanyD
                   </TabsTrigger>
                 </TabsList>
 
+                <TabsContent value="reports">
+                  <div className="grid gap-4">
+                    {/* KPI cards */}
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                      <Card><CardContent className="pt-4">
+                        <div className="text-xs text-muted-foreground">Total Sales</div>
+                        <div className="text-xl font-bold">{formatCurrency(details.stats.totalSales)}</div>
+                      </CardContent></Card>
+                      <Card><CardContent className="pt-4">
+                        <div className="text-xs text-muted-foreground">Payments Received</div>
+                        <div className="text-xl font-bold text-emerald-600">{formatCurrency(details.stats.totalPayments)}</div>
+                      </CardContent></Card>
+                      <Card><CardContent className="pt-4">
+                        <div className="text-xs text-muted-foreground">Pending</div>
+                        <div className="text-xl font-bold text-rose-600">{formatCurrency(details.stats.pendingAmount)}</div>
+                      </CardContent></Card>
+                      <Card><CardContent className="pt-4">
+                        <div className="text-xs text-muted-foreground">This Month Sales</div>
+                        <div className="text-xl font-bold">{formatCurrency(details.stats.thisMonthSales)}</div>
+                      </CardContent></Card>
+                    </div>
+
+                    {/* Monthly sales vs payments line+bar */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-base">Last 6 Months — Sales vs Payments</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <ChartContainer
+                          config={{
+                            sales: { label: 'Sales', color: 'hsl(var(--primary))' },
+                            payments: { label: 'Payments', color: 'hsl(142 71% 45%)' },
+                          }}
+                          className="h-[280px] w-full"
+                        >
+                          <ComposedChart data={details.monthlySales}>
+                            <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                            <XAxis dataKey="month" className="text-xs" />
+                            <YAxis className="text-xs" tickFormatter={(v) => formatCurrency(v)} />
+                            <ChartTooltip content={<ChartTooltipContent />} />
+                            <Bar dataKey="sales" fill="var(--color-sales)" radius={[4, 4, 0, 0]} />
+                            <Line type="monotone" dataKey="payments" stroke="var(--color-payments)" strokeWidth={2} dot={{ r: 4 }} />
+                          </ComposedChart>
+                        </ChartContainer>
+                      </CardContent>
+                    </Card>
+
+                    <div className="grid lg:grid-cols-2 gap-4">
+                      {/* Top products */}
+                      <Card>
+                        <CardHeader><CardTitle className="text-base">Top 10 Products by Revenue</CardTitle></CardHeader>
+                        <CardContent>
+                          {details.topProducts.length === 0 ? (
+                            <div className="text-center text-sm text-muted-foreground py-8">No product sales data</div>
+                          ) : (
+                            <ChartContainer
+                              config={{ revenue: { label: 'Revenue', color: 'hsl(var(--primary))' } }}
+                              className="h-[300px] w-full"
+                            >
+                              <BarChart data={details.topProducts} layout="vertical" margin={{ left: 80 }}>
+                                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                                <XAxis type="number" className="text-xs" tickFormatter={(v) => formatCurrency(v)} />
+                                <YAxis type="category" dataKey="name" className="text-xs" width={80} />
+                                <ChartTooltip content={<ChartTooltipContent />} />
+                                <Bar dataKey="revenue" fill="var(--color-revenue)" radius={[0, 4, 4, 0]} />
+                              </BarChart>
+                            </ChartContainer>
+                          )}
+                        </CardContent>
+                      </Card>
+
+                      {/* Top customers */}
+                      <Card>
+                        <CardHeader><CardTitle className="text-base">Top 10 Customers</CardTitle></CardHeader>
+                        <CardContent>
+                          {details.topCustomers.length === 0 ? (
+                            <div className="text-center text-sm text-muted-foreground py-8">No customer data</div>
+                          ) : (
+                            <ChartContainer
+                              config={{ total: { label: 'Total', color: 'hsl(217 91% 60%)' } }}
+                              className="h-[300px] w-full"
+                            >
+                              <BarChart data={details.topCustomers} layout="vertical" margin={{ left: 80 }}>
+                                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                                <XAxis type="number" className="text-xs" tickFormatter={(v) => formatCurrency(v)} />
+                                <YAxis type="category" dataKey="name" className="text-xs" width={80} />
+                                <ChartTooltip content={<ChartTooltipContent />} />
+                                <Bar dataKey="total" fill="var(--color-total)" radius={[0, 4, 4, 0]} />
+                              </BarChart>
+                            </ChartContainer>
+                          )}
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="products">
+                  <Card>
+                    <CardContent className="pt-4">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Name</TableHead>
+                            <TableHead className="text-right">Default Rate</TableHead>
+                            <TableHead className="text-right">Stock</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {details.products.map((p) => (
+                            <TableRow key={p.id}>
+                              <TableCell className="font-medium">{p.name}</TableCell>
+                              <TableCell className="text-right">{formatCurrency(p.default_rate || 0)}</TableCell>
+                              <TableCell className="text-right">{p.stock || 0}</TableCell>
+                            </TableRow>
+                          ))}
+                          {details.products.length === 0 && (
+                            <TableRow><TableCell colSpan={3} className="text-center py-8 text-muted-foreground">No products found</TableCell></TableRow>
+                          )}
+                        </TableBody>
+                      </Table>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
                 <TabsContent value="customers">
                   <Card>
                     <CardContent className="pt-4">
