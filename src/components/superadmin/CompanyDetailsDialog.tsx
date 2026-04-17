@@ -6,6 +6,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -31,7 +32,9 @@ import {
   UserCheck,
   Truck,
   IndianRupee,
-  Clock
+  Clock,
+  Maximize2,
+  Minimize2
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
@@ -72,6 +75,7 @@ function formatCurrency(amount: number) {
 export function CompanyDetailsDialog({ open, onOpenChange, companyId }: CompanyDetailsDialogProps) {
   const [loading, setLoading] = useState(true);
   const [details, setDetails] = useState<CompanyDetails | null>(null);
+  const [detailedView, setDetailedView] = useState(false);
 
   useEffect(() => {
     if (open && companyId) {
@@ -214,12 +218,23 @@ export function CompanyDetailsDialog({ open, onOpenChange, companyId }: CompanyD
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent className={detailedView ? "max-w-[98vw] w-[98vw] max-h-[96vh] overflow-hidden flex flex-col" : "max-w-6xl max-h-[90vh] overflow-hidden flex flex-col"}>
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Building2 className="w-5 h-5" />
-            {loading ? 'Loading...' : details?.company?.name || 'Company Details'}
-          </DialogTitle>
+          <div className="flex items-center justify-between gap-2 pr-8">
+            <DialogTitle className="flex items-center gap-2">
+              <Building2 className="w-5 h-5" />
+              {loading ? 'Loading...' : details?.company?.name || 'Company Details'}
+            </DialogTitle>
+            <Button
+              variant={detailedView ? "secondary" : "outline"}
+              size="sm"
+              onClick={() => setDetailedView(v => !v)}
+              className="gap-1.5"
+            >
+              {detailedView ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+              <span className="hidden sm:inline">{detailedView ? 'Compact View' : 'Detailed View'}</span>
+            </Button>
+          </div>
         </DialogHeader>
 
         {loading ? (
@@ -407,7 +422,7 @@ export function CompanyDetailsDialog({ open, onOpenChange, companyId }: CompanyD
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {details.customers.slice(0, 20).map((customer) => (
+                          {(detailedView ? details.customers : details.customers.slice(0, 20)).map((customer) => (
                             <TableRow key={customer.id}>
                               <TableCell className="font-medium">{customer.name}</TableCell>
                               <TableCell>{customer.phone || '-'}</TableCell>
@@ -445,7 +460,7 @@ export function CompanyDetailsDialog({ open, onOpenChange, companyId }: CompanyD
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {details.vendors.slice(0, 20).map((vendor) => (
+                          {(detailedView ? details.vendors : details.vendors.slice(0, 20)).map((vendor) => (
                             <TableRow key={vendor.id}>
                               <TableCell className="font-medium">{vendor.name}</TableCell>
                               <TableCell>{vendor.phone || '-'}</TableCell>
@@ -484,7 +499,7 @@ export function CompanyDetailsDialog({ open, onOpenChange, companyId }: CompanyD
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {details.invoices.slice(0, 20).map((invoice) => (
+                          {(detailedView ? details.invoices : details.invoices.slice(0, 20)).map((invoice) => (
                             <TableRow key={invoice.id}>
                               <TableCell className="font-medium">{invoice.invoice_number}</TableCell>
                               <TableCell>{format(new Date(invoice.date), 'MMM d, yyyy')}</TableCell>
