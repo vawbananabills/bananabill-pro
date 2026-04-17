@@ -452,7 +452,11 @@ export function CompanyDetailsDialog({ open, onOpenChange, companyId }: CompanyD
 
               {/* Tabs for detailed data */}
               <Tabs defaultValue="customers" className="space-y-4">
-                <TabsList>
+                <TabsList className="flex flex-wrap h-auto">
+                  <TabsTrigger value="reports" className="gap-1">
+                    <TrendingUp className="w-3 h-3" />
+                    Reports
+                  </TabsTrigger>
                   <TabsTrigger value="customers" className="gap-1">
                     <UserCheck className="w-3 h-3" />
                     Customers ({details.customers.length})
@@ -461,9 +465,13 @@ export function CompanyDetailsDialog({ open, onOpenChange, companyId }: CompanyD
                     <Truck className="w-3 h-3" />
                     Vendors ({details.vendors.length})
                   </TabsTrigger>
+                  <TabsTrigger value="products" className="gap-1">
+                    <Package className="w-3 h-3" />
+                    Products ({details.products.length})
+                  </TabsTrigger>
                   <TabsTrigger value="invoices" className="gap-1">
                     <FileText className="w-3 h-3" />
-                    Recent Invoices
+                    Invoices ({details.invoices.length})
                   </TabsTrigger>
                   <TabsTrigger value="users" className="gap-1">
                     <Users className="w-3 h-3" />
