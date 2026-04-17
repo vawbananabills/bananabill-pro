@@ -53,6 +53,9 @@ interface CompanyDetails {
   invoices: any[];
   products: any[];
   payments: any[];
+  monthlySales: { month: string; sales: number; payments: number; invoices: number }[];
+  topProducts: { name: string; revenue: number; qty: number }[];
+  topCustomers: { name: string; total: number }[];
   stats: {
     totalSales: number;
     totalPayments: number;
