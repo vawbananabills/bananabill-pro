@@ -32,7 +32,9 @@ import {
   UserCheck,
   Truck,
   IndianRupee,
-  Clock
+  Clock,
+  Maximize2,
+  Minimize2
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
