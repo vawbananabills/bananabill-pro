@@ -218,12 +218,23 @@ export function CompanyDetailsDialog({ open, onOpenChange, companyId }: CompanyD
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent className={detailedView ? "max-w-[98vw] w-[98vw] max-h-[96vh] overflow-hidden flex flex-col" : "max-w-6xl max-h-[90vh] overflow-hidden flex flex-col"}>
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Building2 className="w-5 h-5" />
-            {loading ? 'Loading...' : details?.company?.name || 'Company Details'}
-          </DialogTitle>
+          <div className="flex items-center justify-between gap-2 pr-8">
+            <DialogTitle className="flex items-center gap-2">
+              <Building2 className="w-5 h-5" />
+              {loading ? 'Loading...' : details?.company?.name || 'Company Details'}
+            </DialogTitle>
+            <Button
+              variant={detailedView ? "secondary" : "outline"}
+              size="sm"
+              onClick={() => setDetailedView(v => !v)}
+              className="gap-1.5"
+            >
+              {detailedView ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+              <span className="hidden sm:inline">{detailedView ? 'Compact View' : 'Detailed View'}</span>
+            </Button>
+          </div>
         </DialogHeader>
 
         {loading ? (
