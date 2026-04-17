@@ -75,6 +75,7 @@ function formatCurrency(amount: number) {
 export function CompanyDetailsDialog({ open, onOpenChange, companyId }: CompanyDetailsDialogProps) {
   const [loading, setLoading] = useState(true);
   const [details, setDetails] = useState<CompanyDetails | null>(null);
+  const [detailedView, setDetailedView] = useState(false);
 
   useEffect(() => {
     if (open && companyId) {
