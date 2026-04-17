@@ -195,14 +195,73 @@ export function CompanyDetailsDialog({ open, onOpenChange, companyId }: CompanyD
       const thisMonthInvoices = allInvoices?.filter(inv => new Date(inv.date) >= thisMonthStart) || [];
       const thisMonthSales = thisMonthInvoices.reduce((sum, inv) => sum + (inv.total || 0), 0);
 
+      // Build monthly sales (last 6 months)
+      const monthlyMap = new Map<string, { sales: number; payments: number; invoices: number }>();
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        monthlyMap.set(key, { sales: 0, payments: 0, invoices: 0 });
+      }
+      (allInvoices || []).forEach(inv => {
+        const d = new Date(inv.date);
+        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        const m = monthlyMap.get(key);
+        if (m) { m.sales += inv.total || 0; m.invoices += 1; }
+      });
+      (allPayments || []).forEach(p => {
+        const d = new Date(p.payment_date);
+        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        const m = monthlyMap.get(key);
+        if (m) { m.payments += p.amount || 0; }
+      });
+      const monthlySales = Array.from(monthlyMap.entries()).map(([key, v]) => {
+        const [y, mo] = key.split('-');
+        const label = new Date(Number(y), Number(mo) - 1, 1).toLocaleString('en', { month: 'short' });
+        return { month: label, ...v };
+      });
+
+      // Top products by revenue (from invoice_items)
+      const { data: invItems } = await supabase
+        .from('invoice_items')
+        .select('product_id, quantity, total, invoices!inner(company_id)')
+        .eq('invoices.company_id', companyId);
+      const productAgg = new Map<string, { revenue: number; qty: number }>();
+      (invItems || []).forEach((it: any) => {
+        if (!it.product_id) return;
+        const cur = productAgg.get(it.product_id) || { revenue: 0, qty: 0 };
+        cur.revenue += it.total || 0;
+        cur.qty += it.quantity || 0;
+        productAgg.set(it.product_id, cur);
+      });
+      const productMap = new Map((products || []).map(p => [p.id, p.name]));
+      const topProducts = Array.from(productAgg.entries())
+        .map(([id, v]) => ({ name: productMap.get(id) || 'Unknown', ...v }))
+        .sort((a, b) => b.revenue - a.revenue)
+        .slice(0, 10);
+
+      // Top customers by total invoiced
+      const customerAgg = new Map<string, number>();
+      (allInvoices || []).forEach(inv => {
+        if (!inv.customer_id) return;
+        customerAgg.set(inv.customer_id, (customerAgg.get(inv.customer_id) || 0) + (inv.total || 0));
+      });
+      const customerMap = new Map((customers || []).map(c => [c.id, c.name]));
+      const topCustomers = Array.from(customerAgg.entries())
+        .map(([id, total]) => ({ name: customerMap.get(id) || 'Unknown', total }))
+        .sort((a, b) => b.total - a.total)
+        .slice(0, 10);
+
       setDetails({
         company,
         users: users || [],
         customers: customersWithBalances,
         vendors: vendorsWithBalances,
-        invoices: (allInvoices || []).slice(0, 50), // Limit display to 50
+        invoices: allInvoices || [],
         products: products || [],
-        payments: (allPayments || []).slice(0, 50), // Limit display to 50
+        payments: allPayments || [],
+        monthlySales,
+        topProducts,
+        topCustomers,
         stats: {
           totalSales,
           totalPayments: totalPaymentsAmount,
