@@ -41,14 +41,12 @@ export default function Auth() {
 
   const { loginWithBiometric, isSupported } = useBiometrics();
   const [hasBiometric, setHasBiometric] = useState(false);
-  const [biometricEmail, setBiometricEmail] = useState('');
 
   useEffect(() => {
     const email = localStorage.getItem('bb_biometric_email');
     const id = localStorage.getItem('bb_biometric_id');
     if (email && id && isSupported) {
       setHasBiometric(true);
-      setBiometricEmail(email);
     }
   }, [isSupported]);
 
@@ -135,7 +133,7 @@ export default function Auth() {
         toast.success('Welcome back!');
         navigate('/dashboard');
       }
-    } catch (error) {
+    } catch (_error) {
       toast.error('An unexpected error occurred');
       setLoading(false);
     }

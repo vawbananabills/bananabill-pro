@@ -138,7 +138,7 @@ export const authenticateBiometric = async (
     return {
         id: assertion.id,
         rawId: bufferToBase64(assertion.rawId),
-        type: assertion.type,
+        type: 'public-key',
         response: {
             clientDataJSON: bufferToBase64(response.clientDataJSON),
             authenticatorData: bufferToBase64(response.authenticatorData),
