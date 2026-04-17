@@ -422,7 +422,7 @@ export function CompanyDetailsDialog({ open, onOpenChange, companyId }: CompanyD
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {details.customers.slice(0, 20).map((customer) => (
+                          {(detailedView ? details.customers : details.customers.slice(0, 20)).map((customer) => (
                             <TableRow key={customer.id}>
                               <TableCell className="font-medium">{customer.name}</TableCell>
                               <TableCell>{customer.phone || '-'}</TableCell>
@@ -460,7 +460,7 @@ export function CompanyDetailsDialog({ open, onOpenChange, companyId }: CompanyD
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {details.vendors.slice(0, 20).map((vendor) => (
+                          {(detailedView ? details.vendors : details.vendors.slice(0, 20)).map((vendor) => (
                             <TableRow key={vendor.id}>
                               <TableCell className="font-medium">{vendor.name}</TableCell>
                               <TableCell>{vendor.phone || '-'}</TableCell>
@@ -499,7 +499,7 @@ export function CompanyDetailsDialog({ open, onOpenChange, companyId }: CompanyD
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {details.invoices.slice(0, 20).map((invoice) => (
+                          {(detailedView ? details.invoices : details.invoices.slice(0, 20)).map((invoice) => (
                             <TableRow key={invoice.id}>
                               <TableCell className="font-medium">{invoice.invoice_number}</TableCell>
                               <TableCell>{format(new Date(invoice.date), 'MMM d, yyyy')}</TableCell>
