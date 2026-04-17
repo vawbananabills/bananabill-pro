@@ -41,26 +41,20 @@ export default function Auth() {
 
   const { loginWithBiometric, isSupported } = useBiometrics();
   const [hasBiometric, setHasBiometric] = useState(false);
-  const [biometricEmail, setBiometricEmail] = useState('');
 
   useEffect(() => {
     const email = localStorage.getItem('bb_biometric_email');
     const id = localStorage.getItem('bb_biometric_id');
     if (email && id && isSupported) {
       setHasBiometric(true);
-      setBiometricEmail(email);
     }
   }, [isSupported]);
 
   const handleBiometricLogin = async () => {
     setLoading(true);
-    const result = await loginWithBiometric();
-    if (result && typeof result === 'object' && result.email) {
-      // In a real app, loginWithBiometric would retrieve a session
-      // For now, we pre-fill and focus password or show a prompt
-      setFormData(prev => ({ ...prev, email: result.email }));
-      toast.info('Biometric verified. Please enter your password to confirm (first time session).');
-      // Note: Real WebAuthn would use a challenge-response to avoid password
+    const success = await loginWithBiometric();
+    if (success) {
+      navigate('/dashboard');
     }
     setLoading(false);
   };
@@ -139,7 +133,7 @@ export default function Auth() {
         toast.success('Welcome back!');
         navigate('/dashboard');
       }
-    } catch (error) {
+    } catch (_error) {
       toast.error('An unexpected error occurred');
       setLoading(false);
     }

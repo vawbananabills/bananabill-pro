@@ -10,7 +10,9 @@ export const bufferToBase64 = (buffer: ArrayBuffer): string => {
 };
 
 export const base64ToBuffer = (base64: string): ArrayBuffer => {
-    const binary = atob(base64.replace(/-/g, '+').replace(/_/g, '/'));
+    const normalized = base64.replace(/-/g, '+').replace(/_/g, '/');
+    const padding = '='.repeat((4 - (normalized.length % 4)) % 4);
+    const binary = atob(normalized + padding);
     const buffer = new Uint8Array(binary.length);
     for (let i = 0; i < binary.length; i++) {
         buffer[i] = binary.charCodeAt(i);
@@ -29,6 +31,26 @@ export const isWebAuthnSupported = (): boolean => {
 export interface RegistrationResult {
     credentialId: string;
     publicKey: string;
+}
+
+export interface AuthenticationRequestOptions {
+    credentialId: string;
+    challenge: string;
+    rpId: string;
+    timeout?: number;
+}
+
+export interface AuthenticationResult {
+    id: string;
+    rawId: string;
+    type: PublicKeyCredentialType;
+    response: {
+        clientDataJSON: string;
+        authenticatorData: string;
+        signature: string;
+        userHandle: string | null;
+    };
+    clientExtensionResults: AuthenticationExtensionsClientOutputs;
 }
 
 export const registerBiometric = async (
@@ -54,8 +76,8 @@ export const registerBiometric = async (
             displayName: userEmail,
         },
         pubKeyCredParams: [
-            { alg: -7, type: 'public-key' }, // ES256
-            { alg: -257, type: 'public-key' }, // RS256
+            { alg: -7, type: 'public-key' },
+            { alg: -257, type: 'public-key' },
         ],
         timeout: 60000,
         attestation: 'none',
@@ -84,30 +106,45 @@ export const registerBiometric = async (
 };
 
 export const authenticateBiometric = async (
-    credentialId: string
-): Promise<boolean> => {
+    options: AuthenticationRequestOptions
+): Promise<AuthenticationResult> => {
     if (!isWebAuthnSupported()) {
         throw new Error('WebAuthn is not supported in this browser');
     }
 
-    const challenge = new Uint8Array(32);
-    window.crypto.getRandomValues(challenge);
-
     const requestOptions: PublicKeyCredentialRequestOptions = {
-        challenge,
+        challenge: base64ToBuffer(options.challenge),
+        rpId: options.rpId,
         allowCredentials: [
             {
-                id: base64ToBuffer(credentialId),
+                id: base64ToBuffer(options.credentialId),
                 type: 'public-key',
             },
         ],
         userVerification: 'required',
-        timeout: 60000,
+        timeout: options.timeout ?? 60000,
     };
 
-    const assertion = await navigator.credentials.get({
+    const assertion = (await navigator.credentials.get({
         publicKey: requestOptions,
-    });
+    })) as PublicKeyCredential | null;
 
-    return !!assertion;
+    if (!assertion) {
+        throw new Error('Biometric authentication was cancelled');
+    }
+
+    const response = assertion.response as AuthenticatorAssertionResponse;
+
+    return {
+        id: assertion.id,
+        rawId: bufferToBase64(assertion.rawId),
+        type: 'public-key',
+        response: {
+            clientDataJSON: bufferToBase64(response.clientDataJSON),
+            authenticatorData: bufferToBase64(response.authenticatorData),
+            signature: bufferToBase64(response.signature),
+            userHandle: response.userHandle ? bufferToBase64(response.userHandle) : null,
+        },
+        clientExtensionResults: assertion.getClientExtensionResults?.() ?? {},
+    };
 };

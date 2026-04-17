@@ -28,7 +28,7 @@ export function useBiometrics() {
         try {
             const result = await registerBiometric(user.id, user.email || '');
 
-            const { data: insertedData, error } = await supabase
+            const { error } = await supabase
                 .from('user_biometrics' as any)
                 .insert({
                     user_id: user.id,
@@ -41,7 +41,6 @@ export function useBiometrics() {
 
             if (error) throw error;
 
-            // Store locally for login page
             localStorage.setItem('bb_biometric_id', result.credentialId);
             localStorage.setItem('bb_biometric_email', user.email || '');
 
@@ -49,7 +48,7 @@ export function useBiometrics() {
             return true;
         } catch (error: any) {
             console.error('Biometric registration error:', error);
-            if (error.name !== 'NotAllowedError') { // User cancelled
+            if (error.name !== 'NotAllowedError') {
                 toast.error('Failed to register fingerprint: ' + error.message);
             }
             return false;
@@ -80,31 +79,66 @@ export function useBiometrics() {
 
     const loginWithBiometric = async () => {
         const credId = localStorage.getItem('bb_biometric_id');
-        const email = localStorage.getItem('bb_biometric_email');
 
-        if (!credId || !email) {
+        if (!credId) {
             toast.error('No biometric registration found on this device');
             return false;
         }
 
-        try {
-            const success = await authenticateBiometric(credId);
-            if (success) {
-                // Need to sign in via Supabase somehow.
-                // For this demo, we'll assume the biometric validates the user
-                // and we'll use a specific RPC or just notify that they should use password 
-                // if we don't have a secure token exchange.
-                // REAL Implementation: Custom Edge Function to verify signature and return JWT
+        setLoading(true);
 
-                toast.success('Biometric verified! (Proceeding to login)');
-                return { email }; // In a real app, we'd return a session
+        try {
+            const { data: beginData, error: beginError } = await supabase.functions.invoke('biometric-login', {
+                body: {
+                    action: 'begin',
+                    credentialId: credId,
+                },
+            });
+
+            if (beginError) throw beginError;
+            if (!beginData?.challenge || !beginData?.state || !beginData?.rpId) {
+                throw new Error(beginData?.error || 'Unable to start biometric login');
             }
+
+            const assertion = await authenticateBiometric({
+                credentialId: credId,
+                challenge: beginData.challenge,
+                rpId: beginData.rpId,
+                timeout: beginData.timeout,
+            });
+
+            const { data: finishData, error: finishError } = await supabase.functions.invoke('biometric-login', {
+                body: {
+                    action: 'finish',
+                    credentialId: credId,
+                    state: beginData.state,
+                    assertion,
+                },
+            });
+
+            if (finishError) throw finishError;
+            if (!finishData?.tokenHash) {
+                throw new Error(finishData?.error || 'Unable to complete biometric login');
+            }
+
+            const { error: verifyError } = await supabase.auth.verifyOtp({
+                token_hash: finishData.tokenHash,
+                type: finishData.type || 'magiclink',
+            });
+
+            if (verifyError) throw verifyError;
+
+            toast.success('Fingerprint login successful!');
+            return true;
         } catch (error: any) {
+            console.error('Biometric authentication error:', error);
             if (error.name !== 'NotAllowedError') {
-                toast.error('Biometric authentication failed');
+                toast.error(error.message || 'Biometric authentication failed');
             }
+            return false;
+        } finally {
+            setLoading(false);
         }
-        return false;
     };
 
     return {

@@ -1,1 +1,4 @@
 project_id = "qemdzuthofsokcxxxope"
+
+[functions.biometric-login]
+verify_jwt = false
