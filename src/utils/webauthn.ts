@@ -60,9 +60,10 @@ export const registerBiometric = async (
         timeout: 60000,
         attestation: 'none',
         authenticatorSelection: {
-            authenticatorAttachment: 'cross-platform',
+            authenticatorAttachment: 'platform',
             userVerification: 'required',
             residentKey: 'preferred',
+            requireResidentKey: false,
         },
     };
 
