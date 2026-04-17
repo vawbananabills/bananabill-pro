@@ -17,7 +17,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { Bar, BarChart, CartesianGrid, ComposedChart, Line, XAxis, YAxis } from 'recharts';
 import { 
   Building2, 
   Users, 
@@ -53,6 +54,9 @@ interface CompanyDetails {
   invoices: any[];
   products: any[];
   payments: any[];
+  monthlySales: { month: string; sales: number; payments: number; invoices: number }[];
+  topProducts: { name: string; revenue: number; qty: number }[];
+  topCustomers: { name: string; total: number }[];
   stats: {
     totalSales: number;
     totalPayments: number;
@@ -192,14 +196,73 @@ export function CompanyDetailsDialog({ open, onOpenChange, companyId }: CompanyD
       const thisMonthInvoices = allInvoices?.filter(inv => new Date(inv.date) >= thisMonthStart) || [];
       const thisMonthSales = thisMonthInvoices.reduce((sum, inv) => sum + (inv.total || 0), 0);
 
+      // Build monthly sales (last 6 months)
+      const monthlyMap = new Map<string, { sales: number; payments: number; invoices: number }>();
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        monthlyMap.set(key, { sales: 0, payments: 0, invoices: 0 });
+      }
+      (allInvoices || []).forEach(inv => {
+        const d = new Date(inv.date);
+        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        const m = monthlyMap.get(key);
+        if (m) { m.sales += inv.total || 0; m.invoices += 1; }
+      });
+      (allPayments || []).forEach(p => {
+        const d = new Date(p.payment_date);
+        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        const m = monthlyMap.get(key);
+        if (m) { m.payments += p.amount || 0; }
+      });
+      const monthlySales = Array.from(monthlyMap.entries()).map(([key, v]) => {
+        const [y, mo] = key.split('-');
+        const label = new Date(Number(y), Number(mo) - 1, 1).toLocaleString('en', { month: 'short' });
+        return { month: label, ...v };
+      });
+
+      // Top products by revenue (from invoice_items)
+      const { data: invItems } = await supabase
+        .from('invoice_items')
+        .select('product_id, quantity, total, invoices!inner(company_id)')
+        .eq('invoices.company_id', companyId);
+      const productAgg = new Map<string, { revenue: number; qty: number }>();
+      (invItems || []).forEach((it: any) => {
+        if (!it.product_id) return;
+        const cur = productAgg.get(it.product_id) || { revenue: 0, qty: 0 };
+        cur.revenue += it.total || 0;
+        cur.qty += it.quantity || 0;
+        productAgg.set(it.product_id, cur);
+      });
+      const productMap = new Map((products || []).map(p => [p.id, p.name]));
+      const topProducts = Array.from(productAgg.entries())
+        .map(([id, v]) => ({ name: productMap.get(id) || 'Unknown', ...v }))
+        .sort((a, b) => b.revenue - a.revenue)
+        .slice(0, 10);
+
+      // Top customers by total invoiced
+      const customerAgg = new Map<string, number>();
+      (allInvoices || []).forEach(inv => {
+        if (!inv.customer_id) return;
+        customerAgg.set(inv.customer_id, (customerAgg.get(inv.customer_id) || 0) + (inv.total || 0));
+      });
+      const customerMap = new Map((customers || []).map(c => [c.id, c.name]));
+      const topCustomers = Array.from(customerAgg.entries())
+        .map(([id, total]) => ({ name: customerMap.get(id) || 'Unknown', total }))
+        .sort((a, b) => b.total - a.total)
+        .slice(0, 10);
+
       setDetails({
         company,
         users: users || [],
         customers: customersWithBalances,
         vendors: vendorsWithBalances,
-        invoices: (allInvoices || []).slice(0, 50), // Limit display to 50
+        invoices: allInvoices || [],
         products: products || [],
-        payments: (allPayments || []).slice(0, 50), // Limit display to 50
+        payments: allPayments || [],
+        monthlySales,
+        topProducts,
+        topCustomers,
         stats: {
           totalSales,
           totalPayments: totalPaymentsAmount,
@@ -389,8 +452,12 @@ export function CompanyDetailsDialog({ open, onOpenChange, companyId }: CompanyD
               </Card>
 
               {/* Tabs for detailed data */}
-              <Tabs defaultValue="customers" className="space-y-4">
-                <TabsList>
+              <Tabs defaultValue="reports" className="space-y-4">
+                <TabsList className="flex flex-wrap h-auto">
+                  <TabsTrigger value="reports" className="gap-1">
+                    <TrendingUp className="w-3 h-3" />
+                    Reports
+                  </TabsTrigger>
                   <TabsTrigger value="customers" className="gap-1">
                     <UserCheck className="w-3 h-3" />
                     Customers ({details.customers.length})
@@ -399,15 +466,144 @@ export function CompanyDetailsDialog({ open, onOpenChange, companyId }: CompanyD
                     <Truck className="w-3 h-3" />
                     Vendors ({details.vendors.length})
                   </TabsTrigger>
+                  <TabsTrigger value="products" className="gap-1">
+                    <Package className="w-3 h-3" />
+                    Products ({details.products.length})
+                  </TabsTrigger>
                   <TabsTrigger value="invoices" className="gap-1">
                     <FileText className="w-3 h-3" />
-                    Recent Invoices
+                    Invoices ({details.invoices.length})
                   </TabsTrigger>
                   <TabsTrigger value="users" className="gap-1">
                     <Users className="w-3 h-3" />
                     Users ({details.users.length})
                   </TabsTrigger>
                 </TabsList>
+
+                <TabsContent value="reports">
+                  <div className="grid gap-4">
+                    {/* KPI cards */}
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                      <Card><CardContent className="pt-4">
+                        <div className="text-xs text-muted-foreground">Total Sales</div>
+                        <div className="text-xl font-bold">{formatCurrency(details.stats.totalSales)}</div>
+                      </CardContent></Card>
+                      <Card><CardContent className="pt-4">
+                        <div className="text-xs text-muted-foreground">Payments Received</div>
+                        <div className="text-xl font-bold text-emerald-600">{formatCurrency(details.stats.totalPayments)}</div>
+                      </CardContent></Card>
+                      <Card><CardContent className="pt-4">
+                        <div className="text-xs text-muted-foreground">Pending</div>
+                        <div className="text-xl font-bold text-rose-600">{formatCurrency(details.stats.pendingAmount)}</div>
+                      </CardContent></Card>
+                      <Card><CardContent className="pt-4">
+                        <div className="text-xs text-muted-foreground">This Month Sales</div>
+                        <div className="text-xl font-bold">{formatCurrency(details.stats.thisMonthSales)}</div>
+                      </CardContent></Card>
+                    </div>
+
+                    {/* Monthly sales vs payments line+bar */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-base">Last 6 Months — Sales vs Payments</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <ChartContainer
+                          config={{
+                            sales: { label: 'Sales', color: 'hsl(var(--primary))' },
+                            payments: { label: 'Payments', color: 'hsl(142 71% 45%)' },
+                          }}
+                          className="h-[280px] w-full"
+                        >
+                          <ComposedChart data={details.monthlySales}>
+                            <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                            <XAxis dataKey="month" className="text-xs" />
+                            <YAxis className="text-xs" tickFormatter={(v) => formatCurrency(v)} />
+                            <ChartTooltip content={<ChartTooltipContent />} />
+                            <Bar dataKey="sales" fill="var(--color-sales)" radius={[4, 4, 0, 0]} />
+                            <Line type="monotone" dataKey="payments" stroke="var(--color-payments)" strokeWidth={2} dot={{ r: 4 }} />
+                          </ComposedChart>
+                        </ChartContainer>
+                      </CardContent>
+                    </Card>
+
+                    <div className="grid lg:grid-cols-2 gap-4">
+                      {/* Top products */}
+                      <Card>
+                        <CardHeader><CardTitle className="text-base">Top 10 Products by Revenue</CardTitle></CardHeader>
+                        <CardContent>
+                          {details.topProducts.length === 0 ? (
+                            <div className="text-center text-sm text-muted-foreground py-8">No product sales data</div>
+                          ) : (
+                            <ChartContainer
+                              config={{ revenue: { label: 'Revenue', color: 'hsl(var(--primary))' } }}
+                              className="h-[300px] w-full"
+                            >
+                              <BarChart data={details.topProducts} layout="vertical" margin={{ left: 80 }}>
+                                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                                <XAxis type="number" className="text-xs" tickFormatter={(v) => formatCurrency(v)} />
+                                <YAxis type="category" dataKey="name" className="text-xs" width={80} />
+                                <ChartTooltip content={<ChartTooltipContent />} />
+                                <Bar dataKey="revenue" fill="var(--color-revenue)" radius={[0, 4, 4, 0]} />
+                              </BarChart>
+                            </ChartContainer>
+                          )}
+                        </CardContent>
+                      </Card>
+
+                      {/* Top customers */}
+                      <Card>
+                        <CardHeader><CardTitle className="text-base">Top 10 Customers</CardTitle></CardHeader>
+                        <CardContent>
+                          {details.topCustomers.length === 0 ? (
+                            <div className="text-center text-sm text-muted-foreground py-8">No customer data</div>
+                          ) : (
+                            <ChartContainer
+                              config={{ total: { label: 'Total', color: 'hsl(217 91% 60%)' } }}
+                              className="h-[300px] w-full"
+                            >
+                              <BarChart data={details.topCustomers} layout="vertical" margin={{ left: 80 }}>
+                                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                                <XAxis type="number" className="text-xs" tickFormatter={(v) => formatCurrency(v)} />
+                                <YAxis type="category" dataKey="name" className="text-xs" width={80} />
+                                <ChartTooltip content={<ChartTooltipContent />} />
+                                <Bar dataKey="total" fill="var(--color-total)" radius={[0, 4, 4, 0]} />
+                              </BarChart>
+                            </ChartContainer>
+                          )}
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="products">
+                  <Card>
+                    <CardContent className="pt-4">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Name</TableHead>
+                            <TableHead className="text-right">Default Rate</TableHead>
+                            <TableHead className="text-right">Stock</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {details.products.map((p) => (
+                            <TableRow key={p.id}>
+                              <TableCell className="font-medium">{p.name}</TableCell>
+                              <TableCell className="text-right">{formatCurrency(p.default_rate || 0)}</TableCell>
+                              <TableCell className="text-right">{p.stock || 0}</TableCell>
+                            </TableRow>
+                          ))}
+                          {details.products.length === 0 && (
+                            <TableRow><TableCell colSpan={3} className="text-center py-8 text-muted-foreground">No products found</TableCell></TableRow>
+                          )}
+                        </TableBody>
+                      </Table>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
 
                 <TabsContent value="customers">
                   <Card>
