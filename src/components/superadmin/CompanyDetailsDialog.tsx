@@ -242,7 +242,7 @@ export function CompanyDetailsDialog({ open, onOpenChange, companyId }: CompanyD
             <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
           </div>
         ) : details ? (
-          <ScrollArea className="flex-1 min-h-0 -mx-6 px-6">
+          <div className="flex-1 min-h-0 overflow-y-auto -mx-6 px-6">
             <div className="space-y-6 pb-6">
               {/* Company Info */}
               <Card>
@@ -570,7 +570,7 @@ export function CompanyDetailsDialog({ open, onOpenChange, companyId }: CompanyD
                 </TabsContent>
               </Tabs>
             </div>
-          </ScrollArea>
+          </div>
         ) : (
           <div className="text-center py-8 text-muted-foreground">
             Failed to load company details
