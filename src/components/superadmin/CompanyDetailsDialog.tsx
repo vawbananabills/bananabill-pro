@@ -451,7 +451,7 @@ export function CompanyDetailsDialog({ open, onOpenChange, companyId }: CompanyD
               </Card>
 
               {/* Tabs for detailed data */}
-              <Tabs defaultValue="customers" className="space-y-4">
+              <Tabs defaultValue="reports" className="space-y-4">
                 <TabsList className="flex flex-wrap h-auto">
                   <TabsTrigger value="reports" className="gap-1">
                     <TrendingUp className="w-3 h-3" />
