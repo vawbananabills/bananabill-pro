@@ -143,41 +143,80 @@ const getRequestOrigin = (request: Request) => {
   return new URL(referer).origin;
 };
 
-const verifySignature = async (publicKeyBytes: Uint8Array, signatureBytes: Uint8Array, data: Uint8Array) => {
-  const attempts: Array<{ importAlgorithm: AlgorithmIdentifier | RsaHashedImportParams | EcKeyImportParams; verifyAlgorithm: AlgorithmIdentifier | EcdsaParams }> = [
-    {
-      importAlgorithm: { name: 'ECDSA', namedCurve: 'P-256' },
-      verifyAlgorithm: { name: 'ECDSA', hash: 'SHA-256' },
-    },
-    {
-      importAlgorithm: { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
-      verifyAlgorithm: { name: 'RSASSA-PKCS1-v1_5' },
-    },
-  ];
-
-  for (const attempt of attempts) {
-    try {
-      const key = await crypto.subtle.importKey(
-        'spki',
-        publicKeyBytes,
-        attempt.importAlgorithm,
-        false,
-        ['verify']
-      );
-
-      const verified = await crypto.subtle.verify(
-        attempt.verifyAlgorithm,
-        key,
-        signatureBytes,
-        data
-      );
-
-      if (verified) {
-        return true;
-      }
-    } catch {
-      continue;
+// Convert DER-encoded ECDSA signature (as produced by WebAuthn) to raw r||s format expected by Web Crypto
+const derToRawEcdsa = (der: Uint8Array): Uint8Array | null => {
+  try {
+    if (der[0] !== 0x30) return null;
+    let offset = 2;
+    if (der[1] & 0x80) {
+      offset = 2 + (der[1] & 0x7f);
     }
+    if (der[offset] !== 0x02) return null;
+    const rLen = der[offset + 1];
+    let r = der.slice(offset + 2, offset + 2 + rLen);
+    offset = offset + 2 + rLen;
+    if (der[offset] !== 0x02) return null;
+    const sLen = der[offset + 1];
+    let s = der.slice(offset + 2, offset + 2 + sLen);
+
+    // Strip leading zeros
+    while (r.length > 32 && r[0] === 0x00) r = r.slice(1);
+    while (s.length > 32 && s[0] === 0x00) s = s.slice(1);
+    // Left-pad to 32 bytes
+    const rPadded = new Uint8Array(32);
+    rPadded.set(r, 32 - r.length);
+    const sPadded = new Uint8Array(32);
+    sPadded.set(s, 32 - s.length);
+
+    const out = new Uint8Array(64);
+    out.set(rPadded, 0);
+    out.set(sPadded, 32);
+    return out;
+  } catch {
+    return null;
+  }
+};
+
+const verifySignature = async (publicKeyBytes: Uint8Array, signatureBytes: Uint8Array, data: Uint8Array) => {
+  // Try ECDSA P-256 (most common for platform authenticators) — convert DER → raw
+  try {
+    const key = await crypto.subtle.importKey(
+      'spki',
+      publicKeyBytes,
+      { name: 'ECDSA', namedCurve: 'P-256' },
+      false,
+      ['verify']
+    );
+    const rawSig = derToRawEcdsa(signatureBytes) ?? signatureBytes;
+    const verified = await crypto.subtle.verify(
+      { name: 'ECDSA', hash: 'SHA-256' },
+      key,
+      rawSig,
+      data
+    );
+    if (verified) return true;
+  } catch (e) {
+    console.log('ECDSA verify attempt failed:', (e as Error).message);
+  }
+
+  // Fallback: RSA
+  try {
+    const key = await crypto.subtle.importKey(
+      'spki',
+      publicKeyBytes,
+      { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+      false,
+      ['verify']
+    );
+    const verified = await crypto.subtle.verify(
+      { name: 'RSASSA-PKCS1-v1_5' },
+      key,
+      signatureBytes,
+      data
+    );
+    if (verified) return true;
+  } catch (e) {
+    console.log('RSA verify attempt failed:', (e as Error).message);
   }
 
   return false;
