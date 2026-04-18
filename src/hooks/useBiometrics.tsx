@@ -95,9 +95,10 @@ export function useBiometrics() {
                 },
             });
 
-            if (beginError) throw beginError;
+            if (beginError) throw new Error(beginError.message || 'Unable to start biometric login');
+            if (beginData?.error) throw new Error(beginData.error);
             if (!beginData?.challenge || !beginData?.state || !beginData?.rpId) {
-                throw new Error(beginData?.error || 'Unable to start biometric login');
+                throw new Error('Unable to start biometric login');
             }
 
             const assertion = await authenticateBiometric({
@@ -116,9 +117,10 @@ export function useBiometrics() {
                 },
             });
 
-            if (finishError) throw finishError;
+            if (finishError) throw new Error(finishError.message || 'Unable to complete biometric login');
+            if (finishData?.error) throw new Error(finishData.error);
             if (!finishData?.tokenHash) {
-                throw new Error(finishData?.error || 'Unable to complete biometric login');
+                throw new Error('Unable to complete biometric login');
             }
 
             const { error: verifyError } = await supabase.auth.verifyOtp({
