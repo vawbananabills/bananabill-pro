@@ -41,9 +41,9 @@ type StatePayload = {
   exp: number;
 };
 
-const json = (body: Record<string, unknown>, status = 200) =>
+const json = (body: Record<string, unknown>, _status = 200) =>
   new Response(JSON.stringify(body), {
-    status,
+    status: 200, // Always 200 so the client can read the body
     headers: corsHeaders,
   });
 
