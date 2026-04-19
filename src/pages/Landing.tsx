@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Check, BarChart3, Users, FileText, Shield, Zap, Scale, Download } from 'lucide-react';
+import { ArrowRight, Check, BarChart3, Users, FileText, Shield, Zap, Scale, Download, Truck, Package, Wallet, BookOpen, ClipboardList, Bell, Fingerprint, WifiOff, Keyboard, Building2, CreditCard, Receipt, CalendarRange, TrendingUp, FileSpreadsheet } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 const features = [{
   icon: Scale,
@@ -11,21 +11,85 @@ const features = [{
   title: 'Sales-First Workflow',
   description: 'Create sales invoices directly. Purchase entries auto-generate from vendor-linked items.'
 }, {
+  icon: Package,
+  title: 'Products & Loose Items',
+  description: 'Manage box-based products with units and loose items billed by weight in the same invoice.'
+}, {
   icon: Users,
-  title: 'Multi-Tenant SaaS',
-  description: 'Each company gets isolated data, users, customers, vendors, and complete accounting.'
+  title: 'Customer Management',
+  description: 'Track customers with opening balance, running balance, and full transaction history.'
+}, {
+  icon: Truck,
+  title: 'Vendor Management',
+  description: 'Link items to vendors, auto-generate purchases, and track vendor balances effortlessly.'
+}, {
+  icon: Receipt,
+  title: 'Vendor Receipts (Vendor R)',
+  description: 'Commission-based vendor receipts with cooli, padi, rent, loading charges and final totals.'
+}, {
+  icon: Wallet,
+  title: 'Payments & Discounts',
+  description: 'Global payment dialog with discount handling. Total Applied = Paid + Discount on every bill.'
+}, {
+  icon: BookOpen,
+  title: 'Cash Daybook',
+  description: 'Daily cash in/out tracking with payment modes, vehicle numbers and party-wise notes.'
+}, {
+  icon: CalendarRange,
+  title: 'Weekly Invoices',
+  description: 'Consolidate a week of bills into a single statement with opening & closing balances.'
+}, {
+  icon: ClipboardList,
+  title: 'Party & Vendor Statements',
+  description: 'Date-ranged ledgers for any customer or vendor with complete transaction breakdowns.'
 }, {
   icon: BarChart3,
-  title: 'Full Accounting',
-  description: 'Sales ledger, purchase tracking, profit & loss, balance sheet, and GST support.'
+  title: 'Reports Suite',
+  description: 'Day Book, Sales Report, Profit & Loss, Balance Sheet, Cash Ledger and more.'
 }, {
-  icon: Zap,
-  title: 'Fast & Mobile Ready',
-  description: 'Table-based fast data entry optimized for daily trading. Works on any device.'
+  icon: TrendingUp,
+  title: 'Live Dashboard',
+  description: 'Real-time stats on sales, receivables, payables and cash position at a glance.'
+}, {
+  icon: Building2,
+  title: 'Multi-Tenant SaaS',
+  description: 'Each company gets isolated data, users, customers, vendors and complete accounting.'
 }, {
   icon: Shield,
   title: 'Role-Based Access',
-  description: 'Owner, Admin, Manager, Staff roles with customizable permissions per company.'
+  description: 'Super Admin, Owner, Admin, Manager and Staff roles with row-level security.'
+}, {
+  icon: Fingerprint,
+  title: 'Biometric Login',
+  description: 'Sign in with fingerprint or Face ID using WebAuthn — fast and secure.'
+}, {
+  icon: Bell,
+  title: 'Notifications',
+  description: 'In-app announcements and reminders pushed to users by admins in real time.'
+}, {
+  icon: WifiOff,
+  title: 'Offline Sync',
+  description: 'Keep working without internet. Changes sync automatically once you are back online.'
+}, {
+  icon: Keyboard,
+  title: 'Keyboard Shortcuts',
+  description: 'Power-user shortcuts like Alt+N for new invoice and Alt+P for payments.'
+}, {
+  icon: FileSpreadsheet,
+  title: 'Custom Invoice Print',
+  description: 'A4 / thermal print sizes, company logo, footer notes, UPI & bank details on bills.'
+}, {
+  icon: CreditCard,
+  title: 'Subscription Management',
+  description: 'Built-in trial, renewal reminders and manual billing handled by super admin.'
+}, {
+  icon: Download,
+  title: 'Installable PWA',
+  description: 'Install BananaBills on Android, iOS or desktop and use it like a native app.'
+}, {
+  icon: Zap,
+  title: 'Fast Table Entry',
+  description: 'Table-based data entry optimized for daily mandi trading. Works on any device.'
 }];
 const pricing = [{
   name: 'Starter',
