@@ -10,7 +10,7 @@ import { Eye, EyeOff, ArrowLeft, Loader2, Fingerprint } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useBiometrics } from '@/hooks/useBiometrics';
 import { z } from 'zod';
-import logo from '@/assets/logo.png';
+
 
 const signupSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),

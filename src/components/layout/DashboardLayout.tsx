@@ -4,7 +4,7 @@ import { Header } from './Header';
 import { GlobalKeyboardShortcuts } from '@/components/GlobalKeyboardShortcuts';
 import { OfflineBanner } from '@/components/sync/SyncStatusIndicator';
 import { SubscriptionExpiredDialog } from '@/components/subscription/SubscriptionExpiredDialog';
-import logo from '@/assets/logo.png';
+
 
 interface DashboardLayoutProps {
   children: ReactNode;
