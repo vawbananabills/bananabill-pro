@@ -152,9 +152,7 @@ export default function Auth() {
           <Card className="border-0 shadow-xl">
             <CardHeader className="space-y-1 pb-4">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-lg bg-[image:var(--gradient-primary)] flex items-center justify-center shadow-glow">
-                  <span className="text-xl font-bold text-primary-foreground">B</span>
-                </div>
+                <img src={logo} alt="BananaBills" className="w-10 h-10 rounded-lg shadow-glow object-cover" />
                 <span className="font-semibold text-xl">BananaBills</span>
               </div>
               <CardTitle className="text-2xl">
