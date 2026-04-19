@@ -55,9 +55,7 @@ export default function Landing() {
     <nav className="border-b border-border/50 bg-card/50 backdrop-blur-xl sticky top-0 z-50">
       <div className="container mx-auto px-4 h-14 md:h-16 flex items-center justify-between">
         <div className="flex items-center gap-2 md:gap-3">
-          <div className="w-8 h-8 md:w-9 md:h-9 rounded-lg bg-[image:var(--gradient-primary)] flex items-center justify-center shadow-glow">
-            <span className="text-base md:text-lg font-bold text-primary-foreground">B</span>
-          </div>
+          <div className="w-8 h-8 md:w-9 md:h-9 rounded-lg bg-[image:var(--gradient-primary)] flex items-center justify-center shadow-glow text-base md:text-lg">🍌</div>
           <span className="font-semibold text-lg md:text-xl">BananaBills</span>
         </div>
         <div className="flex items-center gap-2 md:gap-4">
@@ -205,9 +203,7 @@ export default function Landing() {
       <div className="container mx-auto px-4">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-[image:var(--gradient-primary)] flex items-center justify-center">
-              <span className="text-sm font-bold text-primary-foreground">B</span>
-            </div>
+            <div className="w-8 h-8 rounded-lg bg-[image:var(--gradient-primary)] flex items-center justify-center text-sm">🍌</div>
             <span className="font-semibold">BananaBills</span>
           </div>
           <div className="flex flex-col items-center md:items-end gap-1">
