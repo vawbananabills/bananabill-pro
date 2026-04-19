@@ -4,7 +4,7 @@ import { Header } from './Header';
 import { GlobalKeyboardShortcuts } from '@/components/GlobalKeyboardShortcuts';
 import { OfflineBanner } from '@/components/sync/SyncStatusIndicator';
 import { SubscriptionExpiredDialog } from '@/components/subscription/SubscriptionExpiredDialog';
-import logo from '@/assets/logo.png';
+
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -27,7 +27,7 @@ export function DashboardLayout({ children, title, subtitle }: DashboardLayoutPr
         <footer className="border-t border-border py-4 px-6">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-muted-foreground">
             <div className="flex items-center gap-2">
-              <img src={logo} alt="BananaBills" className="w-6 h-6 rounded object-cover" />
+              <span className="text-base" aria-hidden>🍌</span>
               <p>© 2024 BananaBills. All rights reserved.</p>
             </div>
             <p>

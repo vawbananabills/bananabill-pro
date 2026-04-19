@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import logo from '@/assets/logo.png';
+
 import {
   LayoutDashboard,
   FileText,
@@ -89,7 +89,7 @@ export function Sidebar() {
       {/* Logo */}
       <div className="h-16 flex items-center px-4 border-b border-sidebar-border">
         <Link to="/dashboard" className="flex items-center gap-3">
-          <img src={logo} alt="BananaBills" className="w-9 h-9 rounded-lg shadow-glow object-cover" />
+          <div className="w-9 h-9 rounded-lg bg-[image:var(--gradient-primary)] flex items-center justify-center shadow-glow text-xl">🍌</div>
           {!collapsed && (
             <div className="flex flex-col">
               <span className="font-semibold text-sidebar-foreground">BananaBills</span>
