@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Check, BarChart3, Users, FileText, Shield, Zap, Scale, Download } from 'lucide-react';
+import { ArrowRight, Check, BarChart3, Users, FileText, Shield, Zap, Scale, Download, Truck, Package, Wallet, BookOpen, ClipboardList, Bell, Fingerprint, WifiOff, Keyboard, Building2, CreditCard, Receipt, CalendarRange, TrendingUp, FileSpreadsheet } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 const features = [{
   icon: Scale,
