@@ -1209,11 +1209,11 @@ export function WeeklyInvoiceDialog({ open, onOpenChange }: WeeklyInvoiceDialogP
                   {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                   {editingInvoiceId ? 'Update' : 'Save'}
                 </Button>
-                <Button variant="outline" onClick={handlePrint} className="gap-2 flex-1" disabled={!selectedCustomer || !hasData}>
+                <Button variant="outline" onClick={handlePrint} className="gap-2 flex-1" disabled={!selectedCustomer}>
                   <Printer className="w-4 h-4" />
                   Print
                 </Button>
-                <Button variant="outline" onClick={handlePrint} className="gap-2 flex-1" disabled={!selectedCustomer || !hasData}>
+                <Button variant="outline" onClick={handlePrint} className="gap-2 flex-1" disabled={!selectedCustomer}>
                   <Download className="w-4 h-4" />
                   PDF
                 </Button>
