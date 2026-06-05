@@ -947,7 +947,7 @@ export function WeeklyInvoiceDialog({ open, onOpenChange }: WeeklyInvoiceDialogP
                 </div>
               )}
 
-              {hasData && (
+              {selectedCustomer && (
                 <>
                   {/* Totals */}
                   <div className="flex justify-between items-start gap-6 mb-6">
