@@ -947,7 +947,7 @@ export function WeeklyInvoiceDialog({ open, onOpenChange }: WeeklyInvoiceDialogP
                 </div>
               )}
 
-              {hasData && (
+              {selectedCustomer && (
                 <>
                   {/* Totals */}
                   <div className="flex justify-between items-start gap-6 mb-6">
@@ -1062,7 +1062,7 @@ export function WeeklyInvoiceDialog({ open, onOpenChange }: WeeklyInvoiceDialogP
           )}
 
           {/* Bottom Actions Section - Discount, Other Charges, Notes, and Payment */}
-          {selectedCustomer && hasData && (
+          {selectedCustomer && (
             <div className="mt-6 space-y-4 border-t pt-4">
               {/* Adjustments Section */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
