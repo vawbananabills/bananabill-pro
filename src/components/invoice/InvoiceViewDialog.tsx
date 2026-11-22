@@ -109,9 +109,10 @@ export function InvoiceViewDialog({ invoice, open, onOpenChange }: InvoiceViewDi
       <html>
         <head>
           <title>Invoice ${invoice?.invoice_number}</title>
+          <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet" />
           <style>
             * { margin: 0; padding: 0; box-sizing: border-box; }
-            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; font-size: 12px; color: #333; background: #fff; }
+            body { font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif; padding: 20px; font-size: 13px; color: #1f2937; background: #fff; }
             .invoice-container { max-width: 800px; margin: 0 auto; }
             
             /* Header */
@@ -119,20 +120,20 @@ export function InvoiceViewDialog({ invoice, open, onOpenChange }: InvoiceViewDi
             .company-info { flex: 1; display: flex; align-items: flex-start; gap: 16px; }
             .company-logo { width: 64px; height: 64px; object-fit: contain; border-radius: 8px; }
             .company-name, h1.company-name { font-size: 26px; font-weight: 700; color: #1e40af !important; margin-bottom: 8px; }
-            .company-details { color: #666; line-height: 1.6; font-size: 11px; }
+            .company-details { color: #475569; line-height: 1.6; font-size: 12px; }
             .company-details p { margin: 2px 0; }
             .invoice-title { text-align: right; }
-            .invoice-title h1 { font-size: 32px; color: #1e40af !important; font-weight: 300; letter-spacing: 2px; }
-            .invoice-number { font-size: 14px; font-weight: 600; color: #333; margin-top: 5px; }
+            .invoice-title h1 { font-size: 32px; color: #1e40af !important; font-weight: 600; letter-spacing: 2px; }
+            .invoice-number { font-size: 14px; font-weight: 600; color: #1f2937; margin-top: 5px; }
             
             /* Meta Info */
             .meta-section { display: flex; justify-content: space-between; margin-bottom: 25px; }
             .bill-to { flex: 1; }
-            .bill-to-label { font-size: 10px; text-transform: uppercase; color: #888; font-weight: 600; margin-bottom: 5px; }
-            .bill-to-name { font-size: 16px; font-weight: 600; color: #333; }
+            .bill-to-label { font-size: 10px; text-transform: uppercase; color: #475569; font-weight: 600; margin-bottom: 5px; }
+            .bill-to-name { font-size: 16px; font-weight: 600; color: #1f2937; }
             .invoice-details { text-align: right; }
             .invoice-details p { margin: 3px 0; }
-            .invoice-details .label, .text-muted-foreground { color: #888 !important; }
+            .invoice-details .label, .text-muted-foreground { color: #475569 !important; }
             .invoice-details .value { font-weight: 600; }
             
             /* Status Badge */
@@ -144,14 +145,14 @@ export function InvoiceViewDialog({ invoice, open, onOpenChange }: InvoiceViewDi
             /* Table */
             table { width: 100%; border-collapse: collapse; margin-bottom: 20px; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
             thead tr, .bg-muted\\/50 { background-color: #f8fafc !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-            th { padding: 12px 10px; text-align: right; font-weight: 600; color: #475569; font-size: 11px; text-transform: uppercase; border-bottom: 2px solid #e2e8f0; }
+            th { padding: 12px 10px; text-align: right; font-weight: 600; color: #334155; font-size: 12px; text-transform: uppercase; border-bottom: 2px solid #e2e8f0; }
             th:first-child, th:nth-child(2) { text-align: left; }
-            td { padding: 10px; border-bottom: 1px solid #f1f5f9; font-size: 12px; text-align: right; }
+            td { padding: 10px; border-bottom: 1px solid #f1f5f9; font-size: 13px; font-weight: 500; color: #1f2937; text-align: right; font-variant-numeric: tabular-nums; }
             td:first-child, td:nth-child(2) { text-align: left; }
             .text-left { text-align: left !important; }
             .text-right { text-align: right !important; }
             .text-center { text-align: center !important; }
-            .font-mono { font-family: 'SF Mono', Monaco, 'Courier New', monospace; }
+            .font-mono { font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 600; font-variant-numeric: tabular-nums; }
             .font-medium { font-weight: 500; }
             .font-semibold { font-weight: 600; }
             tr.bg-muted\\/30, .bg-muted\\/30 { background-color: #f1f5f9 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
@@ -159,7 +160,7 @@ export function InvoiceViewDialog({ invoice, open, onOpenChange }: InvoiceViewDi
             /* Totals */
             .totals-section { display: flex; justify-content: flex-end; margin-bottom: 25px; }
             .totals-box { width: 280px; background-color: #f8fafc !important; padding: 15px 20px; border-radius: 8px; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-            .totals-row { display: flex; justify-content: space-between; padding: 6px 0; }
+            .totals-row { display: flex; justify-content: space-between; padding: 6px 0; font-weight: 500; font-variant-numeric: tabular-nums; }
             .totals-row.discount, .text-green-600 { color: #16a34a !important; }
             .totals-row.total { font-size: 18px; font-weight: 700; color: #1e40af; border-top: 2px solid #e2e8f0; margin-top: 8px; padding-top: 12px; }
             .totals-row.received { color: #16a34a !important; }
@@ -170,18 +171,18 @@ export function InvoiceViewDialog({ invoice, open, onOpenChange }: InvoiceViewDi
             /* Footer */
             .footer-section { display: flex; gap: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0; }
             .bank-details, .notes-section { flex: 1; }
-            .footer-title { font-size: 10px; text-transform: uppercase; color: #888; font-weight: 600; margin-bottom: 8px; }
-            .footer-content { font-size: 11px; color: #555; line-height: 1.6; white-space: pre-line; }
+            .footer-title { font-size: 10px; text-transform: uppercase; color: #475569; font-weight: 600; margin-bottom: 8px; }
+            .footer-content { font-size: 12px; color: #334155; line-height: 1.6; white-space: pre-line; }
             
             /* QR Section */
             .qr-section { text-align: center; padding: 15px; background-color: #f8fafc !important; border-radius: 8px; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
             .qr-section img { margin-bottom: 8px; display: block; margin-left: auto; margin-right: auto; }
-            .qr-label { font-size: 10px; color: #666; }
+            .qr-label { font-size: 10px; color: #475569; }
             .upi-id { font-size: 11px; font-weight: 600; color: #1e40af; }
             
             /* Terms */
             .terms { margin-top: 20px; padding-top: 15px; border-top: 1px solid #e2e8f0; }
-            .terms p { font-size: 10px; color: #888; font-style: italic; }
+            .terms p { font-size: 11px; color: #475569; font-style: italic; }
             
             /* Separator */
             [data-slot="separator"], hr { height: 1px; background: #e2e8f0; border: none; margin: 8px 0; }
@@ -324,7 +325,7 @@ export function InvoiceViewDialog({ invoice, open, onOpenChange }: InvoiceViewDi
               </div>
             </div>
             <div className="invoice-title text-right">
-              <h1 className="text-3xl font-light text-primary tracking-wider">INVOICE</h1>
+              <h1 className="text-3xl font-semibold text-primary tracking-wider">INVOICE</h1>
               <p className="invoice-number text-base font-semibold mt-1">{invoice.invoice_number}</p>
             </div>
           </div>
@@ -370,20 +371,20 @@ export function InvoiceViewDialog({ invoice, open, onOpenChange }: InvoiceViewDi
                   <tr key={index} className="hover:bg-muted/30">
                     <td className="border-b border-border/50 p-3 text-sm">{index + 1}</td>
                     <td className="border-b border-border/50 p-3 text-sm font-medium">{item.product_name}</td>
-                    <td className="border-b border-border/50 p-3 text-sm text-right font-mono">{item.quantity}</td>
-                    <td className="border-b border-border/50 p-3 text-sm text-right font-mono">{item.gross_weight.toFixed(2)}</td>
-                    <td className="border-b border-border/50 p-3 text-sm text-right font-mono font-semibold">{item.net_weight.toFixed(2)}</td>
-                    <td className="border-b border-border/50 p-3 text-sm text-right font-mono">{item.rate.toFixed(2)}</td>
-                    <td className="border-b border-border/50 p-3 text-sm text-right font-mono font-semibold">{formatCurrency(item.total)}</td>
+                    <td className="border-b border-border/50 p-3 text-sm text-right font-mono font-semibold tabular-nums">{item.quantity}</td>
+                    <td className="border-b border-border/50 p-3 text-sm text-right font-mono font-semibold tabular-nums">{item.gross_weight.toFixed(2)}</td>
+                    <td className="border-b border-border/50 p-3 text-sm text-right font-mono font-semibold tabular-nums">{item.net_weight.toFixed(2)}</td>
+                    <td className="border-b border-border/50 p-3 text-sm text-right font-mono font-semibold tabular-nums">{item.rate.toFixed(2)}</td>
+                    <td className="border-b border-border/50 p-3 text-sm text-right font-mono font-semibold tabular-nums">{formatCurrency(item.total)}</td>
                   </tr>
                 ))}
                 {/* Summary Row for regular items */}
                 {invoice.items.length > 0 && (
                   <tr className="bg-muted/30 font-semibold">
                     <td colSpan={4} className="p-3 text-sm text-right">Items Total Weight:</td>
-                    <td className="p-3 text-sm text-right font-mono">{totalNetWeight.toFixed(2)} kg</td>
+                    <td className="p-3 text-sm text-right font-mono font-semibold tabular-nums">{totalNetWeight.toFixed(2)} kg</td>
                     <td className="p-3"></td>
-                    <td className="p-3 text-sm text-right font-mono">{formatCurrency(invoice.items.reduce((sum, item) => sum + item.total, 0))}</td>
+                    <td className="p-3 text-sm text-right font-mono font-semibold tabular-nums">{formatCurrency(invoice.items.reduce((sum, item) => sum + item.total, 0))}</td>
                   </tr>
                 )}
               </tbody>
@@ -409,19 +410,19 @@ export function InvoiceViewDialog({ invoice, open, onOpenChange }: InvoiceViewDi
                     <tr key={index} className="hover:bg-muted/30">
                       <td className="border-b border-border/50 p-3 text-sm">{index + 1}</td>
                       <td className="border-b border-border/50 p-3 text-sm font-medium">{item.product_name}</td>
-                      <td className="border-b border-border/50 p-3 text-sm text-right font-mono">
+                      <td className="border-b border-border/50 p-3 text-sm text-right font-mono font-semibold tabular-nums">
                         {item.net_weight.toFixed(2)} {item.weight_unit}
                       </td>
-                      <td className="border-b border-border/50 p-3 text-sm text-right font-mono">{item.rate.toFixed(2)}</td>
-                      <td className="border-b border-border/50 p-3 text-sm text-right font-mono font-semibold">{formatCurrency(item.total)}</td>
+                      <td className="border-b border-border/50 p-3 text-sm text-right font-mono font-semibold tabular-nums">{item.rate.toFixed(2)}</td>
+                      <td className="border-b border-border/50 p-3 text-sm text-right font-mono font-semibold tabular-nums">{formatCurrency(item.total)}</td>
                     </tr>
                   ))}
                   {/* Summary Row for loose items */}
                   <tr className="bg-muted/30 font-semibold">
                     <td colSpan={2} className="p-3 text-sm text-right">Loose Items Total:</td>
-                    <td className="p-3 text-sm text-right font-mono">{totalLooseWeight.toFixed(3)} kg</td>
+                    <td className="p-3 text-sm text-right font-mono font-semibold tabular-nums">{totalLooseWeight.toFixed(3)} kg</td>
                     <td className="p-3"></td>
-                    <td className="p-3 text-sm text-right font-mono">{formatCurrency(looseItemsTotal)}</td>
+                    <td className="p-3 text-sm text-right font-mono font-semibold tabular-nums">{formatCurrency(looseItemsTotal)}</td>
                   </tr>
                 </tbody>
               </table>
@@ -442,37 +443,37 @@ export function InvoiceViewDialog({ invoice, open, onOpenChange }: InvoiceViewDi
             <div className="totals-box ml-auto w-72 bg-muted/30 p-4 rounded-lg">
               <div className="totals-row flex justify-between py-1.5">
                 <span className="text-muted-foreground">Subtotal</span>
-                <span className="font-mono">{formatCurrency(invoice.subtotal)}</span>
+                <span className="font-mono font-semibold tabular-nums">{formatCurrency(invoice.subtotal)}</span>
               </div>
               {invoice.discount > 0 && (
                 <div className="totals-row discount flex justify-between py-1.5 text-green-600">
                   <span>Discount</span>
-                  <span className="font-mono">-{formatCurrency(invoice.discount)}</span>
+                  <span className="font-mono font-semibold tabular-nums">-{formatCurrency(invoice.discount)}</span>
                 </div>
               )}
               {invoice.other_charges > 0 && (
                 <div className="totals-row flex justify-between py-1.5">
                   <span className="text-muted-foreground">Other Charges</span>
-                  <span className="font-mono">+{formatCurrency(invoice.other_charges)}</span>
+                  <span className="font-mono font-semibold tabular-nums">+{formatCurrency(invoice.other_charges)}</span>
                 </div>
               )}
               <Separator className="my-2" />
               <div className="totals-row total flex justify-between py-2 text-xl font-bold text-primary border-t-2 mt-2 pt-3">
                 <span>Grand Total</span>
-                <span className="font-mono">{formatCurrency(invoice.total)}</span>
+                <span className="font-mono font-semibold tabular-nums">{formatCurrency(invoice.total)}</span>
               </div>
               
               {/* Payment Details */}
               {receivedAmount > 0 && (
                 <div className="totals-row received flex justify-between py-1.5 text-green-600">
                   <span>Received</span>
-                  <span className="font-mono">-{formatCurrency(receivedAmount)}</span>
+                  <span className="font-mono font-semibold tabular-nums">-{formatCurrency(receivedAmount)}</span>
                 </div>
               )}
               {invoiceBalance > 0 && (
                 <div className="totals-row balance flex justify-between py-1.5 text-red-600 font-semibold">
                   <span>Balance Due</span>
-                  <span className="font-mono">{formatCurrency(invoiceBalance)}</span>
+                  <span className="font-mono font-semibold tabular-nums">{formatCurrency(invoiceBalance)}</span>
                 </div>
               )}
               
@@ -482,11 +483,11 @@ export function InvoiceViewDialog({ invoice, open, onOpenChange }: InvoiceViewDi
                   <Separator className="my-2" />
                   <div className="totals-row old-balance flex justify-between py-1.5 text-orange-600">
                     <span>Previous Balance</span>
-                    <span className="font-mono">{formatCurrency(Math.abs(customerOldBalance))}</span>
+                    <span className="font-mono font-semibold tabular-nums">{formatCurrency(Math.abs(customerOldBalance))}</span>
                   </div>
                   <div className="totals-row flex justify-between py-1.5 font-bold">
                     <span>Total Outstanding</span>
-                    <span className="font-mono text-primary">{formatCurrency(invoiceBalance + customerOldBalance)}</span>
+                    <span className="font-mono font-semibold tabular-nums text-primary">{formatCurrency(invoiceBalance + customerOldBalance)}</span>
                   </div>
                 </>
               )}
