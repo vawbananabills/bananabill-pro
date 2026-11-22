@@ -115,8 +115,8 @@ export function InvoiceViewDialog({ invoice, open, onOpenChange }: InvoiceViewDi
             body { font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif; padding: 20px; font-size: 13px; color: #1f2937; background: #fff; }
             .invoice-container { max-width: 800px; margin: 0 auto; }
             
-            /* Header */
-            .header { display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 20px; border-bottom: 3px solid #2563eb; margin-bottom: 20px; }
+            /* Header — spacing mirrors the screen (pb-4/mb-4 = 16px) */
+            .header { display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 16px; border-bottom: 3px solid #2563eb; margin-bottom: 16px; }
             .company-info { flex: 1; display: flex; align-items: flex-start; gap: 16px; }
             .company-logo { width: 64px; height: 64px; object-fit: contain; border-radius: 8px; }
             .company-name, h1.company-name { font-size: 26px; font-weight: 700; color: #1e40af !important; margin-bottom: 8px; }
@@ -127,7 +127,7 @@ export function InvoiceViewDialog({ invoice, open, onOpenChange }: InvoiceViewDi
             .invoice-number { font-size: 14px; font-weight: 600; color: #1f2937; margin-top: 5px; }
             
             /* Meta Info */
-            .meta-section { display: flex; justify-content: space-between; margin-bottom: 25px; }
+            .meta-section { display: flex; justify-content: space-between; margin-bottom: 16px; }
             .bill-to { flex: 1; }
             .bill-to-label { font-size: 10px; text-transform: uppercase; color: #475569; font-weight: 600; margin-bottom: 5px; }
             .bill-to-name { font-size: 16px; font-weight: 600; color: #1f2937; }
@@ -143,11 +143,11 @@ export function InvoiceViewDialog({ invoice, open, onOpenChange }: InvoiceViewDi
             .status-partial, .bg-blue-100 { background-color: #dbeafe !important; color: #1e40af !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
             
             /* Table */
-            table { width: 100%; border-collapse: collapse; margin-bottom: 20px; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            table { width: 100%; border-collapse: collapse; margin-bottom: 16px; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
             thead tr, .bg-muted\\/50 { background-color: #f8fafc !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-            th { padding: 12px 10px; text-align: right; font-weight: 600; color: #334155; font-size: 12px; text-transform: uppercase; border-bottom: 2px solid #e2e8f0; }
+            th { padding: 8px 12px; text-align: right; font-weight: 600; color: #334155; font-size: 12px; text-transform: uppercase; border-bottom: 2px solid #e2e8f0; }
             th:first-child, th:nth-child(2) { text-align: left; }
-            td { padding: 10px; border-bottom: 1px solid #f1f5f9; font-size: 13px; font-weight: 500; color: #1f2937; text-align: right; font-variant-numeric: tabular-nums; }
+            td { padding: 8px 12px; border-bottom: 1px solid #f1f5f9; font-size: 13px; font-weight: 500; color: #1f2937; text-align: right; font-variant-numeric: tabular-nums; }
             td:first-child, td:nth-child(2) { text-align: left; }
             .text-left { text-align: left !important; }
             .text-right { text-align: right !important; }
@@ -158,8 +158,8 @@ export function InvoiceViewDialog({ invoice, open, onOpenChange }: InvoiceViewDi
             tr.bg-muted\\/30, .bg-muted\\/30 { background-color: #f1f5f9 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
             
             /* Totals */
-            .totals-section { display: flex; justify-content: flex-end; margin-bottom: 25px; }
-            .totals-box { width: 280px; background-color: #f8fafc !important; padding: 15px 20px; border-radius: 8px; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            .totals-section { display: flex; justify-content: flex-end; margin-bottom: 16px; }
+            .totals-box { width: 288px; background-color: #f8fafc !important; padding: 16px; border-radius: 8px; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
             .totals-row { display: flex; justify-content: space-between; padding: 6px 0; font-weight: 500; font-variant-numeric: tabular-nums; }
             .totals-row.discount, .text-green-600 { color: #16a34a !important; }
             .totals-row.total { font-size: 18px; font-weight: 700; color: #1e40af; border-top: 2px solid #e2e8f0; margin-top: 8px; padding-top: 12px; }
@@ -169,7 +169,7 @@ export function InvoiceViewDialog({ invoice, open, onOpenChange }: InvoiceViewDi
             .text-primary { color: #1e40af !important; }
             
             /* Footer */
-            .footer-section { display: flex; gap: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0; }
+            .footer-section { display: flex; gap: 16px; padding-top: 16px; border-top: 1px solid #e2e8f0; }
             .bank-details, .notes-section { flex: 1; }
             .footer-title { font-size: 10px; text-transform: uppercase; color: #475569; font-weight: 600; margin-bottom: 8px; }
             .footer-content { font-size: 12px; color: #334155; line-height: 1.6; white-space: pre-line; }
@@ -181,27 +181,30 @@ export function InvoiceViewDialog({ invoice, open, onOpenChange }: InvoiceViewDi
             .upi-id { font-size: 11px; font-weight: 600; color: #1e40af; }
             
             /* Terms */
-            .terms { margin-top: 20px; padding-top: 15px; border-top: 1px solid #e2e8f0; }
+            .terms { margin-top: 16px; padding-top: 12px; border-top: 1px solid #e2e8f0; }
             .terms p { font-size: 11px; color: #475569; font-style: italic; }
             
             /* Separator */
             [data-slot="separator"], hr { height: 1px; background: #e2e8f0; border: none; margin: 8px 0; }
             
-            /* Utilities */
+            /* Utilities — values mirror the screen Tailwind scale exactly
+               (mb-4/gap-4/pt-4/mt-4 = 16px, py-2 = 8px, px-3 = 12px) */
             .flex { display: flex; }
             .justify-between { justify-content: space-between; }
+            .justify-end { justify-content: flex-end; }
             .items-start { align-items: flex-start; }
-            .gap-6 { gap: 24px; }
-            .gap-8 { gap: 32px; }
-            .mb-5, .mb-6 { margin-bottom: 20px; }
+            .gap-4 { gap: 16px; }
+            .mb-4 { margin-bottom: 16px; }
             .ml-auto { margin-left: auto; }
             .w-72 { width: 288px; }
-            .p-3 { padding: 12px; }
             .p-4 { padding: 16px; }
-            .pt-5 { padding-top: 20px; }
-            .mt-5 { margin-top: 20px; }
+            .pb-4 { padding-bottom: 16px; }
             .pt-4 { padding-top: 16px; }
-            .py-1\\.5, .py-2 { padding-top: 6px; padding-bottom: 6px; }
+            .pt-3 { padding-top: 12px; }
+            .mt-4 { margin-top: 16px; }
+            .py-2 { padding-top: 8px; padding-bottom: 8px; }
+            .px-3 { padding-left: 12px; padding-right: 12px; }
+            .py-1\\.5 { padding-top: 6px; padding-bottom: 6px; }
             .rounded-lg { border-radius: 8px; }
             .border-t { border-top: 1px solid #e2e8f0; }
             .border-t-2 { border-top: 2px solid #e2e8f0; }
@@ -301,7 +304,7 @@ export function InvoiceViewDialog({ invoice, open, onOpenChange }: InvoiceViewDi
         {/* Printable Content */}
         <div ref={printRef} className="invoice-container">
           {/* Header */}
-          <div className="header flex justify-between items-start pb-5 border-b-2 border-primary mb-5">
+          <div className="header flex justify-between items-start pb-4 border-b-2 border-primary mb-4">
             <div className="company-info flex items-start gap-4">
               {/* Company Logo */}
               {company?.show_logo_on_invoice && company?.logo_url && (
@@ -331,7 +334,7 @@ export function InvoiceViewDialog({ invoice, open, onOpenChange }: InvoiceViewDi
           </div>
 
           {/* Meta Info */}
-          <div className="meta-section flex justify-between mb-6">
+          <div className="meta-section flex justify-between mb-4">
             <div className="bill-to">
               <p className="bill-to-label text-xs uppercase text-muted-foreground font-semibold mb-1">Bill To</p>
               <p className="bill-to-name text-lg font-semibold">{invoice.customer_name}</p>
@@ -353,29 +356,29 @@ export function InvoiceViewDialog({ invoice, open, onOpenChange }: InvoiceViewDi
           </div>
 
           {/* Items Table */}
-          <div className="overflow-x-auto mb-5">
+          <div className="overflow-x-auto mb-4">
             <table className="w-full border-collapse">
               <thead>
                 <tr className="bg-muted/50">
-                  <th className="border-b-2 border-border p-3 text-left text-xs font-semibold uppercase text-muted-foreground">#</th>
-                  <th className="border-b-2 border-border p-3 text-left text-xs font-semibold uppercase text-muted-foreground">Item</th>
-                  <th className="border-b-2 border-border p-3 text-right text-xs font-semibold uppercase text-muted-foreground">Qty</th>
-                  <th className="border-b-2 border-border p-3 text-right text-xs font-semibold uppercase text-muted-foreground">Gross (kg)</th>
-                  <th className="border-b-2 border-border p-3 text-right text-xs font-semibold uppercase text-muted-foreground">Net (kg)</th>
-                  <th className="border-b-2 border-border p-3 text-right text-xs font-semibold uppercase text-muted-foreground">Rate (₹)</th>
-                  <th className="border-b-2 border-border p-3 text-right text-xs font-semibold uppercase text-muted-foreground">Amount (₹)</th>
+                  <th className="border-b-2 border-border py-2 px-3 text-left text-xs font-semibold uppercase text-muted-foreground">#</th>
+                  <th className="border-b-2 border-border py-2 px-3 text-left text-xs font-semibold uppercase text-muted-foreground">Item</th>
+                  <th className="border-b-2 border-border py-2 px-3 text-right text-xs font-semibold uppercase text-muted-foreground">Qty</th>
+                  <th className="border-b-2 border-border py-2 px-3 text-right text-xs font-semibold uppercase text-muted-foreground">Gross (kg)</th>
+                  <th className="border-b-2 border-border py-2 px-3 text-right text-xs font-semibold uppercase text-muted-foreground">Net (kg)</th>
+                  <th className="border-b-2 border-border py-2 px-3 text-right text-xs font-semibold uppercase text-muted-foreground">Rate (₹)</th>
+                  <th className="border-b-2 border-border py-2 px-3 text-right text-xs font-semibold uppercase text-muted-foreground">Amount (₹)</th>
                 </tr>
               </thead>
               <tbody>
                 {invoice.items.map((item, index) => (
                   <tr key={index} className="hover:bg-muted/30">
-                    <td className="border-b border-border/50 p-3 text-sm">{index + 1}</td>
-                    <td className="border-b border-border/50 p-3 text-sm font-medium">{item.product_name}</td>
-                    <td className="border-b border-border/50 p-3 text-sm text-right font-mono font-semibold tabular-nums">{item.quantity}</td>
-                    <td className="border-b border-border/50 p-3 text-sm text-right font-mono font-semibold tabular-nums">{item.gross_weight.toFixed(2)}</td>
-                    <td className="border-b border-border/50 p-3 text-sm text-right font-mono font-semibold tabular-nums">{item.net_weight.toFixed(2)}</td>
-                    <td className="border-b border-border/50 p-3 text-sm text-right font-mono font-semibold tabular-nums">{item.rate.toFixed(2)}</td>
-                    <td className="border-b border-border/50 p-3 text-sm text-right font-mono font-semibold tabular-nums">{formatCurrency(item.total)}</td>
+                    <td className="border-b border-border/50 py-2 px-3 text-sm">{index + 1}</td>
+                    <td className="border-b border-border/50 py-2 px-3 text-sm font-medium">{item.product_name}</td>
+                    <td className="border-b border-border/50 py-2 px-3 text-sm text-right font-mono font-semibold tabular-nums">{item.quantity}</td>
+                    <td className="border-b border-border/50 py-2 px-3 text-sm text-right font-mono font-semibold tabular-nums">{item.gross_weight.toFixed(2)}</td>
+                    <td className="border-b border-border/50 py-2 px-3 text-sm text-right font-mono font-semibold tabular-nums">{item.net_weight.toFixed(2)}</td>
+                    <td className="border-b border-border/50 py-2 px-3 text-sm text-right font-mono font-semibold tabular-nums">{item.rate.toFixed(2)}</td>
+                    <td className="border-b border-border/50 py-2 px-3 text-sm text-right font-mono font-semibold tabular-nums">{formatCurrency(item.total)}</td>
                   </tr>
                 ))}
                 {/* Summary Row for regular items */}
@@ -393,28 +396,28 @@ export function InvoiceViewDialog({ invoice, open, onOpenChange }: InvoiceViewDi
 
           {/* Loose Items Table */}
           {hasLooseItems && (
-            <div className="overflow-x-auto mb-5">
+            <div className="overflow-x-auto mb-4">
               <p className="text-xs uppercase text-muted-foreground font-semibold mb-2">Loose Items</p>
               <table className="w-full border-collapse">
                 <thead>
                   <tr className="bg-muted/50">
-                    <th className="border-b-2 border-border p-3 text-left text-xs font-semibold uppercase text-muted-foreground">#</th>
-                    <th className="border-b-2 border-border p-3 text-left text-xs font-semibold uppercase text-muted-foreground">Item</th>
-                    <th className="border-b-2 border-border p-3 text-right text-xs font-semibold uppercase text-muted-foreground">Weight</th>
-                    <th className="border-b-2 border-border p-3 text-right text-xs font-semibold uppercase text-muted-foreground">Rate (₹)</th>
-                    <th className="border-b-2 border-border p-3 text-right text-xs font-semibold uppercase text-muted-foreground">Amount (₹)</th>
+                    <th className="border-b-2 border-border py-2 px-3 text-left text-xs font-semibold uppercase text-muted-foreground">#</th>
+                    <th className="border-b-2 border-border py-2 px-3 text-left text-xs font-semibold uppercase text-muted-foreground">Item</th>
+                    <th className="border-b-2 border-border py-2 px-3 text-right text-xs font-semibold uppercase text-muted-foreground">Weight</th>
+                    <th className="border-b-2 border-border py-2 px-3 text-right text-xs font-semibold uppercase text-muted-foreground">Rate (₹)</th>
+                    <th className="border-b-2 border-border py-2 px-3 text-right text-xs font-semibold uppercase text-muted-foreground">Amount (₹)</th>
                   </tr>
                 </thead>
                 <tbody>
                   {looseItems.map((item, index) => (
                     <tr key={index} className="hover:bg-muted/30">
-                      <td className="border-b border-border/50 p-3 text-sm">{index + 1}</td>
-                      <td className="border-b border-border/50 p-3 text-sm font-medium">{item.product_name}</td>
-                      <td className="border-b border-border/50 p-3 text-sm text-right font-mono font-semibold tabular-nums">
+                      <td className="border-b border-border/50 py-2 px-3 text-sm">{index + 1}</td>
+                      <td className="border-b border-border/50 py-2 px-3 text-sm font-medium">{item.product_name}</td>
+                      <td className="border-b border-border/50 py-2 px-3 text-sm text-right font-mono font-semibold tabular-nums">
                         {item.net_weight.toFixed(2)} {item.weight_unit}
                       </td>
-                      <td className="border-b border-border/50 p-3 text-sm text-right font-mono font-semibold tabular-nums">{item.rate.toFixed(2)}</td>
-                      <td className="border-b border-border/50 p-3 text-sm text-right font-mono font-semibold tabular-nums">{formatCurrency(item.total)}</td>
+                      <td className="border-b border-border/50 py-2 px-3 text-sm text-right font-mono font-semibold tabular-nums">{item.rate.toFixed(2)}</td>
+                      <td className="border-b border-border/50 py-2 px-3 text-sm text-right font-mono font-semibold tabular-nums">{formatCurrency(item.total)}</td>
                     </tr>
                   ))}
                   {/* Summary Row for loose items */}
@@ -430,7 +433,7 @@ export function InvoiceViewDialog({ invoice, open, onOpenChange }: InvoiceViewDi
           )}
 
           {/* Totals and Notes Section */}
-          <div className="flex justify-between items-start gap-6 mb-6">
+          <div className={`flex items-start mb-4 ${invoice.notes ? "justify-between gap-4" : "justify-end"}`}>
             {/* Notes */}
             {invoice.notes && (
               <div className="notes-section flex-1">
@@ -494,27 +497,30 @@ export function InvoiceViewDialog({ invoice, open, onOpenChange }: InvoiceViewDi
             </div>
           </div>
 
-          {/* Footer */}
-          <div className="footer-section flex gap-8 pt-5 border-t border-border">
-            {company?.bank_details && (
-              <div className="bank-details flex-1">
-                <p className="footer-title text-xs uppercase text-muted-foreground font-semibold mb-2">Bank Details</p>
-                <p className="footer-content text-sm text-muted-foreground whitespace-pre-line">{company.bank_details}</p>
-              </div>
-            )}
-            {/* QR Code for UPI */}
-            {company?.upi_id && qrCodeUrl && (
-              <div className="qr-section p-4 bg-muted/50 rounded-lg text-center">
-                <img src={qrCodeUrl} alt="UPI QR Code" className="mx-auto mb-2" style={{ width: 120, height: 120 }} />
-                <p className="qr-label text-xs text-muted-foreground">Scan to Pay</p>
-                <p className="upi-id text-sm font-semibold text-primary">{company.upi_id}</p>
-              </div>
-            )}
-          </div>
+          {/* Footer — only render when there is content, otherwise it
+              leaves a blank band + divider (white space) on screen and print */}
+          {(company?.bank_details || (company?.upi_id && qrCodeUrl)) && (
+            <div className="footer-section flex gap-4 pt-4 border-t border-border">
+              {company?.bank_details && (
+                <div className="bank-details flex-1">
+                  <p className="footer-title text-xs uppercase text-muted-foreground font-semibold mb-2">Bank Details</p>
+                  <p className="footer-content text-sm text-muted-foreground whitespace-pre-line">{company.bank_details}</p>
+                </div>
+              )}
+              {/* QR Code for UPI */}
+              {company?.upi_id && qrCodeUrl && (
+                <div className="qr-section p-4 bg-muted/50 rounded-lg text-center">
+                  <img src={qrCodeUrl} alt="UPI QR Code" className="mx-auto mb-2" style={{ width: 120, height: 120 }} />
+                  <p className="qr-label text-xs text-muted-foreground">Scan to Pay</p>
+                  <p className="upi-id text-sm font-semibold text-primary">{company.upi_id}</p>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Terms */}
           {company?.footer_notes && (
-            <div className="terms mt-5 pt-4 border-t border-border">
+            <div className="terms mt-4 pt-3 border-t border-border">
               <p className="text-xs text-muted-foreground italic">{company.footer_notes}</p>
             </div>
           )}
