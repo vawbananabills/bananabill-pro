@@ -17,6 +17,7 @@ import { Switch } from '@/components/ui/switch';
 import { format } from 'date-fns';
 import { Printer, Plus, Trash2, Save, FileText, Loader2, Search, Eye, Edit, FolderOpen, Package, IndianRupee } from 'lucide-react';
 import { toast } from 'sonner';
+import { getVendorReceiptPayableBreakdown } from '@/utils/vendorReceiptTotals';
 
 interface VendorReceiptDialogProps {
     open: boolean;
@@ -128,6 +129,7 @@ export function VendorReceiptDialog({ open, onOpenChange }: VendorReceiptDialogP
     const selectedVendorData = vendors.find(v => v.id === selectedVendor);
 
     const receiptBalancesByVendor = receipts.reduce<Record<string, number>>((acc, r) => {
+        if (r.id === isEditing) return acc;
         const key = r.vendor_id;
         const prev = acc[key] || 0;
         const finalTotal = Number(r.final_total || 0);
@@ -177,6 +179,12 @@ export function VendorReceiptDialog({ open, onOpenChange }: VendorReceiptDialogP
     const firstTotal = items.reduce((sum, item) => sum + (item.amount || 0), 0);
     const commission = (firstTotal * commissionPercent) / 100;
     const finalTotal = firstTotal - cooli - rent - padi - loadingCharge - commission;
+    const payableBreakdown = getVendorReceiptPayableBreakdown({
+        previousBalance: selectedVendorReceiptBalance,
+        currentReceiptAmount: finalTotal,
+        amountReceived,
+        includePreviousBalance,
+    });
 
     const handlePrint = (printData?: any) => {
         const d = printData || {
@@ -199,6 +207,24 @@ export function VendorReceiptDialog({ open, onOpenChange }: VendorReceiptDialogP
             includePreviousBalance,
             selectedVendorReceiptBalance
         };
+
+        const printFinalTotal = Number(d.finalTotal ?? d.final_total ?? finalTotal);
+        const printAmountReceived = Number(d.amountReceived ?? d.amount_received ?? amountReceived);
+        const printVendorId = d.vendor_id || selectedVendor;
+        const printVendor = vendors.find(v => v.id === printVendorId);
+        const printIncludePreviousBalance = typeof d.includePreviousBalance === 'boolean' ? d.includePreviousBalance : true;
+        const previousBalance = typeof d.selectedVendorReceiptBalance === 'number'
+            ? d.selectedVendorReceiptBalance
+            : receipts.reduce((balance, receipt) => {
+                if (receipt.id === d.id || receipt.vendor_id !== printVendorId) return balance;
+                return balance + Number(receipt.final_total || 0) - Number(receipt.amount_received || 0);
+            }, Number((printVendor as any)?.vendor_r_opening_balance || 0));
+        const printBreakdown = getVendorReceiptPayableBreakdown({
+            previousBalance,
+            currentReceiptAmount: printFinalTotal,
+            amountReceived: printAmountReceived,
+            includePreviousBalance: printIncludePreviousBalance,
+        });
 
         const printWindow = window.open('', '_blank');
         if (!printWindow) return;
@@ -274,11 +300,10 @@ export function VendorReceiptDialog({ open, onOpenChange }: VendorReceiptDialogP
               <div class="totals-row"><span>Padi:</span><span>-₹${d.padi.toLocaleString()}</span></div>
               <div class="totals-row"><span>Loading:</span><span>-₹${(d.loadingCharge || d.loading_charge).toLocaleString()}</span></div>
               <div class="totals-row"><span>Comm (${d.commissionPercent || d.commission_percent}%):</span><span>-₹${(d.commission || ((d.first_total * d.commission_percent) / 100 || 0)).toLocaleString()}</span></div>
-              <div class="totals-row grand-total"><span>Final Payable:</span><span>₹${(d.finalTotal || d.final_total).toLocaleString()}</span></div>
-              ${d.includePreviousBalance ? `
-              <div class="totals-row"><span>Prev Balance:</span><span>₹${(d.selectedVendorReceiptBalance || 0).toLocaleString()}</span></div>
-              <div class="totals-row grand-total" style="border-top: 1px dashed #333; margin-top: 4px; padding-top: 4px;"><span>Grand Total:</span><span>₹${((d.finalTotal || d.final_total) + (d.selectedVendorReceiptBalance || 0)).toLocaleString()}</span></div>
-              ` : ''}
+              <div class="totals-row"><span>Previous Balance${!printIncludePreviousBalance ? ' (not included)' : ''}:</span><span>₹${printBreakdown.previousBalance.toLocaleString()}</span></div>
+              <div class="totals-row"><span>Current Receipt Amount:</span><span>₹${printBreakdown.currentReceiptAmount.toLocaleString()}</span></div>
+              ${printBreakdown.amountReceived > 0 ? `<div class="totals-row"><span>Amount Received:</span><span>-₹${printBreakdown.amountReceived.toLocaleString()}</span></div>` : ''}
+              <div class="totals-row grand-total"><span>Final Payable:</span><span>₹${printBreakdown.finalPayable.toLocaleString()}</span></div>
             </div>
           </div>
           <div class="footer">
@@ -747,11 +772,27 @@ export function VendorReceiptDialog({ open, onOpenChange }: VendorReceiptDialogP
                                             className="data-[state=checked]:bg-primary"
                                         />
                                     </div>
-                                    <div className="flex justify-between items-center text-xl font-black text-primary drop-shadow-sm">
-                                        <span>{includePreviousBalance ? "Grand Total" : "Final Payable"}</span>
-                                        <span className="font-mono tabular-nums">
-                                            ₹{(finalTotal + (includePreviousBalance ? selectedVendorReceiptBalance : 0)).toLocaleString()}
-                                        </span>
+                                    <div className="space-y-2 border-t border-primary/10 pt-3">
+                                        <div className="flex justify-between items-center text-xs">
+                                            <span className="text-muted-foreground">
+                                                {includePreviousBalance ? 'Previous Balance' : 'Previous Balance (not included)'}
+                                            </span>
+                                            <span className="font-mono tabular-nums">₹{payableBreakdown.previousBalance.toLocaleString()}</span>
+                                        </div>
+                                        <div className="flex justify-between items-center text-xs">
+                                            <span className="text-muted-foreground">Current Receipt Amount</span>
+                                            <span className="font-mono tabular-nums">₹{payableBreakdown.currentReceiptAmount.toLocaleString()}</span>
+                                        </div>
+                                        {payableBreakdown.amountReceived > 0 && (
+                                            <div className="flex justify-between items-center text-xs">
+                                                <span className="text-muted-foreground">Amount Received</span>
+                                                <span className="font-mono tabular-nums">-₹{payableBreakdown.amountReceived.toLocaleString()}</span>
+                                            </div>
+                                        )}
+                                        <div className="flex justify-between items-center border-t border-primary/20 pt-2 text-lg font-black text-primary">
+                                            <span>Final Payable</span>
+                                            <span className="font-mono tabular-nums">₹{payableBreakdown.finalPayable.toLocaleString()}</span>
+                                        </div>
                                     </div>
                                 </div>
 
