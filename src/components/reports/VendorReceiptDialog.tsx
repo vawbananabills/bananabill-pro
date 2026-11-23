@@ -291,7 +291,6 @@ export function VendorReceiptDialog({ open, onOpenChange }: VendorReceiptDialogP
             <div style="width: 50%;">
               <p style="font-size: 0.85em;"><strong>Notes:</strong> ${d.notes || '-'}</p>
               <p style="font-size: 0.85em;"><strong>Mode:</strong> ${d.paymentMode || d.payment_mode}</p>
-              <p style="font-size: 0.85em;"><strong>Received:</strong> ₹${(d.amountReceived || d.amount_received).toLocaleString()}</p>
             </div>
             <div class="totals">
               <div class="totals-row"><span>Subtotal:</span><span>₹${(d.firstTotal || d.first_total).toLocaleString()}</span></div>

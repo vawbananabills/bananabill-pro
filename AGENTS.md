@@ -1,0 +1,1 @@
+Keep vendor receipt payable calculations in a pure utility shared by the entry summary and printed receipt so both show the same balance breakdown.
